@@ -1,42 +1,48 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
-from django.contrib.contenttypes.fields import (
-    GenericForeignKey, GenericRelation
-)
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinLengthValidator
+
+from .validators import phone_number_validator
 
 
-class User(AbstractBaseUser):
-    name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
-
-    content_type = models.OneToOneField(
-        ContentType, null=True, on_delete=models.SET_NULL
+class User(AbstractUser):
+    email = models.EmailField(
+        unique=True, max_length=50, validators=[MinLengthValidator(5)]
     )
-    profile_id = models.PositiveIntegerField(blank=True, null=True)
-    profile = GenericForeignKey("content_type", "profile_id")
+    first_name = models.CharField(
+        max_length=15,  validators=[MinLengthValidator(2)]
+    )
+    last_name = models.CharField(
+        max_length=15, validators=[MinLengthValidator(2)]
+    )
+    phone_number = models.CharField(
+        max_length=12, 
+        validators=[MinLengthValidator(10), phone_number_validator]
+    )
+    address = models.CharField(max_length=100)
 
     USERNAME_FIELD = "email"
-    EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = ["name"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "phone_number", "address"]
 
     @property
-    def is_customer(self):
-        return isinstance(self.profile, CustomerProfile)
+    def customer_profile(self):
+        if hasattr(self, "related_customer"):
+            return self.customer_related
+        return None
 
     @property
-    def is_supplier(self):
-        return isinstance(self.profile, SupplierProfile)
+    def supplier_profile(self):
+        if hasattr(self, "related_supplier"):
+            return self.supplier_related
+        return None
 
-class Profile(models.Model):
-    user = GenericRelation(User)
-    photo = models.ImageField()
+class CustomerProfile(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="related_customer"
+    )
 
-    class Meta:
-        abstract = True
-
-class CustomerProfile(Profile):
-    pass
-
-class SupplierProfile(Profile):
-    pass
+class SupplierProfile(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="related_supplier"
+    )
+    photo = models.ImageField(blank=True, null=True)
