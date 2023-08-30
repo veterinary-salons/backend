@@ -5,33 +5,7 @@ from django.contrib.auth import authenticate
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import serializers
 
-from .models import User, CustomerProfile, SupplierProfile
-
-
-
-class CustomAuthTokenSerializer(serializers.Serializer):
-    email = serializers.CharField(label="Email", write_only=True)
-    password = serializers.CharField(label="Password", write_only=True)
-    token = serializers.CharField(label="Token", read_only=True)
-
-    def validate(self, data):
-        if (email := data.get("email")) and (password := data.get("password")):
-            user = authenticate(
-                request=self.context.get("request"),
-                email=email, password=password
-            )
-            if not user:
-                raise serializers.ValidationError(
-                    "Unable to log in with provided credentials",
-                    code="authorization"
-                )
-        else:
-            raise serializers.ValidationError(
-                "Must include email and password", code="authorization"
-            )
-
-        data["user"] = user
-        return data
+from users.models import User, CustomerProfile, SupplierProfile
 
 
 class Base64ImageField(serializers.ImageField):

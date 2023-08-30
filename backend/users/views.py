@@ -1,15 +1,9 @@
 from rest_framework import viewsets
-from rest_framework.authtoken.views import ObtainAuthToken
 
-from .models import User, CustomerProfile, SupplierProfile
-from .serializers import (
-    CustomerProfileSerializer, SupplierProfileSerializer,
-    CustomAuthTokenSerializer,
+from users.models import User, CustomerProfile, SupplierProfile
+from users.serializers import (
+    CustomerProfileSerializer, SupplierProfileSerializer
 )
-
-
-class CustomObtainAuthToken(ObtainAuthToken):
-    serializer_class = CustomAuthTokenSerializer
 
 
 class CustomerProfileViewSet(viewsets.ModelViewSet):

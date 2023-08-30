@@ -1,9 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import SimpleRouter
 
-from .views import (
-    CustomerProfileViewSet, SupplierProfileViewSet, CustomObtainAuthToken
-)
+from users.views import CustomerProfileViewSet, SupplierProfileViewSet
 
 
 router = SimpleRouter()
@@ -12,5 +10,4 @@ router.register("suppliers", SupplierProfileViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("token", CustomObtainAuthToken.as_view()),
 ]

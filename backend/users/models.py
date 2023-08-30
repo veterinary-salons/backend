@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import (
 )
 from django.core.validators import MinLengthValidator
 
-from .validators import phone_number_validator
+from users.validators import phone_number_validator
 
 
 class CustomUserManager(BaseUserManager):
@@ -36,9 +36,9 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password, **extra_fields):
         # checks from django UserManager source code
         # in case we'll ever change `is_superuser` or `is_staff` default values
-        if extra_fields.setdefault("is_staff", True) is not True:
+        if extra_fields.setdefault("is_staff", True) is False:
             raise ValueError("Superuser must have is_staff=True")
-        if extra_fields.setdefault("is_superuser", True) is not True:
+        if extra_fields.setdefault("is_superuser", True) is False:
             raise ValueError("Superuser must have is_superuser=True")
 
         return self._create_user(email, password, **extra_fields)
