@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "drf_social_oauth2",
     "users",
     "authentication",
+    "api",
+    "pets",
 ]
 
 MIDDLEWARE = [
