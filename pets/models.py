@@ -1,9 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
-from django.utils import timezone
 
 from core.constants import Limits, MESSAGES, DEFAULT
 
@@ -49,7 +47,7 @@ class Pet(models.Model):
     )
     age = models.PositiveSmallIntegerField(
         verbose_name="Возраст питомца",
-        default=DEFAULT.AGE,
+        default=DEFAULT.PET_AGE,
         validators=(
             MinValueValidator(
                 Limits.MIN_AGE_PET,
@@ -92,77 +90,4 @@ class Pet(models.Model):
         return f"{self.type} {self.breed} {self.name} владельца {self.owner.second_name}"
 
 
-class Specialist(models.Model):
-    user = models.ForeignKey(
-        User,
-        verbose_name="Специалист",
-        on_delete=models.CASCADE,
-        related_name="specialists",
-    )
-    pet_type = models.ForeignKey(
-        Pet,
-        verbose_name="тип животного",
-        related_name="specialists",
-        on_delete=models.SET_NULL,
-        default=Pet(type="Dog")
-    )
-    price = models.PositiveSmallIntegerField(
-        verbose_name="Цена за услугу",
-        default=DEFAULT.SERVICER_PRICE,
-        validators=(
-                     MinValueValidator(
-                         Limits.MIN_DURATION,
-                         MESSAGES.CORRECT_AGE_MESSAGE,
-                     ),
-                     MaxValueValidator(
-                         Limits.MAX_DURATION,
-                         MESSAGES.CORRECT_AGE_MESSAGE,
-                     ),
-                 ),
-    )
-    work_time_from = models.DateTimeField(
-        verbose_name="От",
-        default=timezone.now,
-    )
-    work_time_to = models.DateTimeField(
-        verbose_name="До",
-        default=timezone.now,
-    )
-    duration = models.PositiveIntegerField(
-        verbose_name="Продолжительность услуги в минутах",
-    )
-    about = models.TextField(
-        max_length=Limits.MAX_LENGTH_ABOUT,
-        verbose_name="О себе"
-    )
 
-
-class Groomer(Specialist):
-    # будет работать только на postgres
-    grooming_type = ArrayField(models.CharField(
-        max_length=1,
-        choices=DEFAULT.GROOMING_TYPE,
-        default=DEFAULT.GROOMING_TYPE[0]
-    )
-    )
-
-    class Meta:
-        verbose_name = 'грумер'
-        verbose_name_plural = 'грумеры'
-
-    def __str__(self) -> str:
-        if self.user:
-            return f'Грумер {self.user.second_name} {self.user.first_name}'
-        return f'Грумер был удален'
-
-
-class Veterinary(models.Model):
-    ...
-
-
-class Shelter(models.Model):
-    ...
-
-
-class Synology(models.Model):
-    ...
