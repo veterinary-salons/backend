@@ -9,6 +9,9 @@ class Limits:
     # Возраст пока в годах, потом можно подумать...
     MIN_AGE_PET = 0
     MAX_AGE_PET = 50
+    MIN_DURATION = 1
+    MAX_DURATION = 600
+    MAX_LENGTH_ABOUT = 300
 
 
 class MESSAGES:
@@ -22,10 +25,17 @@ class DEFAULT:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
 
-    AGE = 1
+    PET_AGE = 1
     WEIGHT_CHOICES = (
         ("1", "до 5кг."),
         ("2", "5 - 10кг."),
         ("3", "10 - 20кг."),
         ("4", "более 20кг."),
     )
+    GROOMING_TYPE = (
+        ("h", "Hygienic"),
+        ("e", "Exhibition"),
+        ("d", "Decorative"),
+        ("y", "You can choose"),
+    )
+    SERVICER_PRICE = 500
