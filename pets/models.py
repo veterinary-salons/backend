@@ -87,7 +87,7 @@ class Pet(models.Model):
         )
 
     def __str__(self) -> str:
-        return f"{self.type} {self.breed} {self.name} владельца {self.owner.second_name}"
+        return f"{self.type} {self.breed} {self.name} владельца {self.owner_id}"
 
 
 

@@ -95,6 +95,7 @@ class BaseProfile(models.Model):
     class Meta:
         abstract = True
 
+
 class CustomerProfile(BaseProfile):
     pass
 

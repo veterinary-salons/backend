@@ -22,20 +22,23 @@ class Base64ImageField(serializers.ImageField):
             )
         )
 
+
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = ("id", "email", "first_name", "last_name")
 
+
 class BaseProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
     def create(self, validated_data):
-        user_data = validated_data.pop("user")
+        # user_data = validated_data.pop("user")
         profile = self.Meta.model.objects.create(**validated_data)
-        user = User.objects.create(**user_data, profile=profile)
+        # user = User.objects.create(**user_data, profile=profile)
         return profile
+
 
 class CustomerProfileSerializer(BaseProfileSerializer):
 
@@ -43,8 +46,9 @@ class CustomerProfileSerializer(BaseProfileSerializer):
         model = CustomerProfile
         fields = "__all__"
 
+
 class SupplierProfileSerializer(BaseProfileSerializer):
-    photo = Base64ImageField()
+    photo = Base64ImageField(allow_null=True)
 
     class Meta:
         model = SupplierProfile

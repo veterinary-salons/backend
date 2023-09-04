@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+# from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -15,7 +16,6 @@ class Specialist(models.Model):
         User,
         verbose_name="Специалист",
         on_delete=models.CASCADE,
-        related_name="specialists",
     )
     price = models.PositiveSmallIntegerField(
         verbose_name="Цена за услугу",
@@ -49,16 +49,16 @@ class Groomer(Specialist):
     pet_type = models.ForeignKey(
         Pet,
         verbose_name="тип животного",
-        related_name="specialists",
-        on_delete=models.SET_NULL,
-        default=Pet(type="Dog")
+        related_name="groomers",
+        on_delete=models.CASCADE,
     )
     # будет работать только на postgres
     grooming_type = ArrayField(models.CharField(
-        max_length=1,
+        max_length=20,
         choices=DEFAULT.GROOMING_TYPE,
         default=DEFAULT.GROOMING_TYPE[0]
-    )
+    ),
+        default=DEFAULT.GROOMING_TYPE[0]
     )
     duration = models.PositiveIntegerField(
         verbose_name="Продолжительность услуги в минутах",
@@ -74,62 +74,60 @@ class Groomer(Specialist):
         return f'Грумер был удален'
 
 
-class Veterinary(Specialist):
-    pet_type = models.ForeignKey(
-        Pet,
-        verbose_name="тип животного",
-        related_name="specialists",
-        on_delete=models.SET_NULL,
-        default=Pet(type="Dog")
-    )
+# class Veterinary(Specialist):
+#     pet_type = models.ForeignKey(
+#         Pet,
+#         verbose_name="тип животного",
+#         related_name="veterinarys",
+#         on_delete=models.CASCADE,
+#     )
+#
+#     duration = models.PositiveIntegerField(
+#         verbose_name="Продолжительность услуги в минутах",
+#     )
+#
+#     class Meta:
+#         verbose_name = 'ветеринар'
+#         verbose_name_plural = 'ветеринары'
 
-    duration = models.PositiveIntegerField(
-        verbose_name="Продолжительность услуги в минутах",
-    )
-
-    class Meta:
-        verbose_name = 'ветеринар'
-        verbose_name_plural = 'ветеринары'
-
-    def __str__(self) -> str:
-        if self.user:
-            return f'Ветеринар {self.user.second_name} {self.user.first_name}'
-        return f'Ветеринар был удален'
-
-
-class Shelter(Specialist):
-    pet_type = models.ForeignKey(
-        Pet,
-        verbose_name="тип животного",
-        related_name="specialists",
-        on_delete=models.SET_NULL,
-        default=Pet(type="Dog")
-    )
-
-    class Meta:
-        verbose_name = 'зооняня'
-        verbose_name_plural = 'зооняни'
-
-    def __str__(self) -> str:
-        if self.user:
-            return f'Зооняня {self.user.second_name} {self.user.first_name}'
-        return f'Зооняня была удалена'
+    # def __str__(self) -> str:
+    #     if self.user:
+    #         return f'Ветеринар {self.user.second_name} {self.user.first_name}'
+    #     return f'Ветеринар был удален'
 
 
-class Synology(Specialist):
-    task = ArrayField(models.CharField(
-        max_length=1,
-        choices=DEFAULT.SYNOLOGY_TASKS,
-        default=DEFAULT.SYNOLOGY_TASKS[0]
-    )
-    )
-    format = ArrayField(models.CharField(
-        max_length=1,
-        choices=DEFAULT.SYNOLOGY_FORMAT,
-        default=DEFAULT.SYNOLOGY_FORMAT[0],
-    )
-    )
-    duration = models.PositiveIntegerField(
-        verbose_name="Продолжительность услуги в минутах",
-    )
+# class Shelter(Specialist):
+#     pet_type = models.ForeignKey(
+#         Pet,
+#         verbose_name="тип животного",
+#         related_name="shelters",
+#         on_delete=models.CASCADE,
+#     )
+#
+#     class Meta:
+#         verbose_name = 'зооняня'
+#         verbose_name_plural = 'зооняни'
+#
+#     def __str__(self) -> str:
+#         if self.user:
+#             return f'Зооняня {self.user.second_name} {self.user.first_name}'
+#         return f'Зооняня была удалена'
+
+
+# class Synology(Specialist):
+#     task = ArrayField(models.CharField(
+#         max_length=50,
+#         choices=DEFAULT.SYNOLOGY_TASKS,
+#         default=DEFAULT.SYNOLOGY_TASKS[0]
+#     )
+#     )
+#     format = ArrayField(models.CharField(
+#         max_length=50,
+#         choices=DEFAULT.SYNOLOGY_FORMAT,
+#         default=DEFAULT.SYNOLOGY_FORMAT[0],
+#     )
+#     )
+#     duration = models.PositiveIntegerField(
+#         verbose_name="Продолжительность услуги в минутах",
+#     )
 
