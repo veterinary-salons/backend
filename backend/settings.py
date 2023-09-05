@@ -1,5 +1,11 @@
-import os
+from os import getenv
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -67,27 +73,27 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv(
+        'ENGINE': getenv(
             'DB_ENGINE',
             default='django.db.backends.postgresql',
         ),
-        'NAME': os.getenv(
-            'DB_NAME',
+        'NAME': getenv(
+            'POSTGRES_DB',
             default='groom',
         ),
-        'USER': os.getenv(
+        'USER': getenv(
             'POSTGRES_USER',
             default='postgres',
         ),
-        'PASSWORD': os.getenv(
+        'PASSWORD': getenv(
             'POSTGRES_PASSWORD',
             default='4130',
         ),
-        'HOST': os.getenv(
+        'HOST': getenv(
             'DB_HOST',
             default='localhost',
         ),
-        'PORT': os.getenv(
+        'PORT': getenv(
             'DB_PORT',
             default='5432',
         ),
