@@ -36,6 +36,7 @@ class Pet(models.Model):
     type = models.CharField(
         verbose_name="вид питомца",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
+        choices=DEFAULT.PET_TYPE
     )
     breed = models.CharField(
         verbose_name="порода",

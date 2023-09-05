@@ -3,12 +3,12 @@ from rest_framework.routers import DefaultRouter
 
 from api.v1.views import PetViewSet, GroomerViewSet
 
-app_name = 'api'
+app_name = "api"
 
 router = DefaultRouter()
 
-router.register('pets', PetViewSet, 'pets')
+router.register("pets", PetViewSet, "pets")
 router.register("groomer", GroomerViewSet, "groomers")
 urlpatterns = (
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 )
