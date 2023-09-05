@@ -162,6 +162,10 @@ class Synology(Specialist):
         verbose_name="Продолжительность услуги в минутах",
     )
 
+    class Meta:
+        verbose_name = 'кинолог'
+        verbose_name_plural = 'кинологи'
+
     def __str__(self) -> str:
         if self.user:
             return f'Кинолог {self.user.second_name} {self.user.first_name}'
