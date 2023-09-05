@@ -81,7 +81,7 @@ class Groomer(Specialist):
 
     def __str__(self) -> str:
         if self.user:
-            return f'Грумер {self.user.second_name} {self.user.first_name}'
+            return f'Грумер {self.user} {self.user}'
         return 'Грумер был удален'
 
 
@@ -168,5 +168,5 @@ class Synology(Specialist):
 
     def __str__(self) -> str:
         if self.user:
-            return f'Кинолог {self.user.second_name} {self.user.first_name}'
+            return f"Кинолог {self.user}"
         return 'Кинолог был удален'

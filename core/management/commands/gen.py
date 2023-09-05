@@ -1,6 +1,8 @@
 import csv
 import random
 
+from mixer.backend.django import mixer
+
 from pets.models import Pet
 from services.models import Veterinary, Synology, Groomer, Shelter
 from django.core.management import BaseCommand
@@ -12,7 +14,7 @@ class Command(BaseCommand):
     pet_names = ("Ванька", "Борька", "Монстр", "Мурка", "Сивка", "Мухтар",)
     breeds = ("жирная", "сиамская", "овчарка", "пятнистая", "мелкий",)
     ages = [1, 2, 3, 5, 6]
-    weights = [1, 2, 3, 4,]
+    weights = [1, 2, 3, 4, ]
     owners = [1, 2, 3]
     is_sterilized = [0, 1, 0, 1]
     is_vaccinated = [1, 0, 1, 0]
@@ -35,21 +37,18 @@ class Command(BaseCommand):
     shelter_data = {
         "pet_type": "cat",
     }
-    # data = [base_data.update(specialist_data) for specialist_data in
-    #         (synology_data, groomer_data, veterinary_data, shelter_data)]
+    pets = mixer.cycle(20).blend(Pet)
+    groomers = mixer.cycle(10).blend(Groomer, pet_type=mixer.SELECT(pets), grooming_type=(mixer.RANDOM, mixer.RANDOM))
+    veterinaries = mixer.cycle(10).blend(Veterinary, pet_type=mixer.SELECT(pets))
+    shelters = mixer.cycle(10).blend(Shelter, pet_type=mixer.SELECT(pets))
+    synology = mixer.cycle(10).blend(Synology, task=(mixer.RANDOM,), format=(mixer.RANDOM,))
+
+    _data = ((Groomer, groomers), (Veterinary, veterinaries), (Shelter, shelters), (Synology, synology),)
 
     def generate(self) -> None:
-        pet_list = [Pet(
-            type=random.choice(self.type_list),
-            breed=random.choice(self.breeds),
-            name=random.choice(self.pet_names),
-            age=random.choice(self.ages),
-            weight=random.choice(self.weights),
-            is_sterilized=random.choice(self.is_sterilized),
-            is_vaccinated=random.choice(self.is_vaccinated),
-            owner_id=random.choice(self.owners),
-        ) for _ in range(10)]
-        Pet.objects.bulk_create(pet_list, ignore_conflicts=True)
+
+        [model.objects.bulk_create(data, ignore_conflicts=True) for model, data
+         in self._data]
         print("done!")
 
     def handle(self, *args, **options) -> None:
