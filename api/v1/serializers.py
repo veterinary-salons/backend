@@ -1,6 +1,5 @@
-from rest_framework import serializers
-
 from pets.models import Pet
+from rest_framework import serializers
 from services.models import Groomer
 
 
@@ -11,7 +10,6 @@ class PetSerializer(serializers.ModelSerializer):
 
 
 class GroomerSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Groomer
         fields = (

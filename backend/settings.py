@@ -3,7 +3,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-bh0#76rg!k_%*z3dq@6_#930pfm$zip*c$_yo&uan8r^9!v15m'
+SECRET_KEY = (
+    'django-insecure-bh0#76rg!k_%*z3dq@6_#930pfm$zip*c$_yo&uan8r^9!v15m'
+)
 
 DEBUG = True
 
@@ -124,5 +126,5 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
         "drf_social_oauth2.authentication.SocialAuthentication",
-    ]
+    ],
 }
