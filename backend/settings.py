@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "pets",
     "services",
     "drf_yasg",
+    "core",
 ]
 
 MIDDLEWARE = [

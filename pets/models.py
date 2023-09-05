@@ -60,7 +60,7 @@ class Pet(models.Model):
             ),
         ),
     )
-    weight = models.CharField(max_length=1, choices=DEFAULT.WEIGHT_CHOICES)
+    weight = models.CharField(max_length=10, choices=DEFAULT.WEIGHT_CHOICES)
     is_sterilized = models.BooleanField(default=False)
     is_vaccinated = models.BooleanField(default=False)
     owner = models.ForeignKey(
