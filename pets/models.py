@@ -1,9 +1,8 @@
+from core.constants import DEFAULT, MESSAGES, Limits
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
-
-from core.constants import Limits, MESSAGES, DEFAULT
 
 User = get_user_model()
 
@@ -33,9 +32,11 @@ class Pet(models.Model):
             Владелец питомца.
 
     """
+
     type = models.CharField(
         verbose_name="вид питомца",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
+        choices=DEFAULT.PET_TYPE,
     )
     breed = models.CharField(
         verbose_name="порода",
@@ -59,7 +60,7 @@ class Pet(models.Model):
             ),
         ),
     )
-    weight = models.CharField(max_length=1, choices=DEFAULT.WEIGHT_CHOICES)
+    weight = models.CharField(max_length=10, choices=DEFAULT.WEIGHT_CHOICES)
     is_sterilized = models.BooleanField(default=False)
     is_vaccinated = models.BooleanField(default=False)
     owner = models.ForeignKey(
@@ -75,19 +76,13 @@ class Pet(models.Model):
         ordering = ("name",)
         constraints = (
             UniqueConstraint(
-                fields=(
-                    "name",
-                    "breed",
-                    "type",
-                    "age",
-                    'owner'
-                ),
+                fields=("name", "breed", "type", "age", 'owner'),
                 name="unique_for_pet",
             ),
         )
 
     def __str__(self) -> str:
-        return f"{self.type} {self.breed} {self.name} владельца {self.owner_id}"
-
-
-
+        return (
+            f"{self.type} {self.breed} {self.name} "
+            f"владельца {self.owner_id}"
+        )

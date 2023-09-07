@@ -1,9 +1,7 @@
 from rest_framework import viewsets
-
-from users.models import User, CustomerProfile, SupplierProfile
-from users.serializers import (
-    CustomerProfileSerializer, SupplierProfileSerializer
-)
+from users.models import CustomerProfile, SupplierProfile
+from users.serializers import (CustomerProfileSerializer,
+                               SupplierProfileSerializer)
 
 
 class CustomerProfileViewSet(viewsets.ModelViewSet):
