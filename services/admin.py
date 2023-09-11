@@ -12,7 +12,7 @@ class BaseAdmin(admin.ModelAdmin):
         'work_time_to',
         'about',
         'published',
-        "user",
+        "supplier",
     )
 
 
