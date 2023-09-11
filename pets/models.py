@@ -3,14 +3,13 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
-
-User = get_user_model()
+from users.models import CustomerProfile
 
 
 class Pet(models.Model):
     """Характеристика животного.
 
-    Связано с моделью User через Foreigkey.
+    Связано с моделью CustomerProfile через Foreigkey.
 
     Attributes:
         type (str):
@@ -28,7 +27,7 @@ class Pet(models.Model):
             Указывает, стерилизовано ли животное.
         is_vaccinated (bool):
             Указывает, привито ли животное.
-        owner (User):
+        owner (CustomerProfile):
             Владелец питомца.
 
     """
@@ -64,7 +63,7 @@ class Pet(models.Model):
     is_sterilized = models.BooleanField(default=False)
     is_vaccinated = models.BooleanField(default=False)
     owner = models.ForeignKey(
-        User,
+        CustomerProfile,
         verbose_name="владелец питомца",
         related_name="pets",
         on_delete=models.CASCADE,

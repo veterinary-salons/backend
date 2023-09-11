@@ -18,7 +18,7 @@ class Command(BaseCommand):
     owners = [1, 2, 3]
     is_sterilized = [0, 1, 0, 1]
     is_vaccinated = [1, 0, 1, 0]
-    base_data = {"user": 1, "price": 500, "work_time_from": "10",
+    base_data = {"supplier": 1, "price": 500, "work_time_from": "10",
                  "work_time_to": "12", 'about': "я хороший и добрый.",
                  "published": False, }
     synology_data = {
@@ -27,6 +27,7 @@ class Command(BaseCommand):
         "duration": 1,
     }
     groomer_data = {
+        "pet_type": "dog",
         "grooming_type": "h",
         "duration": 1,
     }
