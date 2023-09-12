@@ -6,13 +6,17 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 from pets.models import Pet
-
-User = get_user_model()
+from users.models import SupplierProfile
 
 
 class Specialist(models.Model):
     """Абстрактная базовая модель объявления."""
 
+    pet_type = models.CharField(
+        verbose_name="тип животного",
+        max_length=Limits.MAX_LEN_ANIMAL_TYPE,
+        choices=DEFAULT.PET_TYPE,
+    )
     price = models.PositiveSmallIntegerField(
         verbose_name="Цена за услугу",
         default=DEFAULT.SERVICER_PRICE,
@@ -52,15 +56,10 @@ class Specialist(models.Model):
 class Groomer(Specialist):
     """Модель объявления грумера."""
 
-    user = models.ForeignKey(
-        User,
+    supplier = models.ForeignKey(
+        SupplierProfile,
         on_delete=models.CASCADE,
-    )
-    pet_type = models.ForeignKey(
-        Pet,
-        verbose_name="тип животного",
-        related_name="groomers",
-        on_delete=models.CASCADE,
+        related_name="grooming"
     )
 
     # будет работать только на postgres
@@ -88,15 +87,10 @@ class Groomer(Specialist):
 class Veterinary(Specialist):
     """Модель объявления ветеринара."""
 
-    user = models.ForeignKey(
-        User,
+    supplier = models.ForeignKey(
+        SupplierProfile,
         on_delete=models.CASCADE,
-    )
-    pet_type = models.ForeignKey(
-        Pet,
-        verbose_name="тип животного",
-        related_name="veterinarys",
-        on_delete=models.CASCADE,
+        related_name="veterinary"
     )
 
     duration = models.PositiveIntegerField(
@@ -116,15 +110,10 @@ class Veterinary(Specialist):
 class Shelter(Specialist):
     """Модель объявления зооняни(передержка)."""
 
-    user = models.ForeignKey(
-        User,
+    supplier = models.ForeignKey(
+        SupplierProfile,
         on_delete=models.CASCADE,
-    )
-    pet_type = models.ForeignKey(
-        Pet,
-        verbose_name="тип животного",
-        related_name="shelters",
-        on_delete=models.CASCADE,
+        related_name="shelter"
     )
 
     class Meta:
@@ -140,10 +129,12 @@ class Shelter(Specialist):
 class Synology(Specialist):
     """Модель объявления кинолога."""
 
-    user = models.ForeignKey(
-        User,
+    supplier = models.ForeignKey(
+        SupplierProfile,
         on_delete=models.CASCADE,
+        related_name="cynology"
     )
+    pet_type = None
     task = ArrayField(
         models.CharField(
             max_length=50,

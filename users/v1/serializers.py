@@ -27,13 +27,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    email = serializers.EmailField(source="user.email")
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
 
     def create(self, validated_data):
         user_data = validated_data.pop("user")
         profile = self.Meta.model.objects.create(**validated_data)
         User.objects.create(**user_data, profile=profile)
         return profile
+
+    class Meta:
+        depth = 2
 
 
 class CustomerProfileSerializer(BaseProfileSerializer):
