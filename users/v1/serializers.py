@@ -27,9 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source="user.email")
-    first_name = serializers.CharField(source="user.first_name")
-    last_name = serializers.CharField(source="user.last_name")
+    user = UserSerializer()
 
     def create(self, validated_data):
         user_data = validated_data.pop("user")
