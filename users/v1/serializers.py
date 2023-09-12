@@ -38,9 +38,6 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         User.objects.create(**user_data, profile=profile)
         return profile
 
-    class Meta:
-        depth = 2
-
 
 class CustomerProfileSerializer(BaseProfileSerializer):
     class Meta:
