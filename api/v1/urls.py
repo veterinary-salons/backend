@@ -8,4 +8,8 @@ router = DefaultRouter()
 
 router.register("pets", PetViewSet, "pets")
 router.register("groomer", GroomerViewSet, "groomers")
-urlpatterns = (path("", include(router.urls)),)
+urlpatterns = (
+    path("", include(router.urls)),
+    path("profiles/", include("users.urls")),
+    path("auth/", include("authentication.urls")),
+)

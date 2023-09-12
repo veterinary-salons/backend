@@ -1,4 +1,9 @@
 from django.urls import path
-from drf_social_oauth2.views import TokenView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView, TokenRefreshView
+)
 
-urlpatterns = [path("token", TokenView.as_view())]
+urlpatterns = [
+    path("token", TokenObtainPairView.as_view()),
+    path("refresh-token", TokenRefreshView.as_view()),
+]

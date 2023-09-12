@@ -1,3 +1,4 @@
+from datetime import timedelta
 from os import getenv
 from pathlib import Path
 
@@ -27,9 +28,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "rest_framework",
-    "oauth2_provider",
+    #"oauth2_provider",
     # "social_django", раскомментируем, когда будем соцсети подключать
-    "drf_social_oauth2",
+    #"drf_social_oauth2",
     "users",
     "authentication",
     "api",
@@ -131,7 +132,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
-        "drf_social_oauth2.authentication.SocialAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(weeks=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=2),
 }
