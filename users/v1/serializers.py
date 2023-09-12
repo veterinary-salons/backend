@@ -35,7 +35,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_data = validated_data.pop("user")
         profile = self.Meta.model.objects.create(**validated_data)
-        User.objects.create(**user_data, profile=profile)
+        User.objects.create_user(**user_data, profile=profile)
         return profile
 
 
