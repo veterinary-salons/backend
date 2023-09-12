@@ -23,7 +23,10 @@ class Base64ImageField(serializers.ImageField):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "first_name", "last_name")
+        fields = ("id", "email", "password", "first_name", "last_name")
+        extra_kwargs = {
+            "password": {"write_only": True}
+        }
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
