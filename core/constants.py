@@ -12,7 +12,7 @@ class Limits:
     MIN_DURATION = 1
     MAX_DURATION = 600
     MAX_LENGTH_ABOUT = 300
-
+    PLACE_MAX_LENGTH = 300
 
 class MESSAGES:
     def __setattr__(self, name: str, value: tuple) -> None:
@@ -68,3 +68,4 @@ class DEFAULT:
         ("hom", "Хомяк"),
         ("ano", "Другое"),
     )
+
