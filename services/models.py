@@ -202,7 +202,7 @@ class BookingService(models.Model):
 
     service = models.ForeignKey(
         Service,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=False,
         blank=False,
     )
@@ -220,7 +220,7 @@ class BookingService(models.Model):
         null=False,
         blank=False,
     )
-    actual = models.BooleanField(verbose_name="акивно или нет")
+    actual = models.BooleanField(verbose_name="активно или нет")
 
     class Meta:
         verbose_name = "бронь услуги"

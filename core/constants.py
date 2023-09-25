@@ -4,7 +4,7 @@ class Limits:
 
     MAX_LEN_ANIMAL_TYPE = 30
     MAX_LEN_ANIMAL_BREED = 30
-    MAX_LEN_ANIMAL_NAME = 50
+    MAX_LEN_ANIMAL_NAME = 255
 
     # Возраст пока в годах, потом можно подумать...
     MIN_AGE_PET = 0
@@ -33,10 +33,10 @@ class DEFAULT:
         ("4", "более 20кг."),
     )
     GROOMING_TYPE = (
-        ("h", "Hygienic"),
-        ("e", "Exhibition"),
-        ("d", "Decorative"),
-        ("y", "You can choose"),
+        ("Hygienic", "Hygienic"),
+        ("Exhibition", "Exhibition"),
+        ("Decorative", "Decorative"),
+        ("ych", "You can choose"),
     )
     SYNOLOGY_TASKS = (
         ("c", "Коррекция проблемного поведения"),
