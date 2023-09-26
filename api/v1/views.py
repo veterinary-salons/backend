@@ -1,14 +1,20 @@
-from api.v1.serializers import GroomerSerializer, PetSerializer
+from api.v1.serializers import (
+    PetSerializer,
+    BookingServiceSerializer,
+    AnnouncementSerializer,
+)
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from pets.models import Pet
 from rest_framework.decorators import action
 from rest_framework.permissions import (
-    IsAuthenticated, IsAuthenticatedOrReadOnly
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+    AllowAny,
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from services.models import Groomer
+from services.models import BookingService, Service
 from users.models import SupplierProfile
 
 User = get_user_model()
@@ -39,7 +45,7 @@ class PetViewSet(ModelViewSet):
 
 
 class BaseServiceViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [AllowAny]
 
     @action(
         methods=["GET"], 
@@ -52,13 +58,17 @@ class BaseServiceViewSet(ModelViewSet):
         )
 
 
-class GroomerViewSet(BaseServiceViewSet):
-    queryset = Groomer.objects.all()
-    serializer_class = GroomerSerializer
+class AnnouncementViewSet(BaseServiceViewSet):
+    queryset = Service.objects.all()
+    serializer_class = AnnouncementSerializer
 
     def perform_create(self, serializer):
         serializer.is_valid(raise_exception=True)
         supplier_profile = SupplierProfile.objects.get(
-            related_user=request.user
+            related_user=self.request.user
         )
         serializer.save(supplier=supplier_profile)
+
+class BookingServiceViewSet(BaseServiceViewSet):
+    queryset = BookingService.objects.all()
+    serializer_class = BookingServiceSerializer

@@ -1,6 +1,6 @@
 from pets.models import Pet
 from rest_framework import serializers
-from services.models import Groomer, BookingService
+from services.models import BookingService, Service
 from users.v1.serializers import SupplierProfileSerializer
 
 
@@ -10,11 +10,11 @@ class PetSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class GroomerSerializer(serializers.ModelSerializer):
+class AnnouncementSerializer(serializers.ModelSerializer):
     supplier = SupplierProfileSerializer(read_only=True)
 
     class Meta:
-        model = Groomer
+        model = Service
         fields = (
             "supplier",
             "price",

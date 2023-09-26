@@ -4,9 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from users.models import CustomerProfile, SupplierProfile
 from users.v1.serializers import (CustomerProfileSerializer,
                                SupplierProfileSerializer)
-from api.v1.serializers import PetSerializer, GroomerSerializer
+from api.v1.serializers import PetSerializer
 from pets.models import Pet
-from services.models import Groomer
 
 
 class CustomerProfileViewSet(viewsets.ModelViewSet):

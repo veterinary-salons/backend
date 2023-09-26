@@ -13,13 +13,15 @@ class Limits:
     MAX_DURATION = 600
     MAX_LENGTH_ABOUT = 300
     PLACE_MAX_LENGTH = 300
+    MIN_PRICE = 1
+    MAX_PRICE = 100000
 
 class MESSAGES:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
 
     CORRECT_AGE_MESSAGE = "Введите корректный возраст!"
-
+    CORRECT_PRICE_MESSAGE = "Без фанатизма!"
 
 class DEFAULT:
     def __setattr__(self, name: str, value: tuple) -> None:
@@ -68,4 +70,9 @@ class DEFAULT:
         ("hom", "Хомяк"),
         ("ano", "Другое"),
     )
-
+    SERVICES = (
+        ("Synology", "Кинолог" ),
+        ("Veterenary", "Ветеринар" ),
+        ("Shelter", "Зооняня" ),
+        ("groomer", "Грумер"),
+    )
