@@ -22,6 +22,7 @@ class MESSAGES:
 
     CORRECT_AGE_MESSAGE = "Введите корректный возраст!"
     CORRECT_PRICE_MESSAGE = "Без фанатизма!"
+    CORRECT_DURATION_MESSAGE = "Не корректная продолжительность."
 
 class DEFAULT:
     def __setattr__(self, name: str, value: tuple) -> None:

@@ -1,7 +1,7 @@
 from api.v1.serializers import (
     PetSerializer,
     BookingServiceSerializer,
-    AnnouncementSerializer,
+    ServiceSerializer,
 )
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
@@ -48,7 +48,7 @@ class BaseServiceViewSet(ModelViewSet):
     permission_classes = [AllowAny]
 
     @action(
-        methods=["GET"], 
+        methods=["GET",],
         detail=False, 
         permission_classes=[IsAuthenticated],
     )
@@ -57,10 +57,9 @@ class BaseServiceViewSet(ModelViewSet):
             self.queryset.filter(user=request.user), many=True
         )
 
-
-class AnnouncementViewSet(BaseServiceViewSet):
+class ServiceViewSet(BaseServiceViewSet):
     queryset = Service.objects.all()
-    serializer_class = AnnouncementSerializer
+    serializer_class = ServiceSerializer
 
     def perform_create(self, serializer):
         serializer.is_valid(raise_exception=True)

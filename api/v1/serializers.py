@@ -10,7 +10,7 @@ class PetSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AnnouncementSerializer(serializers.ModelSerializer):
+class ServiceSerializer(serializers.ModelSerializer):
     supplier = SupplierProfileSerializer(read_only=True)
 
     class Meta:
@@ -33,10 +33,11 @@ class BookingServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookingService
         fields = (
-            "service",
+            "favour",
             "date",
             "place",
             "client",
-            "specialist",
+            "supplier",
             "actual",
+            "confirmed",
         )
