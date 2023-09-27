@@ -1,6 +1,6 @@
 import random
 
-from core.constants import DEFAULT
+from core.constants import Default
 
 from mixer.backend.django import mixer
 
@@ -14,7 +14,7 @@ class Command(BaseCommand):
     def generate(self) -> None:
         pet_names = (petname.generate() for _ in range(10))
         pets = mixer.cycle(10).blend(Pet, name=(pet for pet in pet_names))
-        grooming_type = (gtype for gtype in DEFAULT.GROOMING_TYPE)
+        grooming_type = (gtype for gtype in Default.GROOMING_TYPE)
         mixer.cycle(4).blend(
             Groomer,
             pet_type=(pet.type for pet in pets),
@@ -26,8 +26,8 @@ class Command(BaseCommand):
         )
         mixer.cycle(5).blend(
             Synology,
-            task=(lambda: [random.choice(DEFAULT.SYNOLOGY_TASKS)]),
-            format=(lambda: [random.choice(DEFAULT.SYNOLOGY_FORMAT)]),
+            task=(lambda: [random.choice(Default.SYNOLOGY_TASKS)]),
+            format=(lambda: [random.choice(Default.SYNOLOGY_FORMAT)]),
         )
         print("done!")
 

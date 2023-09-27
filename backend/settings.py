@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     "services",
     "core",
     "drf_yasg",
-
 ]
 
 MIDDLEWARE = [

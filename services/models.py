@@ -1,11 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from core.constants import DEFAULT, MESSAGES, Limits
+from core.constants import Default, Messages, Limits
 from core.utils import grooming_type_default, synology_type_default
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator
 from django.db import models
 
 from core.validators import validate_letters, validate_alphanumeric
@@ -19,7 +19,7 @@ class BaseService(models.Model):
     name = models.CharField(
         verbose_name="название услуги",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
-        choices=DEFAULT.SERVICES,
+        choices=Default.SERVICES,
         null=False,
         blank=False,
         validators=(validate_letters,),
@@ -37,16 +37,16 @@ class Service(BaseService):
     pet_type = models.CharField(
         verbose_name="тип животного",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
-        choices=DEFAULT.PET_TYPE,
+        choices=Default.PET_TYPE,
         default="dog",
     )
     price = models.PositiveSmallIntegerField(
         verbose_name="Цена за услугу",
-        default=DEFAULT.SERVICER_PRICE,
+        default=Default.SERVICER_PRICE,
         validators=(
             MaxValueValidator(
                 Limits.MAX_PRICE,
-                MESSAGES.CORRECT_AGE_MESSAGE,
+                Messages.CORRECT_AGE_MESSAGE,
             ),
         ),
     )
@@ -55,7 +55,7 @@ class Service(BaseService):
         validators=(
             MaxValueValidator(
                 Limits.MAX_DURATION,
-                MESSAGES.CORRECT_DURATION_MESSAGE,
+                Messages.CORRECT_DURATION_MESSAGE,
             ),
         ),
     )
@@ -70,7 +70,7 @@ class Service(BaseService):
     format = ArrayField(
         models.CharField(
             max_length=50,
-            choices=DEFAULT.SYNOLOGY_FORMAT,
+            choices=Default.SYNOLOGY_FORMAT,
             # default=DEFAULT.SYNOLOGY_FORMAT[0],
             validators=(validate_letters,),
         ),
@@ -80,7 +80,7 @@ class Service(BaseService):
     task = ArrayField(
         models.CharField(
             max_length=50,
-            choices=DEFAULT.SYNOLOGY_TASKS,
+            choices=Default.SYNOLOGY_TASKS,
         ),
         default=synology_type_default,
         null=True,
@@ -89,7 +89,7 @@ class Service(BaseService):
     grooming_type = ArrayField(
         models.CharField(
             max_length=20,
-            choices=DEFAULT.GROOMING_TYPE,
+            choices=Default.GROOMING_TYPE,
             validators=(validate_letters,),
         ),
         default=grooming_type_default,
@@ -114,9 +114,9 @@ class Service(BaseService):
     def clean(self):
         super().clean()
 
-        if self.name == DEFAULT.SERVICES[0] and self.pet_type != "dog":
+        if self.name == Default.SERVICES[0] and self.pet_type != "dog":
             raise ValidationError("Кинолог работает только с собаками.")
-        if self.name != DEFAULT.SERVICES[0] and any(
+        if self.name != Default.SERVICES[0] and any(
             (
                 self.task,
                 self.format,
@@ -125,11 +125,11 @@ class Service(BaseService):
             raise ValidationError(
                 "Поля `task` и `format` только для Кинолога."
             )
-        if self.name != DEFAULT.SERVICES[3] and self.grooming_type:
+        if self.name != Default.SERVICES[3] and self.grooming_type:
             raise ValidationError("Поле `grooming_type` только для Грумера.")
-        if self.name == DEFAULT.SERVICES[3] and not self.grooming_type:
+        if self.name == Default.SERVICES[3] and not self.grooming_type:
             raise ValidationError("Поле `grooming_type` необходимо заполнить.")
-        if self.name == DEFAULT.SERVICES[0] and not any(
+        if self.name == Default.SERVICES[0] and not any(
             (
                 self.task,
                 self.format,
@@ -143,9 +143,9 @@ class BookingService(BaseService):
 
     favour = models.CharField(
         max_length=20,
-        choices=DEFAULT.SERVICES,
+        choices=Default.SERVICES,
     )
-    date = models.DateTimeField(default=timezone.now)
+    date = models.DateTimeField(auto_now_add=True)
     place = models.CharField(max_length=Limits.PLACE_MAX_LENGTH)
     client = models.ForeignKey(
         CustomerProfile,
