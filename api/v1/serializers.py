@@ -41,3 +41,5 @@ class BookingServiceSerializer(serializers.ModelSerializer):
             "actual",
             "confirmed",
         )
+
+
