@@ -1,15 +1,15 @@
-from core.constants import DEFAULT
+from core.constants import Default
 
 
 def grooming_type_default():
     """Вспомогательная функция для определения значения по умолчанию
     в поле ArrayField.
     """
-    return DEFAULT.GROOMING_TYPE[0]
+    return Default.GROOMING_TYPE[0]
 
 
 def synology_type_default():
     """Вспомогательная функция для определения значения по умолчанию
     в поле ArrayField.
     """
-    return DEFAULT.SYNOLOGY_TASKS[0]
+    return Default.SYNOLOGY_TASKS[0]

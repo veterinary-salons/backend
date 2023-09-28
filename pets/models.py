@@ -1,4 +1,4 @@
-from core.constants import DEFAULT, MESSAGES, Limits
+from core.constants import Default, Messages, Limits
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -6,8 +6,20 @@ from django.db.models import UniqueConstraint
 from users.models import CustomerProfile
 
 
-class Pet(models.Model):
-    """Характеристика животного.
+class Animal(models.Model):
+    """Характеристика животного."""
+
+    type = models.CharField(
+        verbose_name="вид животного",
+        max_length=Limits.MAX_LEN_ANIMAL_TYPE,
+        choices=Default.PET_TYPE,
+    )
+    class Meta:
+        verbose_name = "характеристика животного"
+        verbose_name_plural = "характеристики животных"
+
+class Pet(Animal):
+    """Характеристика питомца.
 
     Связано с моделью CustomerProfile через Foreigkey.
 
@@ -32,11 +44,6 @@ class Pet(models.Model):
 
     """
 
-    type = models.CharField(
-        verbose_name="вид питомца",
-        max_length=Limits.MAX_LEN_ANIMAL_TYPE,
-        choices=DEFAULT.PET_TYPE,
-    )
     breed = models.CharField(
         verbose_name="порода",
         max_length=Limits.MAX_LEN_ANIMAL_BREED,
@@ -47,19 +54,19 @@ class Pet(models.Model):
     )
     age = models.PositiveSmallIntegerField(
         verbose_name="Возраст питомца",
-        default=DEFAULT.PET_AGE,
+        default=Default.PET_AGE,
         validators=(
             MinValueValidator(
                 Limits.MIN_AGE_PET,
-                MESSAGES.CORRECT_AGE_MESSAGE,
+                Messages.CORRECT_AGE_MESSAGE,
             ),
             MaxValueValidator(
                 Limits.MAX_AGE_PET,
-                MESSAGES.CORRECT_AGE_MESSAGE,
+                Messages.CORRECT_AGE_MESSAGE,
             ),
         ),
     )
-    weight = models.CharField(max_length=10, choices=DEFAULT.WEIGHT_CHOICES)
+    weight = models.CharField(max_length=10, choices=Default.WEIGHT_CHOICES)
     is_sterilized = models.BooleanField(default=False)
     is_vaccinated = models.BooleanField(default=False)
     owner = models.ForeignKey(
@@ -75,7 +82,7 @@ class Pet(models.Model):
         ordering = ("name",)
         constraints = (
             UniqueConstraint(
-                fields=("name", "breed", "type", "age", 'owner'),
+                fields=("name", "breed", "type", "age", "owner"),
                 name="unique_for_pet",
             ),
         )

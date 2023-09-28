@@ -1,212 +1,151 @@
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
-from core.constants import DEFAULT, MESSAGES, Limits
+from core.constants import Default, Messages, Limits
 from core.utils import grooming_type_default, synology_type_default
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator
 from django.db import models
-from django.utils import timezone
+
+from core.validators import validate_letters, validate_alphanumeric
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
 
 
-class Specialist(models.Model):
-    """Абстрактная базовая модель объявления."""
-
-    pet_type = models.CharField(
-        verbose_name="тип животного",
+class BaseService(models.Model):
+    name = models.CharField(
+        verbose_name="название услуги",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
-        choices=DEFAULT.PET_TYPE,
+        choices=Default.SERVICES,
+        null=False,
+        blank=False,
+        validators=(validate_letters,),
     )
-    price = models.PositiveSmallIntegerField(
-        verbose_name="Цена за услугу",
-        default=DEFAULT.SERVICER_PRICE,
-        validators=(
-            MinValueValidator(
-                Limits.MIN_DURATION,
-                MESSAGES.CORRECT_AGE_MESSAGE,
-            ),
-            MaxValueValidator(
-                Limits.MAX_DURATION,
-                MESSAGES.CORRECT_AGE_MESSAGE,
-            ),
-        ),
-    )
-    work_time_from = models.DateTimeField(
-        verbose_name="От",
-        default=timezone.now,
-    )
-    work_time_to = models.DateTimeField(
-        verbose_name="До",
-        default=timezone.now,
-    )
-    about = models.TextField(
-        max_length=Limits.MAX_LENGTH_ABOUT,
-        verbose_name="О себе",
-        blank=True,
-        null=True,
-    )
-    published = models.BooleanField(
-        default=True,
+    supplier = models.ForeignKey(
+        SupplierProfile,
+        on_delete=models.CASCADE,
     )
 
     class Meta:
         abstract = True
 
 
-class Groomer(Specialist):
-    """Модель объявления грумера."""
-
-    supplier = models.ForeignKey(
-        SupplierProfile, on_delete=models.CASCADE, related_name="grooming"
+class Service(BaseService):
+    pet_type = models.CharField(
+        verbose_name="тип животного",
+        max_length=Limits.MAX_LEN_ANIMAL_TYPE,
+        choices=Default.PET_TYPE,
+        default="dog",
     )
-
-    # будет работать только на postgres
-    grooming_type = ArrayField(
-        models.CharField(
-            max_length=20,
-            choices=DEFAULT.GROOMING_TYPE,
+    price = models.PositiveSmallIntegerField(
+        verbose_name="Цена за услугу",
+        default=Default.SERVICER_PRICE,
+        validators=(
+            MaxValueValidator(
+                Limits.MAX_PRICE,
+                Messages.CORRECT_AGE_MESSAGE,
+            ),
         ),
-        default=grooming_type_default,
     )
     duration = models.PositiveIntegerField(
         verbose_name="Продолжительность услуги в минутах",
-    )
-
-    class Meta:
-        verbose_name = "грумер"
-        verbose_name_plural = "грумеры"
-
-    def __str__(self) -> str:
-        if self.user:
-            return f"Грумер {self.user} {self.user}"
-        return "Грумер был удален"
-
-
-class Veterinary(Specialist):
-    """Модель объявления ветеринара."""
-
-    supplier = models.ForeignKey(
-        SupplierProfile, on_delete=models.CASCADE, related_name="veterinary"
-    )
-
-    duration = models.PositiveIntegerField(
-        verbose_name="Продолжительность услуги в минутах",
-    )
-
-    class Meta:
-        verbose_name = "ветеринар"
-        verbose_name_plural = "ветеринары"
-
-    def __str__(self) -> str:
-        if self.user:
-            return f"Ветеринар {self.user.second_name} {self.user.first_name}"
-        return "Ветеринар был удален"
-
-
-class Shelter(Specialist):
-    """Модель объявления зооняни(передержка)."""
-
-    supplier = models.ForeignKey(
-        SupplierProfile, on_delete=models.CASCADE, related_name="shelter"
-    )
-
-    class Meta:
-        verbose_name = "зооняня"
-        verbose_name_plural = "зооняни"
-
-    def __str__(self) -> str:
-        if self.user:
-            return f"Зооняня {self.user.second_name} {self.user.first_name}"
-        return "Зооняня была удалена"
-
-
-class Synology(Specialist):
-    """Модель объявления кинолога."""
-
-    supplier = models.ForeignKey(
-        SupplierProfile, on_delete=models.CASCADE, related_name="cynology"
-    )
-    pet_type = None
-    task = ArrayField(
-        models.CharField(
-            max_length=50,
-            choices=DEFAULT.SYNOLOGY_TASKS,
+        validators=(
+            MaxValueValidator(
+                Limits.MAX_DURATION,
+                Messages.CORRECT_DURATION_MESSAGE,
+            ),
         ),
-        default=synology_type_default,
+    )
+    work_time_from = models.TimeField(
+        verbose_name="От",
+        default="00:00:00",
+    )
+    work_time_to = models.TimeField(
+        verbose_name="До",
+        default="23:59:59",
     )
     format = ArrayField(
         models.CharField(
             max_length=50,
-            choices=DEFAULT.SYNOLOGY_FORMAT,
-            default=DEFAULT.SYNOLOGY_FORMAT[0],
+            choices=Default.SYNOLOGY_FORMAT,
+            # default=DEFAULT.SYNOLOGY_FORMAT[0],
+            validators=(validate_letters,),
         ),
+        null=True,
+        blank=True,
     )
-    duration = models.PositiveIntegerField(
-        verbose_name="Продолжительность услуги в минутах",
+    task = ArrayField(
+        models.CharField(
+            max_length=50,
+            choices=Default.SYNOLOGY_TASKS,
+        ),
+        default=synology_type_default,
+        null=True,
+        blank=True,
+    )
+    grooming_type = ArrayField(
+        models.CharField(
+            max_length=20,
+            choices=Default.GROOMING_TYPE,
+            validators=(validate_letters,),
+        ),
+        default=grooming_type_default,
+        null=True,
+        blank=True,
+    )
+    about = models.TextField(
+        max_length=Limits.MAX_LENGTH_ABOUT,
+        verbose_name="О себе",
+        blank=True,
+        null=True,
+        validators=(validate_alphanumeric,),
+    )
+    published = models.BooleanField(
+        default=False,
     )
 
     class Meta:
-        verbose_name = "кинолог"
-        verbose_name_plural = "кинологи"
-
-    def __str__(self) -> str:
-        if self.user:
-            return f"Кинолог {self.user}"
-        return "Кинолог был удален"
-
-
-class Service(models.Model):
-    """Модель объявления."""
-
-    groomer = models.ForeignKey(
-        Groomer, on_delete=models.CASCADE, null=True, blank=True
-    )
-    synology = models.ForeignKey(
-        Synology, on_delete=models.CASCADE, null=True, blank=True
-    )
-    shelter = models.ForeignKey(
-        Shelter, on_delete=models.CASCADE, null=True, blank=True
-    )
-    veterinary = models.ForeignKey(
-        Veterinary, on_delete=models.CASCADE, null=True, blank=True
-    )
-
-    class Meta:
-        verbose_name = "объявление об услуге"
-        verbose_name_plural = "объявления об услугах"
+        verbose_name = "услуга"
+        verbose_name_plural = "услуги"
 
     def clean(self):
         super().clean()
 
-        selected_services = sum(
-            [
-                self.groomer_id is not None,
-                self.synology_id is not None,
-                self.shelter_id is not None,
-                self.veterinary_id is not None,
-            ]
-        )
-
-        if selected_services != 1:
-            raise ValidationError(
-                "Одна и только одна услуга должна быть выбрана"
+        if self.name == Default.SERVICES[0] and self.pet_type != "dog":
+            raise ValidationError("Кинолог работает только с собаками.")
+        if self.name != Default.SERVICES[0] and any(
+            (
+                self.task,
+                self.format,
             )
-
-
-class BookingService(models.Model):
+        ):
+            raise ValidationError(
+                "Поля `task` и `format` только для Кинолога."
+            )
+        if self.name != Default.SERVICES[3] and self.grooming_type:
+            raise ValidationError("Поле `grooming_type` только для Грумера.")
+        if self.name == Default.SERVICES[3] and not self.grooming_type:
+            raise ValidationError("Поле `grooming_type` необходимо заполнить.")
+        if self.name == Default.SERVICES[0] and not any(
+            (
+                self.task,
+                self.format,
+            )
+        ):
+            raise ValidationError(
+                "Поле `task` и `format` необходимо заполнить."
+            )
+class BookingService(BaseService):
     """Модель бронирования услуги."""
 
-    service = models.ForeignKey(
-        Service,
-        on_delete=models.SET_NULL,
-        null=False,
-        blank=False,
+    favour = models.CharField(
+        max_length=20,
+        choices=Default.SERVICES,
     )
-    date = models.DateField()
+    date = models.DateTimeField(auto_now_add=True)
     place = models.CharField(max_length=Limits.PLACE_MAX_LENGTH)
     client = models.ForeignKey(
         CustomerProfile,
@@ -214,13 +153,14 @@ class BookingService(models.Model):
         null=False,
         blank=False,
     )
-    specialist = models.ForeignKey(
-        SupplierProfile,
-        models.CASCADE,
-        null=False,
-        blank=False,
+    confirmed = models.BooleanField(
+        verbose_name="подтверждено или нет",
+        default=False,
     )
-    actual = models.BooleanField(verbose_name="акивно или нет")
+    actual = models.BooleanField(
+        verbose_name="активно или нет",
+        default=False,
+    )
 
     class Meta:
         verbose_name = "бронь услуги"

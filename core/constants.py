@@ -4,8 +4,10 @@ class Limits:
 
     MAX_LEN_ANIMAL_TYPE = 30
     MAX_LEN_ANIMAL_BREED = 30
-    MAX_LEN_ANIMAL_NAME = 50
-
+    MAX_LEN_ANIMAL_NAME = 30
+    MAX_LEN_CATEGORY_NAME = 30
+    MAX_LEN_GOODS_NAME = 200
+    MAX_LEN_BRAND_NAME = 50
     # Возраст пока в годах, потом можно подумать...
     MIN_AGE_PET = 0
     MAX_AGE_PET = 50
@@ -13,15 +15,18 @@ class Limits:
     MAX_DURATION = 600
     MAX_LENGTH_ABOUT = 300
     PLACE_MAX_LENGTH = 300
+    MIN_PRICE = 1
+    MAX_PRICE = 100000
 
-class MESSAGES:
+class Messages:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
 
     CORRECT_AGE_MESSAGE = "Введите корректный возраст!"
+    CORRECT_PRICE_MESSAGE = "Введите корректный цену."
+    CORRECT_DURATION_MESSAGE = "Не корректная продолжительность."
 
-
-class DEFAULT:
+class Default:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
 
@@ -33,25 +38,25 @@ class DEFAULT:
         ("4", "более 20кг."),
     )
     GROOMING_TYPE = (
-        ("h", "Hygienic"),
-        ("e", "Exhibition"),
-        ("d", "Decorative"),
-        ("y", "You can choose"),
+        ("Hygienic", "Hygienic"),
+        ("Exhibition", "Exhibition"),
+        ("Decorative", "Decorative"),
+        ("ych", "You can choose"),
     )
     SYNOLOGY_TASKS = (
-        ("c", "Коррекция проблемного поведения"),
-        ("l", "Воспитательная дрессировка щенка"),
-        ("t", "Обучение командам"),
+        ("correction", "Коррекция проблемного поведения"),
+        ("etraining", "Воспитательная дрессировка щенка"),
+        ("education", "Обучение командам"),
         (
-            "d",
+            "training",
             "Дрессировка служебных/ охотничьих собак, подготовка "
             "к экзамену ОКД",
         ),
-        ("s", "Спортивная дрессировка"),
-        ("a", "Адаптация собаки из приюта"),
-        ("b", "Подготовка к участию на выставке"),
-        ("k", "Консультация"),
-        ("n", "Другое"),
+        ("sport", "Спортивная дрессировка"),
+        ("adapt", "Адаптация собаки из приюта"),
+        ("prep", "Подготовка к участию на выставке"),
+        ("consult", "Консультация"),
+        ("another", "Другое"),
     )
     SYNOLOGY_FORMAT = (
         ("i", "Индивидуальные занятия"),
@@ -68,4 +73,26 @@ class DEFAULT:
         ("hom", "Хомяк"),
         ("ano", "Другое"),
     )
-
+    SERVICES = (
+        ("Synology", "Кинолог" ),
+        ("Veterenary", "Ветеринар" ),
+        ("Shelter", "Зооняня" ),
+        ("groomer", "Грумер"),
+    )
+    GOODS_CATEGORIES = (
+        ("food", "Корм и лакомства"),
+        ("toys", "Игрушки и амуниция"),
+        ("toilet", "Для туалета"),
+        ("hygiene", "Гигиена и уход"),
+        ("bowls", "Миски, лежанки, домики"),
+        ("vetaptheca", "Ветаптека"),
+    )
+    AGE_CHOICES = (
+        ('any', 'For any age'),
+        ('0-11', '0-1'),
+        ('1-3', '1-3'),
+        ('4-10', '4-10'),
+        ('11-20', '11-20'),
+        ('21-30', '21-30'),
+    )
+    GOODS_IMAGE_SIZE = 500, 300
