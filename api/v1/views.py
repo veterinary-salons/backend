@@ -8,7 +8,7 @@ from api.v1.serializers import (
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 
-from goods.models import Goods
+
 from pets.models import Pet
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -76,23 +76,3 @@ class BookingServiceViewSet(BaseServiceViewSet):
     queryset = BookingService.objects.all()
     serializer_class = BookingServiceSerializer
 
-
-class GoodsViewSet(ModelViewSet):
-    """Обработка товара.
-
-    Вывод, создание, редактирование, добавление/удаление в избранное и список
-    покупок.
-    Для авторизованных пользователей — возможность добавить рецепт в избранное
-    и в список покупок.
-
-    """
-    queryset = Goods.objects.all()
-    def get_queryset(self) -> QuerySet[Goods]:
-        """Получает `queryset` в соответствии с параметрами запроса.
-
-        Returns:
-            `QuerySet`: Список запрошенных объектов.
-
-        """
-
-        is_in_cart = self.request.query_params.get("is_in_shopping_cart")

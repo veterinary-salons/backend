@@ -110,4 +110,6 @@ class CustomerProfile(BaseProfile):
 
 
 class SupplierProfile(BaseProfile):
+    serve_at_supplier = models.BooleanField()
+    serve_at_customer = models.BooleanField()
     photo = models.ImageField(blank=True, null=True)

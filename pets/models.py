@@ -15,6 +15,7 @@ class Animal(models.Model):
         choices=Default.PET_TYPE,
     )
     class Meta:
+        abstract = True
         verbose_name = "характеристика животного"
         verbose_name_plural = "характеристики животных"
 

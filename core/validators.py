@@ -16,3 +16,10 @@ def validate_alphanumeric(value):
             "Поле должно содержать только русские и английские буквы, цифры, "
             "знаки препинания и скобки."
         )
+
+def validate_service_name(value):
+    if not re.match(r"^[а-яА-Я -.,]*$", value):
+        raise ValidationError(
+            "Поле должно содержать только русские буквы, пробел, дефис, "
+            "точки и запятые."
+        )
