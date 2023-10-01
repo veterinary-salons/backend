@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from django.utils import timezone
+from django.db.models import UniqueConstraint
 
 from core.constants import Default, Messages, Limits
 from core.utils import grooming_type_default, synology_type_default
@@ -8,7 +8,8 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator
 from django.db import models
 
-from core.validators import validate_letters, validate_alphanumeric
+from core.validators import validate_letters, validate_alphanumeric, \
+    validate_services
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
 
@@ -17,12 +18,11 @@ User = get_user_model()
 
 class BaseService(models.Model):
     name = models.CharField(
-        verbose_name="название услуги",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
         choices=Default.SERVICES,
-        null=False,
-        blank=False,
         validators=(validate_letters,),
+        blank=False,
+        null=False,
     )
     supplier = models.ForeignKey(
         SupplierProfile,
@@ -38,7 +38,6 @@ class Service(BaseService):
         verbose_name="тип животного",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
         choices=Default.PET_TYPE,
-        default="dog",
     )
     price = models.PositiveSmallIntegerField(
         verbose_name="Цена за услугу",
@@ -67,7 +66,7 @@ class Service(BaseService):
         verbose_name="До",
         default="23:59:59",
     )
-    format = ArrayField(
+    formats = ArrayField(
         models.CharField(
             max_length=50,
             choices=Default.SYNOLOGY_FORMAT,
@@ -80,9 +79,7 @@ class Service(BaseService):
     task = ArrayField(
         models.CharField(
             max_length=50,
-            choices=Default.SYNOLOGY_TASKS,
         ),
-        default=synology_type_default,
         null=True,
         blank=True,
     )
@@ -92,7 +89,6 @@ class Service(BaseService):
             choices=Default.GROOMING_TYPE,
             validators=(validate_letters,),
         ),
-        default=grooming_type_default,
         null=True,
         blank=True,
     )
@@ -110,34 +106,19 @@ class Service(BaseService):
     class Meta:
         verbose_name = "услуга"
         verbose_name_plural = "услуги"
-
+        constraints = (
+            UniqueConstraint(
+                fields=("name", "supplier",),
+                name="unique_for_services",
+            ),
+        )
     def clean(self):
         super().clean()
+        validate_services(self.name, self.pet_type, self.task, self.formats, self.grooming_type)
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(Service, self).save(*args, **kwargs)
 
-        if self.name == Default.SERVICES[0] and self.pet_type != "dog":
-            raise ValidationError("Кинолог работает только с собаками.")
-        if self.name != Default.SERVICES[0] and any(
-            (
-                self.task,
-                self.format,
-            )
-        ):
-            raise ValidationError(
-                "Поля `task` и `format` только для Кинолога."
-            )
-        if self.name != Default.SERVICES[3] and self.grooming_type:
-            raise ValidationError("Поле `grooming_type` только для Грумера.")
-        if self.name == Default.SERVICES[3] and not self.grooming_type:
-            raise ValidationError("Поле `grooming_type` необходимо заполнить.")
-        if self.name == Default.SERVICES[0] and not any(
-            (
-                self.task,
-                self.format,
-            )
-        ):
-            raise ValidationError(
-                "Поле `task` и `format` необходимо заполнить."
-            )
 class BookingService(BaseService):
     """Модель бронирования услуги."""
 
