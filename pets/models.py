@@ -1,13 +1,15 @@
 from core.constants import Default, Messages, Limits
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 from users.models import CustomerProfile
 
+class AnimalAbstract(models.Model):
+    """Абстрактная модель животного.
 
-class Animal(models.Model):
-    """Характеристика животного."""
+    Необходимо, чтобы использовать поле `type` в UniqueConstraint.
+
+    """
 
     type = models.CharField(
         verbose_name="вид животного",
@@ -16,13 +18,18 @@ class Animal(models.Model):
     )
     class Meta:
         abstract = True
+
+class Animal(AnimalAbstract):
+    """Характеристика животного."""
+
+    class Meta:
         verbose_name = "характеристика животного"
         verbose_name_plural = "характеристики животных"
 
-class Pet(Animal):
+class Pet(AnimalAbstract):
     """Характеристика питомца.
 
-    Связано с моделью CustomerProfile через Foreigkey.
+    Связано с моделью `CustomerProfile` через `Foreigkey`.
 
     Attributes:
         type (str):
