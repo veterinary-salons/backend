@@ -13,16 +13,14 @@ def validate_letters(value):
 
 
 def validate_alphanumeric(value):
-    if not re.match(r"^[a-zA-Zа-яА-Я0-9\s.-,?!()]*$", value):
+    if not re.match(r"^[a-zA-Zа-яА-Я0-9\s.,?!()-]*$", value):
         raise ValidationError(
             "Поле должно содержать только русские и английские буквы, цифры, "
             "знаки препинания и скобки."
         )
 
 def validate_services(name, pet_type, task, formats, grooming_type):
-    print(name)
     if name == Default.SERVICES[0][0] and pet_type != "dog":
-        print(task, formats)
         raise ValidationError("Кинолог работает только с собаками.")
     if name != Default.SERVICES[0][0] and any(
         (
