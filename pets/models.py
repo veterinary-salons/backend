@@ -19,7 +19,6 @@ class AnimalAbstract(models.Model):
     class Meta:
         abstract = True
 
-
 class Animal(AnimalAbstract):
     """Характеристика животного."""
 

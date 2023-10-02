@@ -8,7 +8,7 @@ def grooming_type_default():
     return Default.GROOMING_TYPE[0]
 
 
-def synology_type_default():
+def cynology_type_default():
     """Вспомогательная функция для определения значения по умолчанию
     в поле ArrayField.
     """

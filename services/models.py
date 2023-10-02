@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import UniqueConstraint
 
 from core.constants import Default, Messages, Limits
-from core.utils import grooming_type_default, synology_type_default
+from core.utils import grooming_type_default, cynology_type_default
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator
@@ -18,7 +18,15 @@ User = get_user_model()
 
 class BaseService(models.Model):
     name = models.CharField(
-        max_length=Limits.MAX_LEN_ANIMAL_TYPE,
+        verbose_name="название услуги",
+        max_length=Limits.MAX_LEN_SERVICE_NAME,
+        null=False,
+        blank=False,
+        validators=(validate_alphanumeric,),
+    )
+    service_type = models.CharField(
+        verbose_name="тип услуги",
+        max_length=Limits.MAX_LEN_SERVICE_TYPE,
         choices=Default.SERVICES,
         validators=(validate_letters,),
         blank=False,
@@ -69,8 +77,8 @@ class Service(BaseService):
     formats = ArrayField(
         models.CharField(
             max_length=50,
-            choices=Default.SYNOLOGY_FORMAT,
-            # default=DEFAULT.SYNOLOGY_FORMAT[0],
+            choices=Default.CYNOLOGY_FORMAT,
+            # default=DEFAULT.CYNOLOGY_FORMAT[0],
             validators=(validate_letters,),
         ),
         null=True,

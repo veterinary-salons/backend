@@ -2,6 +2,8 @@ class Limits:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
 
+    MAX_LEN_SERVICE_NAME = 20
+    MAX_LEN_SERVICE_TYPE = 30
     MAX_LEN_ANIMAL_TYPE = 30
     MAX_LEN_ANIMAL_BREED = 30
     MAX_LEN_ANIMAL_NAME = 30
@@ -43,7 +45,7 @@ class Default:
         ("Decorative", "Decorative"),
         ("ych", "You can choose"),
     )
-    SYNOLOGY_TASKS = (
+    CYNOLOGY_TASKS = (
         ("correction", "Коррекция проблемного поведения"),
         ("etraining", "Воспитательная дрессировка щенка"),
         ("education", "Обучение командам"),
@@ -58,8 +60,8 @@ class Default:
         ("consult", "Консультация"),
         ("another", "Другое"),
     )
-    SYNOLOGY_FORMAT = (
-        ("individusl", "Индивидуальные занятия"),
+    CYNOLOGY_FORMAT = (
+        ("individual", "Индивидуальные занятия"),
         ("minigroup", "Занятия в мини-группе"),
         ("group", "Групповые занятия"),
         ("training", "Дрессировка с передержкой у кинолога"),
@@ -74,10 +76,10 @@ class Default:
         ("ano", "Другое"),
     )
     SERVICES = (
-        ("synology", "Кинолог" ),
+        ("cynology", "Кинолог" ),
         ("veterenary", "Ветеринар" ),
         ("shelter", "Зооняня" ),
-        ("groomer", "Грумер"),
+        ("grooming", "Грумер"),
     )
     GOODS_CATEGORIES = (
         ("food", "Корм и лакомства"),
