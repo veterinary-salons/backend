@@ -1,15 +1,18 @@
-from django.core.exceptions import ValidationError
 from django.db.models import UniqueConstraint
+from django.utils import timezone
 
 from core.constants import Default, Messages, Limits
-from core.utils import grooming_type_default, cynology_type_default
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
-from django.core.validators import MaxValueValidator
 from django.db import models
 
-from core.validators import validate_letters, validate_alphanumeric, \
-    validate_services
+from core.validators import (
+    validate_letters,
+    validate_alphanumeric,
+    validate_services,
+    RangeValueValidator,
+    validate_current_and_future_month,
+)
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
 
@@ -50,21 +53,20 @@ class Service(BaseService):
     price = models.PositiveSmallIntegerField(
         verbose_name="Цена за услугу",
         default=Default.SERVICER_PRICE,
-        validators=(
-            MaxValueValidator(
+        validators=[
+            RangeValueValidator(
+                Limits.MIN_PRICE,
                 Limits.MAX_PRICE,
-                Messages.CORRECT_AGE_MESSAGE,
             ),
-        ),
+        ],
     )
     duration = models.PositiveIntegerField(
-        verbose_name="Продолжительность услуги в минутах",
-        validators=(
-            MaxValueValidator(
+        validators=[
+            RangeValueValidator(
+                Limits.MIN_DURATION,
                 Limits.MAX_DURATION,
-                Messages.CORRECT_DURATION_MESSAGE,
             ),
-        ),
+        ]
     )
     work_time_from = models.TimeField(
         verbose_name="От",
@@ -78,7 +80,6 @@ class Service(BaseService):
         models.CharField(
             max_length=50,
             choices=Default.CYNOLOGY_FORMAT,
-            # default=DEFAULT.CYNOLOGY_FORMAT[0],
             validators=(validate_letters,),
         ),
         null=True,
@@ -116,27 +117,47 @@ class Service(BaseService):
         verbose_name_plural = "услуги"
         constraints = (
             UniqueConstraint(
-                fields=("name", "supplier",),
+                fields=(
+                    "name",
+                    "supplier",
+                ),
                 name="unique_for_services",
             ),
         )
+
     def clean(self):
         super().clean()
-        validate_services(self.name, self.pet_type, self.task, self.formats, self.grooming_type)
+        validate_services(
+            self.service_type,
+            self.pet_type,
+            self.task,
+            self.formats,
+            self.grooming_type,
+        )
+
     def save(self, *args, **kwargs):
         self.full_clean()
         return super(Service, self).save(*args, **kwargs)
+
 
 class BookingService(BaseService):
     """Модель бронирования услуги."""
 
     favour = models.CharField(
-        max_length=20,
         choices=Default.SERVICES,
     )
     date = models.DateTimeField(auto_now_add=True)
-    place = models.CharField(max_length=Limits.PLACE_MAX_LENGTH)
-    client = models.ForeignKey(
+    to_date = models.DateTimeField(
+        validators=(validate_current_and_future_month,),
+        blank=False,
+        null=False,
+        default=timezone.now,
+    )
+    place = models.CharField(
+        max_length=Limits.PLACE_MAX_LENGTH, blank=True, null=True,
+        validators=(validate_alphanumeric,),
+    )
+    customer = models.ForeignKey(
         CustomerProfile,
         models.CASCADE,
         null=False,

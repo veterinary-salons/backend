@@ -19,7 +19,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from services.models import BookingService, Service
-from users.models import SupplierProfile
+from users.models import SupplierProfile, CustomerProfile
 from django.db.models import QuerySet
 User = get_user_model()
 
@@ -75,4 +75,13 @@ class ServiceViewSet(BaseServiceViewSet):
 class BookingServiceViewSet(BaseServiceViewSet):
     queryset = BookingService.objects.all()
     serializer_class = BookingServiceSerializer
+    permission_classes = [IsAuthenticated,]
 
+    def perform_create(self, serializer):
+        print("serializer.data")
+        serializer.is_valid(raise_exception=True)
+        customer_profile = CustomerProfile.objects.get(
+            related_user=self.request.user
+        )
+        serializer.save(customer=customer_profile)
+        print(serializer.data)

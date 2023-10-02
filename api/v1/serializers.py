@@ -1,9 +1,6 @@
-from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
-
 from core.validators import validate_services
 from pets.models import Pet
-from rest_framework import serializers, status
+from rest_framework import serializers
 from services.models import BookingService, Service
 from users.v1.serializers import SupplierProfileSerializer
 
@@ -21,6 +18,7 @@ class ServiceSerializer(serializers.ModelSerializer):
         model = Service
         fields = (
             "name",
+            "service_type",
             "supplier",
             "price",
             "work_time_from",
@@ -35,31 +33,42 @@ class ServiceSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        name = data.get("name")
+        service_type = data.get("service_type")
         pet_type = data.get("pet_type")
         task = data.get("task")
         formats = data.get("formats")
         grooming_type = data.get("grooming_type")
-        validate_services(name, pet_type, task, formats, grooming_type)
+        name = data.get("name")
+        validate_services(service_type, pet_type, task, formats, grooming_type)
         if Service.objects.filter(
-            name=name, supplier=self.context.get("request").user.profile_id
+            name=name,
+            supplier=self.context.get("request").user.profile_id,
         ).exists():
-            raise serializers.ValidationError(
-                "Такая услуга уже существует!"
-            )
+            raise serializers.ValidationError("Такая услуга уже существует!")
 
         return data
 
 
 class BookingServiceSerializer(serializers.ModelSerializer):
+    service = serializers.CharField(source="favour")
+    customer = SupplierProfileSerializer(read_only=True)
     class Meta:
         model = BookingService
         fields = (
-            "favour",
+            "service",
             "date",
+            "to_date",
             "place",
-            "client",
+            "customer",
             "supplier",
             "actual",
             "confirmed",
         )
+    def validate(self, data):
+        service = data.get("service")
+        if BookingService.objects.filter(
+            favour=service,
+            customer=self.context.get("request").user.profile_id,
+        ).exists():
+            raise serializers.ValidationError("Такая бронь уже существует!")
+        return data

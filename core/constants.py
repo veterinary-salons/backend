@@ -14,7 +14,7 @@ class Limits:
     MIN_AGE_PET = 0
     MAX_AGE_PET = 50
     MIN_DURATION = 1
-    MAX_DURATION = 600
+    MAX_DURATION = 650
     MAX_LENGTH_ABOUT = 300
     PLACE_MAX_LENGTH = 300
     MIN_PRICE = 1
@@ -25,8 +25,8 @@ class Messages:
         raise AttributeError(f"can't reassign constant '{name}'")
 
     CORRECT_AGE_MESSAGE = "Введите корректный возраст!"
-    CORRECT_PRICE_MESSAGE = "Введите корректный цену."
-    CORRECT_DURATION_MESSAGE = "Не корректная продолжительность."
+    CORRECT_PRICE_MESSAGE = "Введите корректную цену."
+    CORRECT_DURATION_MESSAGE = "Некорректная продолжительность."
 
 class Default:
     def __setattr__(self, name: str, value: tuple) -> None:
