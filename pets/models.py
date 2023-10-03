@@ -6,8 +6,8 @@ from django.db.models import UniqueConstraint
 from users.models import CustomerProfile
 
 
-class Animal(models.Model):
-    """Характеристика животного."""
+class AbstractAnimal(models.Model):
+    """Абстрактная модель животного."""
 
     type = models.CharField(
         verbose_name="вид животного",
@@ -16,10 +16,16 @@ class Animal(models.Model):
     )
     class Meta:
         abstract = True
+
+
+class Animal(AbstractAnimal):
+    """Характеристика животного."""
+
+    class Meta:
         verbose_name = "характеристика животного"
         verbose_name_plural = "характеристики животных"
 
-class Pet(Animal):
+class Pet(AbstractAnimal):
     """Характеристика питомца.
 
     Связано с моделью CustomerProfile через Foreigkey.
