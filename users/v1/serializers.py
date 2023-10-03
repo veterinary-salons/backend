@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import serializers
+
 from users.models import CustomerProfile, SupplierProfile, User
 
 
@@ -23,20 +24,43 @@ class Base64ImageField(serializers.ImageField):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "password", "first_name", "last_name")
-        extra_kwargs = {
-            "password": {"write_only": True}
-        }
+        fields = (
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+        )
+        extra_kwargs = {"password": {"write_only": True}}
+
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "first_name",
+            "last_name",
+        )
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = CustomUserSerializer()
 
     def create(self, validated_data):
         user_data = validated_data.pop("user")
         profile = self.Meta.model.objects.create(**validated_data)
         User.objects.create_user(**user_data, profile=profile)
         return profile
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user_representation = representation.pop("user")
+        for key in user_representation:
+            representation[key] = user_representation[key]
+        return representation
+
+    class Meta:
+        model = User
+        fields = "__all__"
 
 
 class CustomerProfileSerializer(BaseProfileSerializer):

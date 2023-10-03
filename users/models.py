@@ -1,10 +1,15 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
-from django.contrib.contenttypes.fields import (GenericForeignKey,
-                                                GenericRelation)
+from django.contrib.contenttypes.fields import (
+    GenericForeignKey,
+    GenericRelation,
+)
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MinLengthValidator
 from django.db import models
+
+from core.constants import Limits
+from core.validators import RangeValueValidator
 from users.validators import phone_number_validator
 
 
@@ -93,9 +98,17 @@ class BaseProfile(models.Model):
 
     phone_number = models.CharField(
         max_length=12,
-        validators=[MinLengthValidator(10), phone_number_validator],
+        validators=[
+            RangeValueValidator(
+                Limits.MIN_LEN_PHONE_NUMBER, Limits.MAX_LEN_PHONE_NUMBER
+            ),
+            phone_number_validator,
+        ],
     )
-    address = models.CharField(max_length=100)
+    contact_email = models.EmailField(
+        max_length=Limits.MAX_LEN_EMAIL, null=True, blank=True
+    )
+    address = models.CharField(max_length=Limits.MAX_LEN_ADDRESS)
 
     @property
     def user(self):
@@ -110,6 +123,6 @@ class CustomerProfile(BaseProfile):
 
 
 class SupplierProfile(BaseProfile):
-    serve_at_supplier = models.BooleanField()
-    serve_at_customer = models.BooleanField()
+    customer_place = models.BooleanField()
+    supplier_place = models.BooleanField()
     photo = models.ImageField(blank=True, null=True)

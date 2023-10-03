@@ -1,7 +1,7 @@
 from django.db.models import UniqueConstraint
 from django.utils import timezone
 
-from core.constants import Default, Messages, Limits
+from core.constants import Default, Limits
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -102,7 +102,7 @@ class Service(BaseService):
         blank=True,
     )
     about = models.TextField(
-        max_length=Limits.MAX_LENGTH_ABOUT,
+        max_length=Limits.MAX_LEN_ABOUT,
         verbose_name="О себе",
         blank=True,
         null=True,
@@ -154,7 +154,7 @@ class BookingService(BaseService):
         default=timezone.now,
     )
     place = models.CharField(
-        max_length=Limits.PLACE_MAX_LENGTH, blank=True, null=True,
+        max_length=Limits.MAX_PLACE_LENGTH, blank=True, null=True,
         validators=(validate_alphanumeric,),
     )
     customer = models.ForeignKey(
@@ -163,7 +163,7 @@ class BookingService(BaseService):
         null=False,
         blank=False,
     )
-    confirmed = models.BooleanField(
+    is_done = models.BooleanField(
         verbose_name="подтверждено или нет",
         default=False,
     )

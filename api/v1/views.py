@@ -78,10 +78,8 @@ class BookingServiceViewSet(BaseServiceViewSet):
     permission_classes = [IsAuthenticated,]
 
     def perform_create(self, serializer):
-        print("serializer.data")
         serializer.is_valid(raise_exception=True)
         customer_profile = CustomerProfile.objects.get(
             related_user=self.request.user
         )
         serializer.save(customer=customer_profile)
-        print(serializer.data)

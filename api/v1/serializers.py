@@ -2,7 +2,12 @@ from core.validators import validate_services
 from pets.models import Pet
 from rest_framework import serializers
 from services.models import BookingService, Service
-from users.v1.serializers import SupplierProfileSerializer
+from users.models import SupplierProfile
+from users.v1.serializers import (
+    CustomerProfileSerializer,
+    BaseProfileSerializer,
+    Base64ImageField,
+)
 
 
 class PetSerializer(serializers.ModelSerializer):
@@ -12,14 +17,15 @@ class PetSerializer(serializers.ModelSerializer):
 
 
 class ServiceSerializer(serializers.ModelSerializer):
-    supplier = SupplierProfileSerializer(read_only=True)
+    # supplier = SupplierProfileSerializer(read_only=True)
 
     class Meta:
         model = Service
         fields = (
+            "id",
             "name",
             "service_type",
-            "supplier",
+            # "supplier",
             "price",
             "work_time_from",
             "work_time_to",
@@ -51,7 +57,8 @@ class ServiceSerializer(serializers.ModelSerializer):
 
 class BookingServiceSerializer(serializers.ModelSerializer):
     service = serializers.CharField(source="favour")
-    customer = SupplierProfileSerializer(read_only=True)
+    customer = CustomerProfileSerializer(read_only=True)
+
     class Meta:
         model = BookingService
         fields = (
@@ -62,8 +69,9 @@ class BookingServiceSerializer(serializers.ModelSerializer):
             "customer",
             "supplier",
             "actual",
-            "confirmed",
+            "is_done",
         )
+
     def validate(self, data):
         service = data.get("service")
         if BookingService.objects.filter(
@@ -72,3 +80,36 @@ class BookingServiceSerializer(serializers.ModelSerializer):
         ).exists():
             raise serializers.ValidationError("Такая бронь уже существует!")
         return data
+
+
+class SupplierSerializer(BaseProfileSerializer):
+    photo = Base64ImageField(allow_null=True)
+    exit = serializers.SerializerMethodField()
+    service = ServiceSerializer(many=True, read_only=True, source='service_set')
+
+    @staticmethod
+    def get_exit(instance):
+        exit_data = [
+            {
+                "customer_place": instance.customer_place,
+                "text": "выезжаю к клиентам",
+            },
+            {
+                "supplier_place": instance.supplier_place,
+                "text": "принимаю у себя",
+            },
+        ]
+        return exit_data
+
+    class Meta:
+        model = SupplierProfile
+        fields = (
+            "photo",
+            "exit",
+            "contact_email",
+            "address",
+            "phone_number",
+            "user",
+            "service",
+        )
+

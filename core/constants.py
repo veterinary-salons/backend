@@ -2,6 +2,11 @@ class Limits:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
 
+    MIN_AGE_PET = 0
+    MIN_DURATION = 1
+    MIN_PRICE = 1
+    MIN_LEN_PHONE_NUMBER = 10
+
     MAX_LEN_SERVICE_NAME = 20
     MAX_LEN_SERVICE_TYPE = 30
     MAX_LEN_ANIMAL_TYPE = 30
@@ -11,14 +16,14 @@ class Limits:
     MAX_LEN_GOODS_NAME = 200
     MAX_LEN_BRAND_NAME = 50
     # Возраст пока в годах, потом можно подумать...
-    MIN_AGE_PET = 0
     MAX_AGE_PET = 50
-    MIN_DURATION = 1
     MAX_DURATION = 650
-    MAX_LENGTH_ABOUT = 300
-    PLACE_MAX_LENGTH = 300
-    MIN_PRICE = 1
+    MAX_LEN_ABOUT = 300
+    MAX_PLACE_LENGTH = 300
     MAX_PRICE = 100000
+    MAX_LEN_PHONE_NUMBER = 12
+    MAX_LEN_EMAIL = 50
+    MAX_LEN_ADDRESS = 100
 
 class Messages:
     def __setattr__(self, name: str, value: tuple) -> None:
