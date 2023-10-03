@@ -78,6 +78,8 @@ class Default:
         ("dog", "Собака"),
         ("pig", "Морская свинка"),
         ("hom", "Хомяк"),
+        ("hor", "Хорек"),
+        ("rab", "Кролик"),
         ("ano", "Другое"),
     )
     SERVICES = (
@@ -102,4 +104,24 @@ class Default:
         ('11-20', '11-20'),
         ('21-30', '21-30'),
     )
+    VET_SERVICES=(
+        ("consultation", "Консультации"),
+        ("veterinary", "Диагностика заболевания и лечение"),
+        ("injection", "Введение инъекций"),
+        ("vaccinating", "Вакцинация"),
+        ("sterializing", "Стерилизация"),
+        ("vetpassport", "Оформление ветпаспорта"),
+        ("sleeping", "Усыпление"),
+        ("another", "Другое"),
+    )
+    DAYS_OF_WEEK = (
+        ("monday", "Понедельник"),
+        ("tuesday", "Вторник"),
+        ("wednesday", "Среда"),
+        ("thursday", "Четверг"),
+        ("friday", "Пятница"),
+        ("saturday", "Суббота"),
+        ("sunday", "Воскресенье"),
+    )
     GOODS_IMAGE_SIZE = 500, 300
+

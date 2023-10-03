@@ -22,7 +22,7 @@ def validate_alphanumeric(value):
         )
 
 
-def validate_services(service_type, pet_type, task, formats, grooming_type):
+def validate_services(service_type, pet_type, task, formats, grooming_type, vet_services):
     if service_type == Default.SERVICES[0][0] and pet_type != "dog":
         raise ValidationError("Кинолог работает только с собаками.")
     print(service_type, Default.SERVICES[0][0])
@@ -45,8 +45,10 @@ def validate_services(service_type, pet_type, task, formats, grooming_type):
         )
     ):
         raise ValidationError("Поле `task` и `formats` необходимо заполнить.")
-
-
+    if service_type == Default.SERVICES[1][0] and not vet_services:
+        raise ValidationError("Поле `vet_services` необходимо заполнить.")
+    if service_type != Default.SERVICES[2][0] and  vet_services:
+        raise ValidationError("Поле `vet_services` только для ветеринара.")
 class RangeValueValidator(BaseValidator):
     def __init__(self, value_from, value_to):
         self.value_from = value_from
@@ -66,3 +68,9 @@ def validate_current_and_future_month(value):
         raise ValidationError(
             "Дата должна быть в текущем или следующем месяце."
         )
+
+def validate_working_hours(value):
+    if len(value) != 2:
+        raise ValidationError('Рабочие часы должны быть в корректном формате')
+    if value[1] <= value[0]:
+        raise ValidationError('Конечное время должно быть больше начального.')

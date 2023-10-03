@@ -24,7 +24,7 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
-            "service_type",
+            "specialist_type",
             # "supplier",
             "price",
             "work_time_from",
@@ -84,32 +84,18 @@ class BookingServiceSerializer(serializers.ModelSerializer):
 
 class SupplierSerializer(BaseProfileSerializer):
     photo = Base64ImageField(allow_null=True)
-    exit = serializers.SerializerMethodField()
     service = ServiceSerializer(many=True, read_only=True, source='service_set')
-
-    @staticmethod
-    def get_exit(instance):
-        exit_data = [
-            {
-                "customer_place": instance.customer_place,
-                "text": "выезжаю к клиентам",
-            },
-            {
-                "supplier_place": instance.supplier_place,
-                "text": "принимаю у себя",
-            },
-        ]
-        return exit_data
 
     class Meta:
         model = SupplierProfile
         fields = (
             "photo",
-            "exit",
             "contact_email",
             "address",
             "phone_number",
             "user",
             "service",
+            "customer_place",
+            "supplier_place",
         )
 

@@ -12,11 +12,31 @@ from core.validators import (
     validate_services,
     RangeValueValidator,
     validate_current_and_future_month,
+    validate_working_hours,
 )
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
+
+
+class Schedule(models.Model):
+    working_days = ArrayField(
+        models.CharField(
+            max_length=50,
+            choices=Default.DAYS_OF_WEEK,
+            validators=(validate_letters,),
+        ),
+        default=Default.DAYS_OF_WEEK[:4],
+        null=True,
+        blank=True,
+    )
+    working_hours = ArrayField(
+        models.PositiveSmallIntegerField(
+            validators=(RangeValueValidator(0, 24), validate_working_hours)
+        ),
+    )
+
 
 
 class BaseService(models.Model):
@@ -27,7 +47,7 @@ class BaseService(models.Model):
         blank=False,
         validators=(validate_alphanumeric,),
     )
-    service_type = models.CharField(
+    specialist_type = models.CharField(
         verbose_name="тип услуги",
         max_length=Limits.MAX_LEN_SERVICE_TYPE,
         choices=Default.SERVICES,
@@ -94,8 +114,17 @@ class Service(BaseService):
     )
     grooming_type = ArrayField(
         models.CharField(
-            max_length=20,
+            max_length=30,
             choices=Default.GROOMING_TYPE,
+            validators=(validate_letters,),
+        ),
+        null=True,
+        blank=True,
+    )
+    vet_services = ArrayField(
+        models.CharField(
+            max_length=30,
+            choices=Default.VET_SERVICES,
             validators=(validate_letters,),
         ),
         null=True,
@@ -128,7 +157,7 @@ class Service(BaseService):
     def clean(self):
         super().clean()
         validate_services(
-            self.service_type,
+            self.specialist_type,
             self.pet_type,
             self.task,
             self.formats,
@@ -154,7 +183,9 @@ class BookingService(BaseService):
         default=timezone.now,
     )
     place = models.CharField(
-        max_length=Limits.MAX_PLACE_LENGTH, blank=True, null=True,
+        max_length=Limits.MAX_PLACE_LENGTH,
+        blank=True,
+        null=True,
         validators=(validate_alphanumeric,),
     )
     customer = models.ForeignKey(
