@@ -1,7 +1,7 @@
 from core.validators import validate_services
 from pets.models import Pet
 from rest_framework import serializers
-from services.models import BookingService, Service
+from services.models import BookingService, Service, Schedule
 from users.models import SupplierProfile
 from users.v1.serializers import (
     CustomerProfileSerializer,
@@ -16,9 +16,32 @@ class PetSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ScheduleSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        representation = dict(super().to_representation(instance))
+        print(representation)
+        for key in representation:
+            if representation[key]:
+                representation[key] = {"available": representation[key]}
+            representation[key] = {"unavailable": representation[key]}
+        return representation
+
+    class Meta:
+        model = Schedule
+        fields = (
+            "monday_hours",
+            "tuesday_hours",
+            "wednesday_hours",
+            "thursday_hours",
+            "friday_hours",
+            "saturday_hours",
+            "sunday_hours",
+        )
+
+
 class ServiceSerializer(serializers.ModelSerializer):
     # supplier = SupplierProfileSerializer(read_only=True)
-
+    schedule = ScheduleSerializer(read_only=True)
     class Meta:
         model = Service
         fields = (
@@ -26,9 +49,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             "name",
             "specialist_type",
             # "supplier",
+            "schedule",
             "price",
-            "work_time_from",
-            "work_time_to",
             "about",
             "pet_type",
             "grooming_type",
@@ -84,7 +106,9 @@ class BookingServiceSerializer(serializers.ModelSerializer):
 
 class SupplierSerializer(BaseProfileSerializer):
     photo = Base64ImageField(allow_null=True)
-    service = ServiceSerializer(many=True, read_only=True, source='service_set')
+    service = ServiceSerializer(
+        many=True, read_only=True, source="service_set"
+    )
 
     class Meta:
         model = SupplierProfile
@@ -98,4 +122,3 @@ class SupplierSerializer(BaseProfileSerializer):
             "customer_place",
             "supplier_place",
         )
-

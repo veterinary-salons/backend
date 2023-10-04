@@ -21,22 +21,26 @@ User = get_user_model()
 
 
 class Schedule(models.Model):
-    working_days = ArrayField(
-        models.CharField(
-            max_length=50,
-            choices=Default.DAYS_OF_WEEK,
-            validators=(validate_letters,),
-        ),
-        default=Default.DAYS_OF_WEEK[:4],
-        null=True,
-        blank=True,
-    )
-    working_hours = ArrayField(
-        models.PositiveSmallIntegerField(
-            validators=(RangeValueValidator(0, 24), validate_working_hours)
-        ),
-    )
+    hours = {}
+    for day, label in Default.DAYS_OF_WEEK:
+        hours[label.lower()] = ArrayField(
+            models.PositiveSmallIntegerField(
+                validators=[RangeValueValidator(0, 24)]
+            ),
+            null=True,
+            size=2,
+        )
 
+    monday_hours = hours[Default.DAYS_OF_WEEK[0][1].lower()]
+    tuesday_hours = hours[Default.DAYS_OF_WEEK[1][1].lower()]
+    wednesday_hours = hours[Default.DAYS_OF_WEEK[2][1].lower()]
+    thursday_hours = hours[Default.DAYS_OF_WEEK[3][1].lower()]
+    friday_hours = hours[Default.DAYS_OF_WEEK[4][1].lower()]
+    saturday_hours = hours[Default.DAYS_OF_WEEK[5][1].lower()]
+    sunday_hours = hours[Default.DAYS_OF_WEEK[6][1].lower()]
+
+    class Meta:
+        verbose_name = "расписание специалиста"
 
 
 class BaseService(models.Model):
@@ -88,13 +92,16 @@ class Service(BaseService):
             ),
         ]
     )
-    work_time_from = models.TimeField(
-        verbose_name="От",
-        default="00:00:00",
-    )
-    work_time_to = models.TimeField(
-        verbose_name="До",
-        default="23:59:59",
+    # work_time_from = models.TimeField(
+    #     verbose_name="От",
+    #     default="00:00:00",
+    # )
+    # work_time_to = models.TimeField(
+    #     verbose_name="До",
+    #     default="23:59:59",
+    # )
+    schedule = models.ForeignKey(
+        Schedule, on_delete=models.CASCADE, null=True, blank=True
     )
     formats = ArrayField(
         models.CharField(
