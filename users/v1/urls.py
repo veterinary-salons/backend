@@ -6,6 +6,7 @@ router = SimpleRouter()
 router.register("customers", CustomerProfileViewSet)
 router.register("suppliers", SupplierProfileViewSet)
 
+
 urlpatterns = [
     path("", include(router.urls)),
 ]
