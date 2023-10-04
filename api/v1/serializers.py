@@ -19,11 +19,11 @@ class PetSerializer(serializers.ModelSerializer):
 class ScheduleSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = dict(super().to_representation(instance))
-        print(representation)
         for key in representation:
             if representation[key]:
                 representation[key] = {"available": representation[key]}
-            representation[key] = {"unavailable": representation[key]}
+            else:
+                representation[key] = {"unavailable": representation[key]}
         return representation
 
     class Meta:
@@ -36,6 +36,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "friday_hours",
             "saturday_hours",
             "sunday_hours",
+            "breakTime",
         )
 
 

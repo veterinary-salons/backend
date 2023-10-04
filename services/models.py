@@ -21,6 +21,7 @@ User = get_user_model()
 
 
 class Schedule(models.Model):
+    """Расписание специалиста."""
     hours = {}
     for day, label in Default.DAYS_OF_WEEK:
         hours[label.lower()] = ArrayField(
@@ -30,7 +31,13 @@ class Schedule(models.Model):
             null=True,
             size=2,
         )
-
+    breakTime = ArrayField(
+            models.PositiveSmallIntegerField(
+                validators=[RangeValueValidator(0, 24)]
+            ),
+            null=True,
+            size=2,
+        )
     monday_hours = hours[Default.DAYS_OF_WEEK[0][1].lower()]
     tuesday_hours = hours[Default.DAYS_OF_WEEK[1][1].lower()]
     wednesday_hours = hours[Default.DAYS_OF_WEEK[2][1].lower()]
