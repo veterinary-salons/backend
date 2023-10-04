@@ -6,9 +6,7 @@ from users.models import CustomerProfile
 
 class AnimalAbstract(models.Model):
     """Абстрактная модель животного.
-
     Необходимо, чтобы использовать поле `type` в UniqueConstraint.
-
     """
 
     type = models.CharField(
@@ -19,12 +17,14 @@ class AnimalAbstract(models.Model):
     class Meta:
         abstract = True
 
+
 class Animal(AnimalAbstract):
     """Характеристика животного."""
 
     class Meta:
         verbose_name = "характеристика животного"
         verbose_name_plural = "характеристики животных"
+
 
 class Pet(AnimalAbstract):
     """Характеристика питомца.
