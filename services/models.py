@@ -1,5 +1,6 @@
 from django.db.models import UniqueConstraint
 from django.utils import timezone
+from rest_framework.fields import JSONField
 
 from core.constants import Default, Limits
 from django.contrib.auth import get_user_model
@@ -12,7 +13,7 @@ from core.validators import (
     validate_services,
     RangeValueValidator,
     validate_current_and_future_month,
-    validate_working_hours,
+    validate_cost,
 )
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
@@ -50,6 +51,15 @@ class Schedule(models.Model):
         verbose_name = "расписание специалиста"
 
 
+class Price(models.Model):
+    """Цена за услугу."""
+    name = models.CharField(max_length=Limits.MAX_LEN_SERVICE_NAME)
+    cost = JSONField(validators=[validate_cost])
+
+    class Meta:
+        verbose_name = "цена за услугу"
+        verbose_name_plural = "цены за услуги"
+
 class BaseService(models.Model):
     name = models.CharField(
         verbose_name="название услуги",
@@ -70,7 +80,6 @@ class BaseService(models.Model):
         SupplierProfile,
         on_delete=models.CASCADE,
     )
-
     class Meta:
         abstract = True
 
@@ -81,15 +90,8 @@ class Service(BaseService):
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
         choices=Default.PET_TYPE,
     )
-    price = models.PositiveSmallIntegerField(
-        verbose_name="Цена за услугу",
-        default=Default.SERVICER_PRICE,
-        validators=[
-            RangeValueValidator(
-                Limits.MIN_PRICE,
-                Limits.MAX_PRICE,
-            ),
-        ],
+    price = models.ForeignKey(
+        Price, on_delete=models.SET_NULL, null=True, blank=True
     )
     duration = models.PositiveIntegerField(
         validators=[
@@ -99,14 +101,6 @@ class Service(BaseService):
             ),
         ]
     )
-    # work_time_from = models.TimeField(
-    #     verbose_name="От",
-    #     default="00:00:00",
-    # )
-    # work_time_to = models.TimeField(
-    #     verbose_name="До",
-    #     default="23:59:59",
-    # )
     schedule = models.ForeignKey(
         Schedule, on_delete=models.CASCADE, null=True, blank=True
     )

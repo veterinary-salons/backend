@@ -1,11 +1,9 @@
 from core.validators import validate_services
 from core.constants import Limits, Default
-from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
+
 
 from pets.models import Pet
-from rest_framework import serializers
-from services.models import BookingService, Service, Schedule
+from services.models import Schedule
 from users.models import SupplierProfile
 from users.v1.serializers import (
     CustomerProfileSerializer,
@@ -14,10 +12,20 @@ from users.v1.serializers import (
 )
 from rest_framework import serializers
 from services.models import BookingService, Service
-from users.v1.serializers import SupplierProfileSerializer
 
 
 class PetSerializer(serializers.ModelSerializer):
+    """Сериализация питомцев."""
+    def validate(self, data):
+        if Pet.objects.filter(
+            name=data.get("name"),
+            age=data.get("age"),
+            breed = data.get("breed"),
+            type = data.get("type"),
+        ).exists():
+            raise serializers.ValidationError("Такой питомец уже существует!")
+        return data
+
     class Meta:
         model = Pet
         fields = "__all__"
@@ -47,8 +55,21 @@ class ScheduleSerializer(serializers.ModelSerializer):
         )
 
 
+class BaseServiceSerializer(serializers.ModelSerializer):
+    """Сериализатор услуг для бронирования."""
+    class Meta:
+        model = Service
+        fields = (
+            "price",
+            "grooming_type",
+            "task",
+            "formats",
+        )
+
+
+
 class ServiceSerializer(serializers.ModelSerializer):
-    # supplier = SupplierProfileSerializer(read_only=True)
+    """Сериализация всех услуг."""
     schedule = ScheduleSerializer(read_only=True)
     class Meta:
         model = Service
@@ -56,7 +77,6 @@ class ServiceSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "specialist_type",
-            # "supplier",
             "schedule",
             "price",
             "about",
@@ -69,6 +89,11 @@ class ServiceSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
+        """Проверка на валидность услуги.
+
+        Проверяем соответствие полей видам услуги и уникальность услуги.
+
+        """
         service_type = data.get("service_type")
         pet_type = data.get("pet_type")
         task = data.get("task")
@@ -155,3 +180,4 @@ class SupplierSerializer(BaseProfileSerializer):
             "customer_place",
             "supplier_place",
         )
+

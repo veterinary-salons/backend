@@ -6,7 +6,10 @@ app_name = "api"
 
 router = DefaultRouter()
 router.register("pets", PetViewSet)
-router.register("booking", BookingServiceViewSet)
+router.register(
+    "profiles/customers/(?P<customer_id>\d+)/booking",
+    BookingServiceViewSet,
+)
 router.register("services", ServiceViewSet)
 
 urlpatterns = [

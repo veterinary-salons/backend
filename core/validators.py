@@ -22,7 +22,9 @@ def validate_alphanumeric(value):
         )
 
 
-def validate_services(service_type, pet_type, task, formats, grooming_type, vet_services):
+def validate_services(
+    service_type, pet_type, task, formats, grooming_type, vet_services
+):
     if service_type == Default.SERVICES[0][0] and pet_type != "dog":
         raise ValidationError("Кинолог работает только с собаками.")
     print(service_type, Default.SERVICES[0][0])
@@ -47,8 +49,10 @@ def validate_services(service_type, pet_type, task, formats, grooming_type, vet_
         raise ValidationError("Поле `task` и `formats` необходимо заполнить.")
     if service_type == Default.SERVICES[1][0] and not vet_services:
         raise ValidationError("Поле `vet_services` необходимо заполнить.")
-    if service_type != Default.SERVICES[2][0] and  vet_services:
+    if service_type != Default.SERVICES[2][0] and vet_services:
         raise ValidationError("Поле `vet_services` только для ветеринара.")
+
+
 class RangeValueValidator(BaseValidator):
     def __init__(self, value_from, value_to):
         self.value_from = value_from
@@ -69,8 +73,30 @@ def validate_current_and_future_month(value):
             "Дата должна быть в текущем или следующем месяце."
         )
 
+
 def validate_working_hours(value):
     if len(value) != 2:
-        raise ValidationError('Рабочие часы должны быть в корректном формате')
+        raise ValidationError("Рабочие часы должны быть в корректном формате")
     if value[1] <= value[0]:
-        raise ValidationError('Конечное время должно быть больше начального.')
+        raise ValidationError("Конечное время должно быть больше начального.")
+
+
+def validate_age(value):
+    if value[0] < Limits.MIN_AGE_PET or value[0] > Limits.MAX_AGE_PET:
+        raise ValidationError(
+            f"Возраст питомца должен быть от {Limits.MIN_AGE_PET} до "
+            f"{Limits.MAX_AGE_PET} лет"
+        )
+
+    if  value[1] < 0 or value[1] > 12:
+        raise ValidationError(
+            f"Количество месяцев долджно быть от 0 до 12."
+        )
+
+
+def validate_cost(value):
+    if not isinstance(value, dict) or len(value) != 2:
+        raise ValidationError(
+            "Поле cost должно содержать ровно две пары значений.",
+            params={"value": value},
+        )
