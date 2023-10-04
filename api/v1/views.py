@@ -5,6 +5,7 @@ from api.v1.serializers import (
     BookingServiceSerializer,
     ServiceSerializer,
 )
+from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 
@@ -17,6 +18,7 @@ from rest_framework.permissions import (
     AllowAny,
 )
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK
 from rest_framework.viewsets import ModelViewSet
 from services.models import BookingService, Service
 from users.models import SupplierProfile
@@ -61,8 +63,19 @@ class BaseServiceViewSet(ModelViewSet):
             self.queryset.filter(user=request.user), many=True
         )
 
+    @action(
+        methods=["POST"],
+        detail=False,
+        filter_backends=(ServiceFilterBackend,),
+    )
+    def filter(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(data=serializer.data)
+
+
 class ServiceViewSet(BaseServiceViewSet):
-    queryset = Service.objects.all()
+    queryset = Service.objects.select_related("supplier")
     serializer_class = ServiceSerializer
 
     def perform_create(self, serializer):
@@ -71,6 +84,7 @@ class ServiceViewSet(BaseServiceViewSet):
             related_user=self.request.user
         )
         serializer.save(supplier=supplier_profile)
+
 
 class BookingServiceViewSet(BaseServiceViewSet):
     queryset = BookingService.objects.all()
