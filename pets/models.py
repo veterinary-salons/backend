@@ -1,12 +1,19 @@
+from django.contrib.postgres.fields import ArrayField
+
 from core.constants import Default, Messages, Limits
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
+
+from core.validators import RangeValueValidator, validate_age
 from users.models import CustomerProfile
+
 
 class AnimalAbstract(models.Model):
     """Абстрактная модель животного.
+
     Необходимо, чтобы использовать поле `type` в UniqueConstraint.
+
     """
 
     type = models.CharField(
@@ -14,6 +21,7 @@ class AnimalAbstract(models.Model):
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
         choices=Default.PET_TYPE,
     )
+
     class Meta:
         abstract = True
 
@@ -26,10 +34,23 @@ class Animal(AnimalAbstract):
         verbose_name_plural = "характеристики животных"
 
 
+class Age(models.Model):
+    year = models.PositiveIntegerField(
+        validators=[MaxValueValidator(Limits.MAX_AGE_PET)],
+    )
+    month = models.PositiveSmallIntegerField(
+        validators=[
+            MaxValueValidator(Limits.MAX_MONTH_QUANTITY)
+        ],
+    )
+    class Meta:
+        verbose_name = "возраст питомца"
+        verbose_name_plural = "возрасты питомцев"
+
 class Pet(AnimalAbstract):
     """Характеристика питомца.
 
-    Связано с моделью `CustomerProfile` через `Foreigkey`.
+    Связано с моделью `CustomerProfile` через `Foreignkey`.
 
     Attributes:
         type (str):
@@ -55,25 +76,17 @@ class Pet(AnimalAbstract):
     breed = models.CharField(
         verbose_name="порода",
         max_length=Limits.MAX_LEN_ANIMAL_BREED,
+        null=True,
+        blank=True,
     )
     name = models.CharField(
         verbose_name="имя питомца",
         max_length=Limits.MAX_LEN_ANIMAL_NAME,
     )
-    age = models.PositiveSmallIntegerField(
-        verbose_name="Возраст питомца",
-        default=Default.PET_AGE,
-        validators=(
-            MinValueValidator(
-                Limits.MIN_AGE_PET,
-                Messages.CORRECT_AGE_MESSAGE,
-            ),
-            MaxValueValidator(
-                Limits.MAX_AGE_PET,
-                Messages.CORRECT_AGE_MESSAGE,
-            ),
-        ),
+    age = models.ForeignKey(
+        Age, on_delete=models.SET_NULL, null=True, blank=True
     )
+
     weight = models.CharField(max_length=10, choices=Default.WEIGHT_CHOICES)
     is_sterilized = models.BooleanField(default=False)
     is_vaccinated = models.BooleanField(default=False)
@@ -87,13 +100,17 @@ class Pet(AnimalAbstract):
     class Meta:
         verbose_name = "питомец"
         verbose_name_plural = "питомцы"
-        ordering = ("name",)
-        constraints = (
+        constraints = [
             UniqueConstraint(
-                fields=("name", "breed", "type", "age", "owner"),
-                name="unique_for_pet",
+                fields=[
+                    "name",
+                    "breed",
+                    "age",
+                    "type",
+                ],
+                name="unique_name_for_pet",
             ),
-        )
+        ]
 
     def __str__(self) -> str:
         return (

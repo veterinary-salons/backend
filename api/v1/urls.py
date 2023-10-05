@@ -5,8 +5,15 @@ from rest_framework.routers import DefaultRouter
 app_name = "api"
 
 router = DefaultRouter()
-router.register("pets", PetViewSet)
-router.register("booking", BookingServiceViewSet)
+router.register(
+    "profiles/customers/(?P<customer_id>\d+)/pet",
+    PetViewSet,
+    basename="petviewset",
+)
+router.register(
+    "profiles/customers/(?P<customer_id>\d+)/booking",
+    BookingServiceViewSet,
+)
 router.register("services", ServiceViewSet)
 
 urlpatterns = [
