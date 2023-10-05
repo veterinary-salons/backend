@@ -1,3 +1,8 @@
+from typing import Any
+
+from rest_framework.exceptions import ValidationError
+
+from core.utils import remove_dict_fields
 from core.validators import validate_services
 from core.constants import Limits, Default
 
@@ -9,6 +14,7 @@ from users.v1.serializers import (
     CustomerProfileSerializer,
     BaseProfileSerializer,
     Base64ImageField,
+    SupplierProfileSerializer,
 )
 from rest_framework import serializers
 from services.models import BookingService, Service
@@ -54,19 +60,21 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "breakTime",
         )
 
-
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализатор услуг для бронирования."""
+    schedule = ScheduleSerializer(read_only=True)
     class Meta:
         model = Service
         fields = (
+            "name",
+            "pet_type",
             "price",
+            "about",
             "grooming_type",
             "task",
             "formats",
+            "schedule",
         )
-
-
 
 class ServiceSerializer(serializers.ModelSerializer):
     """Сериализация всех услуг."""
@@ -87,6 +95,37 @@ class ServiceSerializer(serializers.ModelSerializer):
             "formats",
             "published",
         )
+    def to_representation(self, instance) -> dict[str, Any]:
+        representation = super().to_representation(instance)
+    
+        if representation.get("specialist_type") == "cynology":
+            remove_dict_fields(representation, ["grooming_type", "pet_type"])
+    
+        if representation.get("specialist_type") == "veterenary":
+            remove_dict_fields(
+                representation, ["grooming_type", "formats", "task"]
+            )
+    
+        if representation.get("specialist_type") == "grooming":
+            remove_dict_fields(representation, ["formats", "task"])
+    
+        if representation.get("specialist_type") == "shelter":
+            remove_dict_fields(
+                representation, ["formats", "task", "grooming_type"]
+            )
+    
+        return representation
+
+
+    @staticmethod
+    def validate_price(data):
+        """Проверка на валидность стоимости."""
+
+        if data[0] < Limits.MIN_PRICE or data[0] > Limits.MAX_PRICE:
+            raise ValidationError(
+                f"Стоимость услуги должна быть от {Limits.MIN_PRICE} до "
+                f"{Limits.MAX_PRICE} р."
+            )
 
     def validate(self, data):
         """Проверка на валидность услуги.
@@ -134,22 +173,18 @@ class FilterServicesSerializer(serializers.Serializer):
         format=None, input_formats=("%d.%m.%Y",)
     )
 
-
 class BookingServiceSerializer(serializers.ModelSerializer):
-    service = serializers.CharField(source="favour")
-    customer = CustomerProfileSerializer(read_only=True)
+    service = BaseServiceSerializer(read_only=True)
+    supplier = SupplierProfileSerializer(read_only=True)
 
     class Meta:
         model = BookingService
         fields = (
-            "service",
-            "date",
             "to_date",
-            "place",
-            "customer",
             "supplier",
-            "actual",
-            "is_done",
+            "service",
+            "customer_place",
+            "supplier_place",
         )
 
     def validate(self, data):
@@ -177,7 +212,4 @@ class SupplierSerializer(BaseProfileSerializer):
             "phone_number",
             "user",
             "service",
-            "customer_place",
-            "supplier_place",
         )
-

@@ -123,6 +123,4 @@ class CustomerProfile(BaseProfile):
 
 
 class SupplierProfile(BaseProfile):
-    customer_place = models.BooleanField()
-    supplier_place = models.BooleanField()
     photo = models.ImageField(blank=True, null=True)

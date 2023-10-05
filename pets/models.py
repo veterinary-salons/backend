@@ -56,7 +56,6 @@ class Pet(AnimalAbstract):
             Владелец питомца.
 
     """
-
     breed = models.CharField(
         verbose_name="порода",
         max_length=Limits.MAX_LEN_ANIMAL_BREED,
@@ -93,7 +92,6 @@ class Pet(AnimalAbstract):
                 name="unique_name_for_pet",
             ),
         ]
-
 
     def __str__(self) -> str:
         return (

@@ -1,28 +1,27 @@
 from django.db.models import UniqueConstraint
 from django.utils import timezone
-from rest_framework.fields import JSONField
 
 from core.constants import Default, Limits
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from core.utils import default_price
 from core.validators import (
     validate_letters,
     validate_alphanumeric,
     validate_services,
     RangeValueValidator,
     validate_current_and_future_month,
-    validate_cost,
 )
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
 
-
 class Schedule(models.Model):
     """Расписание специалиста."""
+
     hours = {}
     for day, label in Default.DAYS_OF_WEEK:
         hours[label.lower()] = ArrayField(
@@ -33,12 +32,12 @@ class Schedule(models.Model):
             size=2,
         )
     breakTime = ArrayField(
-            models.PositiveSmallIntegerField(
-                validators=[RangeValueValidator(0, 24)]
-            ),
-            null=True,
-            size=2,
-        )
+        models.PositiveSmallIntegerField(
+            validators=[RangeValueValidator(0, 24)]
+        ),
+        null=True,
+        size=2,
+    )
     monday_hours = hours[Default.DAYS_OF_WEEK[0][1].lower()]
     tuesday_hours = hours[Default.DAYS_OF_WEEK[1][1].lower()]
     wednesday_hours = hours[Default.DAYS_OF_WEEK[2][1].lower()]
@@ -50,15 +49,6 @@ class Schedule(models.Model):
     class Meta:
         verbose_name = "расписание специалиста"
 
-
-class Price(models.Model):
-    """Цена за услугу."""
-    name = models.CharField(max_length=Limits.MAX_LEN_SERVICE_NAME)
-    cost = JSONField(validators=[validate_cost])
-
-    class Meta:
-        verbose_name = "цена за услугу"
-        verbose_name_plural = "цены за услуги"
 
 class BaseService(models.Model):
     name = models.CharField(
@@ -80,18 +70,15 @@ class BaseService(models.Model):
         SupplierProfile,
         on_delete=models.CASCADE,
     )
+
     class Meta:
         abstract = True
-
 
 class Service(BaseService):
     pet_type = models.CharField(
         verbose_name="тип животного",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
         choices=Default.PET_TYPE,
-    )
-    price = models.ForeignKey(
-        Price, on_delete=models.SET_NULL, null=True, blank=True
     )
     duration = models.PositiveIntegerField(
         validators=[
@@ -103,6 +90,16 @@ class Service(BaseService):
     )
     schedule = models.ForeignKey(
         Schedule, on_delete=models.CASCADE, null=True, blank=True
+    )
+    price = ArrayField(
+        models.PositiveIntegerField(
+            validators=[
+                RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)
+            ]
+        ),
+        null=False,
+        blank=False,
+        default=default_price,
     )
     formats = ArrayField(
         models.CharField(
@@ -170,6 +167,7 @@ class Service(BaseService):
             self.task,
             self.formats,
             self.grooming_type,
+            self.vet_services,
         )
 
     def save(self, *args, **kwargs):
@@ -180,8 +178,10 @@ class Service(BaseService):
 class BookingService(BaseService):
     """Модель бронирования услуги."""
 
-    favour = models.CharField(
-        choices=Default.SERVICES,
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name="booking_services",
     )
     date = models.DateTimeField(auto_now_add=True)
     to_date = models.DateTimeField(
@@ -210,7 +210,28 @@ class BookingService(BaseService):
         verbose_name="активно или нет",
         default=False,
     )
+    customer_place = models.BooleanField(default=False,)
+    supplier_place = models.BooleanField(default=True,)
 
     class Meta:
         verbose_name = "бронь услуги"
         verbose_name_plural = "брони услуг"
+#
+#
+# class Price(models.Model):
+#     """Базовая модель прайса."""
+#
+#     name = models.CharField(
+#         max_length=Limits.MAX_LEN_SERVICE_NAME,
+#         choices=Default.CYNOLOGY_SERVICES,
+#     )
+#     cost = models.CharField(
+#         validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)]
+#     )
+#     service = models.ForeignKey(
+#         Service, on_delete=models.CASCADE, related_name="prices"
+#     )
+#
+#     class Meta:
+#         verbose_name = "прайс"
+#         verbose_name_plural = "прайсы"

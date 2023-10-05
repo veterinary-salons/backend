@@ -15,7 +15,6 @@ class Limits:
     MAX_LEN_CATEGORY_NAME = 30
     MAX_LEN_GOODS_NAME = 200
     MAX_LEN_BRAND_NAME = 50
-    # Возраст пока в годах, потом можно подумать...
     MAX_AGE_PET = 50
     MAX_DURATION = 650
     MAX_LEN_ABOUT = 300
@@ -50,7 +49,7 @@ class Default:
         ("Decorative", "Decorative"),
         ("ych", "You can choose"),
     )
-    CYNOLOGY_TASKS = (
+    CYNOLOGY_SERVICES = (
         ("correction", "Коррекция проблемного поведения"),
         ("etraining", "Воспитательная дрессировка щенка"),
         ("education", "Обучение командам"),
@@ -72,7 +71,7 @@ class Default:
         ("training", "Дрессировка с передержкой у кинолога"),
         ("another", "Другое"),
     )
-    SERVICER_PRICE = 500
+    SERVICER_PRICE = [1000, 2000]
     PET_TYPE = (
         ("cat", "Кошка"),
         ("dog", "Собака"),

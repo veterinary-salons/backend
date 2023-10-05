@@ -93,10 +93,10 @@ def validate_age(value):
             f"Количество месяцев долджно быть от 0 до 12."
         )
 
-
-def validate_cost(value):
-    if not isinstance(value, dict) or len(value) != 2:
-        raise ValidationError(
-            "Поле cost должно содержать ровно две пары значений.",
-            params={"value": value},
-        )
+#
+# def validate_cost(value):
+#     if not isinstance(value, dict) or len(value) != 2:
+#         raise ValidationError(
+#             "Поле cost должно содержать ровно две пары значений.",
+#             params={"value": value},
+#         )
