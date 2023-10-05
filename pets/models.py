@@ -8,17 +8,20 @@ from django.db.models import UniqueConstraint
 from core.validators import RangeValueValidator, validate_age
 from users.models import CustomerProfile
 
+
 class AnimalAbstract(models.Model):
     """Абстрактная модель животного.
 
     Необходимо, чтобы использовать поле `type` в UniqueConstraint.
 
     """
+
     type = models.CharField(
         verbose_name="вид животного",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
         choices=Default.PET_TYPE,
     )
+
     class Meta:
         abstract = True
 
@@ -30,6 +33,19 @@ class Animal(AnimalAbstract):
         verbose_name = "характеристика животного"
         verbose_name_plural = "характеристики животных"
 
+
+class Age(models.Model):
+    year = models.PositiveIntegerField(
+        validators=[MaxValueValidator(Limits.MAX_AGE_PET)],
+    )
+    month = models.PositiveSmallIntegerField(
+        validators=[
+            MaxValueValidator(Limits.MAX_MONTH_QUANTITY)
+        ],
+    )
+    class Meta:
+        verbose_name = "возраст питомца"
+        verbose_name_plural = "возрасты питомцев"
 
 class Pet(AnimalAbstract):
     """Характеристика питомца.
@@ -56,6 +72,7 @@ class Pet(AnimalAbstract):
             Владелец питомца.
 
     """
+
     breed = models.CharField(
         verbose_name="порода",
         max_length=Limits.MAX_LEN_ANIMAL_BREED,
@@ -66,12 +83,9 @@ class Pet(AnimalAbstract):
         verbose_name="имя питомца",
         max_length=Limits.MAX_LEN_ANIMAL_NAME,
     )
-    age = ArrayField(
-            models.PositiveSmallIntegerField(),
-            null=True,
-            size=2,
-        validators = [validate_age, ]
-        )
+    age = models.ForeignKey(
+        Age, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     weight = models.CharField(max_length=10, choices=Default.WEIGHT_CHOICES)
     is_sterilized = models.BooleanField(default=False)
@@ -88,7 +102,12 @@ class Pet(AnimalAbstract):
         verbose_name_plural = "питомцы"
         constraints = [
             UniqueConstraint(
-                fields=["name", "breed", "age", "type",],
+                fields=[
+                    "name",
+                    "breed",
+                    "age",
+                    "type",
+                ],
                 name="unique_name_for_pet",
             ),
         ]

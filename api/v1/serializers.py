@@ -3,15 +3,13 @@ from typing import Any
 from rest_framework.exceptions import ValidationError
 
 from core.utils import remove_dict_fields
-from core.validators import validate_services
 from core.constants import Limits, Default
 
 
-from pets.models import Pet
+from pets.models import Pet, Age
 from services.models import Schedule
 from users.models import SupplierProfile
 from users.v1.serializers import (
-    CustomerProfileSerializer,
     BaseProfileSerializer,
     Base64ImageField,
     SupplierProfileSerializer,
@@ -20,14 +18,45 @@ from rest_framework import serializers
 from services.models import BookingService, Service
 
 
+class AgeSerializer(serializers.ModelSerializer):
+    """Сериализация возраста."""
+
+    class Meta:
+        model = Age
+        fields = (
+            "year",
+            "month",
+        )
+
+    def validate(self, data):
+        if (
+            data.get("year") > Limits.MAX_AGE_PET
+            or data.get("year") < Limits.MIN_AGE_PET
+        ):
+            raise ValidationError(
+                "Возраст питомца должен быть от "
+                f"{Limits.MIN_AGE_PET} до {Limits.MAX_AGE_PET} лет"
+            )
+        if (
+            data.get("month") < 0
+            or data.get("month") > Limits.MAX_MONTH_QUANTITY
+        ):
+            raise ValidationError(
+                f"Количество месяцев должно быть от 0 до 12."
+            )
+
+
 class PetSerializer(serializers.ModelSerializer):
     """Сериализация питомцев."""
+
+    age = AgeSerializer(read_only=True)
+
     def validate(self, data):
         if Pet.objects.filter(
             name=data.get("name"),
             age=data.get("age"),
-            breed = data.get("breed"),
-            type = data.get("type"),
+            breed=data.get("breed"),
+            type=data.get("type"),
         ).exists():
             raise serializers.ValidationError("Такой питомец уже существует!")
         return data
@@ -60,62 +89,32 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "breakTime",
         )
 
+
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализатор услуг для бронирования."""
+
     schedule = ScheduleSerializer(read_only=True)
+
     class Meta:
         model = Service
         fields = (
             "name",
             "pet_type",
             "price",
-            "about",
-            "grooming_type",
-            "task",
-            "formats",
+            "description",
             "schedule",
         )
 
-class ServiceSerializer(serializers.ModelSerializer):
+
+class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
-    schedule = ScheduleSerializer(read_only=True)
-    class Meta:
-        model = Service
-        fields = (
+
+    class Meta(BaseServiceSerializer.Meta):
+        fields = BaseServiceSerializer.Meta.fields + (
             "id",
-            "name",
             "specialist_type",
-            "schedule",
-            "price",
-            "about",
-            "pet_type",
-            "grooming_type",
-            "duration",
-            "task",
-            "formats",
             "published",
         )
-    def to_representation(self, instance) -> dict[str, Any]:
-        representation = super().to_representation(instance)
-    
-        if representation.get("specialist_type") == "cynology":
-            remove_dict_fields(representation, ["grooming_type", "pet_type"])
-    
-        if representation.get("specialist_type") == "veterenary":
-            remove_dict_fields(
-                representation, ["grooming_type", "formats", "task"]
-            )
-    
-        if representation.get("specialist_type") == "grooming":
-            remove_dict_fields(representation, ["formats", "task"])
-    
-        if representation.get("specialist_type") == "shelter":
-            remove_dict_fields(
-                representation, ["formats", "task", "grooming_type"]
-            )
-    
-        return representation
-
 
     @staticmethod
     def validate_price(data):
@@ -128,18 +127,9 @@ class ServiceSerializer(serializers.ModelSerializer):
             )
 
     def validate(self, data):
-        """Проверка на валидность услуги.
+        """Проверяем уникальность услуги."""
 
-        Проверяем соответствие полей видам услуги и уникальность услуги.
-
-        """
-        service_type = data.get("service_type")
-        pet_type = data.get("pet_type")
-        task = data.get("task")
-        formats = data.get("formats")
-        grooming_type = data.get("grooming_type")
         name = data.get("name")
-        validate_services(service_type, pet_type, task, formats, grooming_type)
         if Service.objects.filter(
             name=name,
             supplier=self.context.get("request").user.profile_id,
@@ -155,7 +145,8 @@ class FilterServicesSerializer(serializers.Serializer):
         child=serializers.IntegerField(
             min_value=Limits.MIN_PRICE, max_value=Limits.MAX_PRICE
         ),
-        min_length=2, max_length=2,
+        min_length=2,
+        max_length=2,
     )
     service_type = serializers.ListField(
         required=False,
@@ -169,9 +160,9 @@ class FilterServicesSerializer(serializers.Serializer):
     serve_at_supplier = serializers.BooleanField(required=False)
     serve_at_customer = serializers.BooleanField(required=False)
     date = serializers.DateField(
-        required=False,
-        format=None, input_formats=("%d.%m.%Y",)
+        required=False, format=None, input_formats=("%d.%m.%Y",)
     )
+
 
 class BookingServiceSerializer(serializers.ModelSerializer):
     service = BaseServiceSerializer(read_only=True)

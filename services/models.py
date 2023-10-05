@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator
 from django.db.models import UniqueConstraint
 from django.utils import timezone
 
@@ -10,7 +11,6 @@ from core.utils import default_price
 from core.validators import (
     validate_letters,
     validate_alphanumeric,
-    validate_services,
     RangeValueValidator,
     validate_current_and_future_month,
 )
@@ -80,14 +80,6 @@ class Service(BaseService):
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
         choices=Default.PET_TYPE,
     )
-    duration = models.PositiveIntegerField(
-        validators=[
-            RangeValueValidator(
-                Limits.MIN_DURATION,
-                Limits.MAX_DURATION,
-            ),
-        ]
-    )
     schedule = models.ForeignKey(
         Schedule, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -101,41 +93,7 @@ class Service(BaseService):
         blank=False,
         default=default_price,
     )
-    formats = ArrayField(
-        models.CharField(
-            max_length=50,
-            choices=Default.CYNOLOGY_FORMAT,
-            validators=(validate_letters,),
-        ),
-        null=True,
-        blank=True,
-    )
-    task = ArrayField(
-        models.CharField(
-            max_length=50,
-        ),
-        null=True,
-        blank=True,
-    )
-    grooming_type = ArrayField(
-        models.CharField(
-            max_length=30,
-            choices=Default.GROOMING_TYPE,
-            validators=(validate_letters,),
-        ),
-        null=True,
-        blank=True,
-    )
-    vet_services = ArrayField(
-        models.CharField(
-            max_length=30,
-            choices=Default.VET_SERVICES,
-            validators=(validate_letters,),
-        ),
-        null=True,
-        blank=True,
-    )
-    about = models.TextField(
+    description = models.TextField(
         max_length=Limits.MAX_LEN_ABOUT,
         verbose_name="О себе",
         blank=True,
@@ -164,10 +122,6 @@ class Service(BaseService):
         validate_services(
             self.specialist_type,
             self.pet_type,
-            self.task,
-            self.formats,
-            self.grooming_type,
-            self.vet_services,
         )
 
     def save(self, *args, **kwargs):
