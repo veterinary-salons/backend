@@ -181,7 +181,7 @@ class BookingServiceSerializer(serializers.ModelSerializer):
     def validate(self, data):
         service = data.get("service")
         if BookingService.objects.filter(
-            favour=service,
+            service=service,
             customer=self.context.get("request").user.profile_id,
         ).exists():
             raise serializers.ValidationError("Такая бронь уже существует!")

@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404
+from rest_framework import generics
+from rest_framework.views import APIView
 
 from api.v1.serializers import (
     PetSerializer,
@@ -36,17 +38,8 @@ class PetViewSet(ModelViewSet):
         return Response(serializer.data)
 
 class BaseServiceViewSet(ModelViewSet):
-    permission_classes = [AllowAny,]
-
-    @action(
-        methods=["GET",],
-        detail=False, 
-        permission_classes=[IsAuthenticated],
-    )
-    def me(self, request):
-        serializer = self.get_serializer(
-            self.queryset.filter(user=request.user), many=True
-        )
+    queryset = Service.objects.select_related("supplier")
+    permission_classes = [IsAuthenticated,]
 
     @action(
         methods=["POST"],
@@ -71,7 +64,7 @@ class ServiceViewSet(BaseServiceViewSet):
         serializer.save(supplier=supplier_profile)
 
 
-class BookingServiceViewSet(BaseServiceViewSet):
+class BookingServiceViewSet(ModelViewSet):
     queryset = BookingService.objects.all()
     serializer_class = BookingServiceSerializer
     permission_classes = [IsAuthenticated,]
@@ -81,4 +74,12 @@ class BookingServiceViewSet(BaseServiceViewSet):
         customer_profile = CustomerProfile.objects.get(
             related_user=self.request.user
         )
+        serializer.save(customer=customer_profile)
+
+class BookingServiceAPIView(generics.CreateAPIView):
+    queryset = BookingService.objects.all()
+    serializer_class = BookingServiceSerializer
+    permission_classes = [IsAuthenticated,]
+    def perform_create(self, serializer):
+        customer_profile = CustomerProfile.objects.get(related_user=self.request.user)
         serializer.save(customer=customer_profile)
