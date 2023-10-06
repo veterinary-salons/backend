@@ -1,6 +1,7 @@
 from typing import Any
 
 from rest_framework.exceptions import ValidationError
+from rest_framework.relations import StringRelatedField, PrimaryKeyRelatedField
 
 from core.utils import remove_dict_fields
 from core.constants import Limits, Default
@@ -8,7 +9,7 @@ from core.constants import Limits, Default
 
 from pets.models import Pet, Age
 from services.models import Schedule
-from users.models import SupplierProfile
+from users.models import SupplierProfile, CustomerProfile
 from users.v1.serializers import (
     BaseProfileSerializer,
     Base64ImageField,
@@ -127,15 +128,20 @@ class ServiceSerializer(BaseServiceSerializer):
             )
 
     def validate(self, data):
-        """Проверяем уникальность услуги."""
+        """Проверяем уникальность услуги и тип пользователя."""
 
         name = data.get("name")
+        user = self.context.get("request").user
+        print(user)
         if Service.objects.filter(
             name=name,
-            supplier=self.context.get("request").user.profile_id,
+            supplier=user.profile_id,
         ).exists():
             raise serializers.ValidationError("Такая услуга уже существует!")
-
+        if not SupplierProfile.objects.filter(related_user=user).exists():
+            raise serializers.ValidationError(
+                "Услуги создает только специалист!"
+            )
         return data
 
 
@@ -164,8 +170,7 @@ class FilterServicesSerializer(serializers.Serializer):
     )
 
 
-class BookingServiceSerializer(serializers.ModelSerializer):
-    service = BaseServiceSerializer(read_only=True)
+class BaseBookingServiceSerializer(serializers.ModelSerializer):
     supplier = SupplierProfileSerializer(read_only=True)
 
     class Meta:
@@ -178,14 +183,19 @@ class BookingServiceSerializer(serializers.ModelSerializer):
             "supplier_place",
         )
 
+class BookingServiceSerializer(BaseBookingServiceSerializer):
+    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all())
     def validate(self, data):
         service = data.get("service")
         if BookingService.objects.filter(
-            favour=service,
+            service=service,
             customer=self.context.get("request").user.profile_id,
         ).exists():
             raise serializers.ValidationError("Такая бронь уже существует!")
         return data
+
+class BookingServiceRetrieveSerializer(BaseBookingServiceSerializer):
+    service = ServiceSerializer(read_only=True)
 
 
 class SupplierSerializer(BaseProfileSerializer):

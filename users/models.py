@@ -9,7 +9,7 @@ from django.core.validators import MinLengthValidator
 from django.db import models
 
 from core.constants import Limits
-from core.validators import RangeValueValidator
+from core.validators import RangeValueValidator, PhoneNumberValidator
 from users.validators import phone_number_validator
 
 
@@ -81,11 +81,11 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name",]
 
     class Meta:
         indexes = [
-            models.Index(fields=["profile_content_type", "profile_id"]),
+            models.Index(fields=["profile_content_type", "profile_id",]),
         ]
 
 
@@ -99,7 +99,7 @@ class BaseProfile(models.Model):
     phone_number = models.CharField(
         max_length=12,
         validators=[
-            RangeValueValidator(
+            PhoneNumberValidator(
                 Limits.MIN_LEN_PHONE_NUMBER, Limits.MAX_LEN_PHONE_NUMBER
             ),
             phone_number_validator,

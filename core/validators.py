@@ -22,7 +22,10 @@ def validate_alphanumeric(value):
         )
 
 
-def validate_services(service_type, pet_type,):
+def validate_services(
+    service_type,
+    pet_type,
+):
     if service_type == Default.SERVICES[0][0] and pet_type != "dog":
         raise ValidationError("Кинолог работает только с собаками.")
     # print(service_type, Default.SERVICES[0][0])
@@ -57,7 +60,7 @@ class RangeValueValidator(BaseValidator):
         self.value_to = value_to
 
     def __call__(self, value):
-        if not self.value_from < value < self.value_to:
+        if not self.value_from < int(value) < self.value_to:
             raise ValidationError(
                 f"Значение {value} должно быть в пределах от {self.value_from}"
                 f" до {self.value_to}"
@@ -86,10 +89,21 @@ def validate_age(value):
             f"{Limits.MAX_AGE_PET} лет"
         )
 
-    if  value[1] < 0 or value[1] > 12:
-        raise ValidationError(
-            f"Количество месяцев долджно быть от 0 до 12."
-        )
+    if value[1] < 0 or value[1] > 12:
+        raise ValidationError(f"Количество месяцев долджно быть от 0 до 12.")
+
+
+class PhoneNumberValidator(BaseValidator):
+    def __init__(self, value_from, value_to):
+        self.value_from = value_from
+        self.value_to = value_to
+
+    def __call__(self, value):
+        if not re.match(r"^\+7\d{10}$", value):
+            raise ValidationError(
+                "Номер телефона должен быть в формате +7999999999"
+            )
+
 
 #
 # def validate_cost(value):

@@ -13,6 +13,7 @@ from core.validators import (
     validate_alphanumeric,
     RangeValueValidator,
     validate_current_and_future_month,
+    validate_services,
 )
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
@@ -128,6 +129,9 @@ class Service(BaseService):
         self.full_clean()
         return super(Service, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.name} - {self.specialist_type}"
+
 
 class BookingService(BaseService):
     """Модель бронирования услуги."""
@@ -170,22 +174,7 @@ class BookingService(BaseService):
     class Meta:
         verbose_name = "бронь услуги"
         verbose_name_plural = "брони услуг"
-#
-#
-# class Price(models.Model):
-#     """Базовая модель прайса."""
-#
-#     name = models.CharField(
-#         max_length=Limits.MAX_LEN_SERVICE_NAME,
-#         choices=Default.CYNOLOGY_SERVICES,
-#     )
-#     cost = models.CharField(
-#         validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)]
-#     )
-#     service = models.ForeignKey(
-#         Service, on_delete=models.CASCADE, related_name="prices"
-#     )
-#
-#     class Meta:
-#         verbose_name = "прайс"
-#         verbose_name_plural = "прайсы"
+
+    def __str__(self):
+        return f"{self.service.name} - {self.date}"
+
