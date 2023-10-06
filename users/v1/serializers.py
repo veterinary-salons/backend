@@ -21,7 +21,7 @@ class Base64ImageField(serializers.ImageField):
         )
 
 
-class UserSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -31,15 +31,6 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
         )
         extra_kwargs = {"password": {"write_only": True}}
-
-
-class CustomUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            "first_name",
-            "last_name",
-        )
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
@@ -57,10 +48,6 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         for key in user_representation:
             representation[key] = user_representation[key]
         return representation
-
-    class Meta:
-        model = User
-        fields = "__all__"
 
 
 class CustomerProfileSerializer(BaseProfileSerializer):

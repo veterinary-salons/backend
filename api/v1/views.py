@@ -1,11 +1,12 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.views import APIView
 
 from api.v1.serializers import (
     PetSerializer,
     BookingServiceSerializer,
     ServiceSerializer,
+    BookingServiceRetrieveSerializer,
 )
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
@@ -28,18 +29,23 @@ User = get_user_model()
 
 class PetViewSet(ModelViewSet):
     queryset = Pet.objects.all()
+
     def list(self, request, *args, **kwargs):
         queryset = Pet.objects.all()
         serializer = PetSerializer(queryset, many=True)
         return Response(serializer.data)
+
     def retrieve(self, request, *args, **kwargs):
         pet = get_object_or_404(self.queryset, owner_id=kwargs["customer_id"])
         serializer = PetSerializer(pet)
         return Response(serializer.data)
 
+
 class BaseServiceViewSet(ModelViewSet):
     queryset = Service.objects.select_related("supplier")
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     @action(
         methods=["POST"],
@@ -64,22 +70,43 @@ class ServiceViewSet(BaseServiceViewSet):
         serializer.save(supplier=supplier_profile)
 
 
-class BookingServiceViewSet(ModelViewSet):
-    queryset = BookingService.objects.all()
-    serializer_class = BookingServiceSerializer
-    permission_classes = [IsAuthenticated,]
+# class BookingServiceViewSet(ModelViewSet):
+#     queryset = BookingService.objects.all()
+#     serializer_class = BookingServiceSerializer
+#     permission_classes = [IsAuthenticated,]
+#
+#     def perform_create(self, serializer):
+#         # serializer.is_valid(raise_exception=True)
+#         customer_profile = CustomerProfile.objects.get(
+#             related_user=self.request.user
+#         )
+#         serializer.save(customer=customer_profile)
 
-    def perform_create(self, serializer):
-        serializer.is_valid(raise_exception=True)
-        customer_profile = CustomerProfile.objects.get(
-            related_user=self.request.user
-        )
-        serializer.save(customer=customer_profile)
 
 class BookingServiceAPIView(generics.CreateAPIView):
     queryset = BookingService.objects.all()
     serializer_class = BookingServiceSerializer
-    permission_classes = [IsAuthenticated,]
-    def perform_create(self, serializer):
-        customer_profile = CustomerProfile.objects.get(related_user=self.request.user)
-        serializer.save(customer=customer_profile)
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        customer_profile = CustomerProfile.objects.get(
+            related_user=request.user
+        )
+        supplier_id = self.kwargs.get("supplier_id")
+        supplier_profile = SupplierProfile.objects.get(id=supplier_id)
+
+        serializer.save(customer=customer_profile, supplier=supplier_profile)
+        instance = serializer.instance
+
+        serializer = BookingServiceRetrieveSerializer(
+            instance
+        )  # Используем Retrieve Serializer для включения вложенных полей
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
