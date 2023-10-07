@@ -1,11 +1,12 @@
 from django.contrib.postgres.fields import ArrayField
 
+from core.classes import YesNoDontKnow
 from core.constants import Default, Messages, Limits
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import UniqueConstraint
+from django.db.models import UniqueConstraint, Q
 
-from core.validators import RangeValueValidator, validate_age
+from core.validators import RangeValueValidator
 from users.models import CustomerProfile
 
 
@@ -37,15 +38,22 @@ class Animal(AnimalAbstract):
 class Age(models.Model):
     year = models.PositiveIntegerField(
         validators=[MaxValueValidator(Limits.MAX_AGE_PET)],
+        null=True, blank=True,
     )
     month = models.PositiveSmallIntegerField(
-        validators=[
-            MaxValueValidator(Limits.MAX_MONTH_QUANTITY)
-        ],
+        validators=[MaxValueValidator(Limits.MAX_MONTH_QUANTITY)],
+        null=True, blank=True,
     )
+
     class Meta:
         verbose_name = "возраст питомца"
         verbose_name_plural = "возрасты питомцев"
+        constraints = [
+            models.CheckConstraint(
+                check=Q(year__gt=0) | Q(month__gt=0),
+                name='year_or_month_not_zero'
+            )
+        ]
 
 class Pet(AnimalAbstract):
     """Характеристика питомца.
@@ -84,12 +92,25 @@ class Pet(AnimalAbstract):
         max_length=Limits.MAX_LEN_ANIMAL_NAME,
     )
     age = models.ForeignKey(
-        Age, on_delete=models.SET_NULL, null=True, blank=True
+        Age,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="pets",
     )
-
-    weight = models.CharField(max_length=10, choices=Default.WEIGHT_CHOICES)
-    is_sterilized = models.BooleanField(default=False)
-    is_vaccinated = models.BooleanField(default=False)
+    pet_photo = models.ImageField(null=True, blank=True)
+    weight = models.FloatField(
+        validators=[RangeValueValidator(0, Limits.MAX_WEIGHT)]
+    )
+    is_sterilized = models.CharField(
+        max_length=10,
+        choices=YesNoDontKnow.choices,
+        default=YesNoDontKnow.DONT_KNOW,
+    )
+    is_vaccinated = models.CharField(
+        max_length=10,
+        choices=YesNoDontKnow.choices,
+        default=YesNoDontKnow.DONT_KNOW,
+    )
     owner = models.ForeignKey(
         CustomerProfile,
         verbose_name="владелец питомца",

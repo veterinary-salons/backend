@@ -1,15 +1,11 @@
-from typing import Any
+from django.core.exceptions import ValidationError
 
-from rest_framework.exceptions import ValidationError
-from rest_framework.relations import StringRelatedField, PrimaryKeyRelatedField
-
-from core.utils import remove_dict_fields
 from core.constants import Limits, Default
-
+from core.validators import validate_age_in_pet
 
 from pets.models import Pet, Age
 from services.models import Schedule
-from users.models import SupplierProfile, CustomerProfile
+from users.models import SupplierProfile
 from users.v1.serializers import (
     BaseProfileSerializer,
     Base64ImageField,
@@ -29,42 +25,77 @@ class AgeSerializer(serializers.ModelSerializer):
             "month",
         )
 
-    def validate(self, data):
-        if (
-            data.get("year") > Limits.MAX_AGE_PET
-            or data.get("year") < Limits.MIN_AGE_PET
-        ):
+    def validate_year(self, value):
+        if value > Limits.MAX_AGE_PET or value < Limits.MIN_AGE_PET:
             raise ValidationError(
                 "Возраст питомца должен быть от "
                 f"{Limits.MIN_AGE_PET} до {Limits.MAX_AGE_PET} лет"
             )
-        if (
-            data.get("month") < 0
-            or data.get("month") > Limits.MAX_MONTH_QUANTITY
-        ):
+        return value
+
+    def validate_month(self, value):
+        if value > Limits.MAX_MONTH_QUANTITY or value < 0:
             raise ValidationError(
-                f"Количество месяцев должно быть от 0 до 12."
+                "Месяц возраста питомца должен быть от "
+                f"0 до {Limits.MAX_MONTH_QUANTITY} месяцев"
             )
+        return value
 
 
 class PetSerializer(serializers.ModelSerializer):
     """Сериализация питомцев."""
 
-    age = AgeSerializer(read_only=True)
+    weight = serializers.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        required=False,
+    )
+    age = AgeSerializer(required=True)
+    def validate_age(self, value):
+        return value
 
     def validate(self, data):
+        age = AgeSerializer(data=data)
+        age.is_valid(raise_exception=True)
+        age, _ = Age.objects.get_or_create(**data.get("age"))
         if Pet.objects.filter(
             name=data.get("name"),
-            age=data.get("age"),
+            age_id=age.id,
             breed=data.get("breed"),
             type=data.get("type"),
         ).exists():
             raise serializers.ValidationError("Такой питомец уже существует!")
         return data
 
+    def create(self, validated_data):
+        """Создание нового питомца."""
+        age_serializer = AgeSerializer(data=validated_data.get("age"))
+        age_serializer.is_valid(raise_exception=True)
+        validated_data["age"] = Age.objects.get_or_create(
+            **validated_data.get("age")
+        )[0]
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """Обновление питомца."""
+        age_serializer = AgeSerializer(data=validated_data.get("age"))
+        age_serializer.is_valid(raise_exception=True)
+        validated_data["age"] = Age.objects.get_or_create(
+            **validated_data.get("age")
+        )[0]
+        instance.age = validated_data["age"]
+        return super().update(instance, validated_data)
+
     class Meta:
         model = Pet
-        fields = "__all__"
+        fields = (
+            "name",
+            "breed",
+            "type",
+            "age",
+            "weight",
+            "pet_photo",
+        )
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -132,7 +163,6 @@ class ServiceSerializer(BaseServiceSerializer):
 
         name = data.get("name")
         user = self.context.get("request").user
-        print(user)
         if Service.objects.filter(
             name=name,
             supplier=user.profile_id,
@@ -183,8 +213,12 @@ class BaseBookingServiceSerializer(serializers.ModelSerializer):
             "supplier_place",
         )
 
+
 class BookingServiceSerializer(BaseBookingServiceSerializer):
-    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all())
+    service = serializers.PrimaryKeyRelatedField(
+        queryset=Service.objects.all()
+    )
+
     def validate(self, data):
         service = data.get("service")
         if BookingService.objects.filter(
@@ -193,6 +227,7 @@ class BookingServiceSerializer(BaseBookingServiceSerializer):
         ).exists():
             raise serializers.ValidationError("Такая бронь уже существует!")
         return data
+
 
 class BookingServiceRetrieveSerializer(BaseBookingServiceSerializer):
     service = ServiceSerializer(read_only=True)

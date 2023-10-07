@@ -3,8 +3,7 @@ from api.v1.views import (
     ServiceViewSet,
     BaseServiceViewSet,
     BookingServiceAPIView,
-    # BookingServiceAPIView,
-)  # BookingServiceViewSet, ServiceViewSet
+)
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
@@ -21,11 +20,6 @@ router.register(
     BaseServiceViewSet,
 )
 
-# router.register(
-#     "profiles/customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)",
-#     BookingServiceAPIView.as_view(),
-#     name = "bookingview"
-# )
 router.register(
     "services",
     ServiceViewSet,

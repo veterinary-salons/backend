@@ -24,6 +24,7 @@ class Limits:
     MAX_LEN_EMAIL = 50
     MAX_LEN_ADDRESS = 100
     MAX_MONTH_QUANTITY = 11
+    MAX_WEIGHT = 200
 
 class Messages:
     def __setattr__(self, name: str, value: tuple) -> None:

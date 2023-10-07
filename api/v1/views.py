@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -7,17 +8,16 @@ from api.v1.serializers import (
     BookingServiceSerializer,
     ServiceSerializer,
     BookingServiceRetrieveSerializer,
+    AgeSerializer,
 )
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
 
-from pets.models import Pet
+from pets.models import Pet, Age
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-    AllowAny,
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -29,16 +29,29 @@ User = get_user_model()
 
 class PetViewSet(ModelViewSet):
     queryset = Pet.objects.all()
-
+    serializer_class = PetSerializer
     def list(self, request, *args, **kwargs):
-        queryset = Pet.objects.all()
-        serializer = PetSerializer(queryset, many=True)
+        serializer = PetSerializer(self.queryset, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         pet = get_object_or_404(self.queryset, owner_id=kwargs["customer_id"])
         serializer = PetSerializer(pet)
         return Response(serializer.data)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        if CustomerProfile.objects.get(
+            related_user=self.request.user
+        ).id != int(kwargs["customer_id"]):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = PetSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        customer_profile = CustomerProfile.objects.get(
+            related_user=self.request.user
+        )
+        serializer.save(owner=customer_profile)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class BaseServiceViewSet(ModelViewSet):

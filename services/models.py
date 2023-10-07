@@ -20,6 +20,7 @@ from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
 
+
 class Schedule(models.Model):
     """Расписание специалиста."""
 

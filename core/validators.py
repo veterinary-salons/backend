@@ -82,7 +82,8 @@ def validate_working_hours(value):
         raise ValidationError("Конечное время должно быть больше начального.")
 
 
-def validate_age(value):
+def validate_age_in_pet(value):
+
     if value[0] < Limits.MIN_AGE_PET or value[0] > Limits.MAX_AGE_PET:
         raise ValidationError(
             f"Возраст питомца должен быть от {Limits.MIN_AGE_PET} до "
@@ -90,7 +91,7 @@ def validate_age(value):
         )
 
     if value[1] < 0 or value[1] > 12:
-        raise ValidationError(f"Количество месяцев долджно быть от 0 до 12.")
+        raise ValidationError(f"Количество месяцев долджно быть от 0 до 11.")
 
 
 class PhoneNumberValidator(BaseValidator):
