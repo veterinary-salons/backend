@@ -208,9 +208,9 @@ class SupplierSerializer(BaseProfileSerializer):
         model = SupplierProfile
         fields = (
             "photo",
-            "contact_email",
             "address",
             "phone_number",
             "user",
             "service",
         )
+        depth=1

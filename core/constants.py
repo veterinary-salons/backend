@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+
 class Limits:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
@@ -24,6 +27,12 @@ class Limits:
     MAX_LEN_EMAIL = 50
     MAX_LEN_ADDRESS = 100
     MAX_MONTH_QUANTITY = 11
+
+    CONFIRMATION_CODE_LENGTH = 5
+
+    RECOVERY_ACCESS_TOKEN_LIFETIME = timedelta(minutes=10)
+    EMAIL_CODE_LIFETIME = timedelta(minutes=10)
+
 
 class Messages:
     def __setattr__(self, name: str, value: tuple) -> None:
