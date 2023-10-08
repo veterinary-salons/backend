@@ -29,6 +29,7 @@ User = get_user_model()
 
 class PetViewSet(ModelViewSet):
     queryset = Pet.objects.all()
+    serializer_class = PetSerializer
 
     def list(self, request, *args, **kwargs):
         queryset = Pet.objects.all()
