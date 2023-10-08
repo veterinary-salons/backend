@@ -24,7 +24,7 @@ class SignUpProfileSerializer(serializers.Serializer):
     def validate(self, attrs):
         user_data = {
             field: attrs.pop(field)
-            for field in {"first_name", "last_name", "email"}
+            for field in {"first_name", "last_name", "email", "password"}
         }
         attrs["user"] = user_data
         return attrs
