@@ -1,7 +1,6 @@
 from django.core.exceptions import ValidationError
 
 from core.constants import Limits, Default
-from core.validators import validate_age_in_pet
 
 from pets.models import Pet, Age
 from services.models import Schedule
@@ -12,7 +11,7 @@ from users.v1.serializers import (
     SupplierProfileSerializer,
 )
 from rest_framework import serializers
-from services.models import BookingService, Service
+from services.models import Booking, Service
 
 
 class AgeSerializer(serializers.ModelSerializer):
@@ -51,6 +50,7 @@ class PetSerializer(serializers.ModelSerializer):
         required=False,
     )
     age = AgeSerializer(required=True)
+
     def validate_age(self, value):
         return value
 
@@ -126,6 +126,12 @@ class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализатор услуг для бронирования."""
 
     schedule = ScheduleSerializer(read_only=True)
+    booking = serializers.PrimaryKeyRelatedField(
+        # queryset=BookingService.objects.all(),
+        required=False,
+        default=False,
+        read_only=True,
+    )
 
     class Meta:
         model = Service
@@ -135,6 +141,7 @@ class BaseServiceSerializer(serializers.ModelSerializer):
             "price",
             "description",
             "schedule",
+            "booking",
         )
 
 
@@ -200,37 +207,63 @@ class FilterServicesSerializer(serializers.Serializer):
     )
 
 
-class BaseBookingServiceSerializer(serializers.ModelSerializer):
+class BaseBookingSerializer(serializers.ModelSerializer):
     supplier = SupplierProfileSerializer(read_only=True)
 
     class Meta:
-        model = BookingService
+        model = Booking
         fields = (
             "to_date",
-            "supplier",
-            "service",
             "customer_place",
             "supplier_place",
+            "pet",
         )
 
 
-class BookingServiceSerializer(BaseBookingServiceSerializer):
-    service = serializers.PrimaryKeyRelatedField(
-        queryset=Service.objects.all()
+class BookingSerializer(BaseBookingSerializer):
+    booking_services = BaseServiceSerializer(
+        many=True,
     )
 
-    def validate(self, data):
-        service = data.get("service")
-        if BookingService.objects.filter(
-            service=service,
-            customer=self.context.get("request").user.profile_id,
-        ).exists():
-            raise serializers.ValidationError("Такая бронь уже существует!")
-        return data
+    def create(self, validated_data, **kwargs):
+        booking_services_data = validated_data.pop('booking_services')
+        booking_service = Booking.objects.create(**validated_data)
+        supplier = SupplierProfile.objects.get(
+            id=self.context["view"].kwargs.get("supplier_id")
+        )
+        for service_data in booking_services_data:
+            service = Service.objects.filter(
+                supplier=supplier,
+                **dict(service_data),
+            ).first()
+            specialist_type = service.specialist_type
+            service_data.update(
+                {
+                    "supplier_id": self.context["view"].kwargs.get("supplier_id"),
+                    "specialist_type": specialist_type,
+                    "booking": booking_service,
+                }
+            )
+            Service.objects.create(**service_data)
+        return booking_service
+
+    # def validate(self, data):
+    #     service = data.get("service")
+    #     if BookingService.objects.filter(
+    #         service=service,
+    #         customer=self.context.get("request").user.profile_id,
+    #     ).exists():
+    #         raise serializers.ValidationError("Такая бронь уже существует!")
+    #     return data
+
+    class Meta(BaseBookingSerializer.Meta):
+        fields = BaseBookingSerializer.Meta.fields + ("booking_services",)
 
 
-class BookingServiceRetrieveSerializer(BaseBookingServiceSerializer):
-    service = ServiceSerializer(read_only=True)
+class BookingServiceRetrieveSerializer(BaseBookingSerializer):
+    service = ServiceSerializer(
+        read_only=True,
+    )
 
 
 class SupplierSerializer(BaseProfileSerializer):
@@ -238,14 +271,3 @@ class SupplierSerializer(BaseProfileSerializer):
     service = ServiceSerializer(
         many=True, read_only=True, source="service_set"
     )
-
-    class Meta:
-        model = SupplierProfile
-        fields = (
-            "photo",
-            "contact_email",
-            "address",
-            "phone_number",
-            "user",
-            "service",
-        )

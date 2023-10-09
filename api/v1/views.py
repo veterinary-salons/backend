@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from api.v1.serializers import (
     PetSerializer,
-    BookingServiceSerializer,
+    BookingSerializer,
     ServiceSerializer,
     BookingServiceRetrieveSerializer,
     AgeSerializer,
@@ -21,7 +21,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from services.models import BookingService, Service
+from services.models import Booking, Service
 from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
@@ -30,6 +30,7 @@ User = get_user_model()
 class PetViewSet(ModelViewSet):
     queryset = Pet.objects.all()
     serializer_class = PetSerializer
+
     def list(self, request, *args, **kwargs):
         serializer = PetSerializer(self.queryset, many=True)
         return Response(serializer.data)
@@ -97,29 +98,17 @@ class ServiceViewSet(BaseServiceViewSet):
 
 
 class BookingServiceAPIView(generics.CreateAPIView):
-    queryset = BookingService.objects.all()
-    serializer_class = BookingServiceSerializer
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
     permission_classes = [
         IsAuthenticated,
     ]
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
 
+    def perform_create(self, serializer):
         customer_profile = CustomerProfile.objects.get(
-            related_user=request.user
+            related_user=self.request.user,
         )
         supplier_id = self.kwargs.get("supplier_id")
         supplier_profile = SupplierProfile.objects.get(id=supplier_id)
-
-        serializer.save(customer=customer_profile, supplier=supplier_profile)
-        instance = serializer.instance
-
-        serializer = BookingServiceRetrieveSerializer(
-            instance
-        )  # Используем Retrieve Serializer для включения вложенных полей
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        serializer.save(customer=customer_profile, supplier=supplier_profile,)
