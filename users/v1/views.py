@@ -15,5 +15,5 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
     """Отображение профиля специалиста."""
     queryset = SupplierProfile.objects.prefetch_related("related_user")
     serializer_class = SupplierSerializer
-    permission_classes = [IsAuthenticated,]
+    # permission_classes = [IsAuthenticated,]
 

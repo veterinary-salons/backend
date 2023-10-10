@@ -270,3 +270,8 @@ class SupplierSerializer(BaseProfileSerializer):
     service = ServiceSerializer(
         many=True, read_only=True, source="service_set"
     )
+    class Meta:
+        model = SupplierProfile
+        verbose_name = "Специалист"
+        verbose_name_plural = "Специалисты"
+        fields = ("phone_number", "contact_email", "service", "address", "email", "password", "photo",)
