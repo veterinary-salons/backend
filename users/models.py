@@ -81,11 +81,19 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name",]
+    REQUIRED_FIELDS = [
+        "first_name",
+        "last_name",
+    ]
 
     class Meta:
         indexes = [
-            models.Index(fields=["profile_content_type", "profile_id",]),
+            models.Index(
+                fields=[
+                    "profile_content_type",
+                    "profile_id",
+                ]
+            ),
         ]
 
 

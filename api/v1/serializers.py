@@ -127,7 +127,6 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 
     schedule = ScheduleSerializer(read_only=True)
     booking = serializers.PrimaryKeyRelatedField(
-        # queryset=BookingService.objects.all(),
         required=False,
         default=False,
         read_only=True,
@@ -136,6 +135,7 @@ class BaseServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = (
+            "id",
             "name",
             "pet_type",
             "price",
@@ -150,7 +150,6 @@ class ServiceSerializer(BaseServiceSerializer):
 
     class Meta(BaseServiceSerializer.Meta):
         fields = BaseServiceSerializer.Meta.fields + (
-            "id",
             "specialist_type",
             "published",
         )
@@ -241,20 +240,20 @@ class BookingSerializer(BaseBookingSerializer):
                 {
                     "supplier_id": self.context["view"].kwargs.get("supplier_id"),
                     "specialist_type": specialist_type,
-                    "booking": booking_service,
                 }
             )
-            Service.objects.create(**service_data)
+            Service.objects.filter(**service_data).update(booking=booking_service)
         return booking_service
 
-    # def validate(self, data):
-    #     service = data.get("service")
-    #     if BookingService.objects.filter(
-    #         service=service,
-    #         customer=self.context.get("request").user.profile_id,
-    #     ).exists():
-    #         raise serializers.ValidationError("Такая бронь уже существует!")
-    #     return data
+    def validate(self, data):
+        service = data.get("service")
+        if Booking.objects.filter(
+            booking_services=service,
+            customer=self.context.get("request").user.profile_id,
+            supplier=self.context.get("view").kwargs.get("supplier_id"),
+        ).exists():
+            raise serializers.ValidationError("Такая бронь уже существует!")
+        return data
 
     class Meta(BaseBookingSerializer.Meta):
         fields = BaseBookingSerializer.Meta.fields + ("booking_services",)
