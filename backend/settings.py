@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "api",
     "pets",
     "services",
+    "goods",
     "core",
     "drf_yasg",
 ]
@@ -126,6 +127,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = "static/"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -138,4 +140,13 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(weeks=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(weeks=2),
+    "RECOVERY_ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
 }
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = getenv("EMAIL_HOST")
+EMAIL_PORT = getenv("EMAIL_PORT")
+EMAIL_HOST_USER = getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_SSL = getenv("EMAIL_USE_SSL")

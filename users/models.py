@@ -51,10 +51,7 @@ class User(AbstractUser):
     username = models.NOT_PROVIDED
     email = models.EmailField(
         unique=True,
-        max_length=50,
-        validators=[
-            MinLengthValidator(5),
-        ],
+        max_length=Limits.MAX_LEN_EMAIL,
     )
     first_name = models.CharField(
         max_length=15,
@@ -67,6 +64,11 @@ class User(AbstractUser):
         validators=[
             MinLengthValidator(2),
         ],
+    )
+
+    email_confirmed = models.BooleanField(
+        default=False,
+        blank=True, null=True,
     )
 
     profile_content_type = models.ForeignKey(
@@ -112,10 +114,10 @@ class BaseProfile(models.Model):
             phone_number_validator,
         ],
     )
-    contact_email = models.EmailField(
-        max_length=Limits.MAX_LEN_EMAIL, null=True, blank=True
+    address = models.CharField(
+        max_length=Limits.MAX_LEN_ADDRESS,
+        blank=True, null=True,
     )
-    address = models.CharField(max_length=Limits.MAX_LEN_ADDRESS)
 
     @property
     def user(self):
@@ -126,9 +128,15 @@ class BaseProfile(models.Model):
 
 
 class CustomerProfile(BaseProfile):
-    pass
+    favorite_services = models.ManyToManyField(
+        "services.Service", 
+        blank=True,
+        related_name="+"
+    )
+
     def __str__(self):
         return f"{self.user.email}"
+
 
 
 class SupplierProfile(BaseProfile):
