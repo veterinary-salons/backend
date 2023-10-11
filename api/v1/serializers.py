@@ -1,17 +1,19 @@
+from copy import deepcopy
+
 from django.core.exceptions import ValidationError
+from icecream import ic
+from rest_framework import serializers
 
 from core.constants import Limits, Default
-
 from pets.models import Pet, Age
+from services.models import Booking, Service
 from services.models import Schedule
-from users.models import SupplierProfile
+from users.models import SupplierProfile, CustomerProfile
 from users.v1.serializers import (
     BaseProfileSerializer,
     Base64ImageField,
     SupplierProfileSerializer,
 )
-from rest_framework import serializers
-from services.models import Booking, Service
 
 
 class AgeSerializer(serializers.ModelSerializer):
@@ -40,8 +42,7 @@ class AgeSerializer(serializers.ModelSerializer):
             )
         return value
 
-
-class PetSerializer(serializers.ModelSerializer):
+class BasePetSerializer(serializers.ModelSerializer):
     """Сериализация питомцев."""
 
     weight = serializers.DecimalField(
@@ -51,22 +52,6 @@ class PetSerializer(serializers.ModelSerializer):
     )
     age = AgeSerializer(required=True)
 
-    def validate_age(self, value):
-        return value
-
-    def validate(self, data):
-        age = AgeSerializer(data=data)
-        age.is_valid(raise_exception=True)
-        age, _ = Age.objects.get_or_create(**data.get("age"))
-        if Pet.objects.filter(
-            name=data.get("name"),
-            age_id=age.id,
-            breed=data.get("breed"),
-            type=data.get("type"),
-        ).exists():
-            raise serializers.ValidationError("Такой питомец уже существует!")
-        return data
-
     def create(self, validated_data):
         """Создание нового питомца."""
         age_serializer = AgeSerializer(data=validated_data.get("age"))
@@ -75,6 +60,7 @@ class PetSerializer(serializers.ModelSerializer):
             **validated_data.get("age")
         )[0]
         return super().create(validated_data)
+
 
     def update(self, instance, validated_data):
         """Обновление питомца."""
@@ -96,6 +82,24 @@ class PetSerializer(serializers.ModelSerializer):
             "weight",
             "pet_photo",
         )
+
+class PetSerializer(BasePetSerializer):
+    """Сериализация питомцев с валидацией."""
+
+    def validate(self, data):
+ 
+        age = AgeSerializer(data=data)
+        age.is_valid(raise_exception=True)
+        age, _ = Age.objects.get_or_create(**data.get("age"))
+        if Pet.objects.filter(
+            name=data.get("name"),
+            age_id=age.id,
+            breed=data.get("breed"),
+            type=data.get("type"),
+        ).exists():
+            raise serializers.ValidationError("Такой питомец уже существует!")
+        return data
+
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -223,9 +227,29 @@ class BookingSerializer(BaseBookingSerializer):
     booking_services = BaseServiceSerializer(
         many=True,
     )
+    pet = BasePetSerializer()
+ 
 
     def create(self, validated_data, **kwargs):
-        booking_services_data = validated_data.pop('booking_services')
+        """Создание бронирования.
+
+        Обрабатываем вложенные поля service и pet и вложенное в pet age.
+
+        """
+        booking_services_data = validated_data.pop("booking_services")
+        pet_data = validated_data.pop("pet")
+        age = Age.objects.get_or_create(**pet_data.pop("age"))
+        pet_data.update(
+            {
+                "age": age[0],
+                "owner": CustomerProfile.objects.get(
+                    related_user=self.context.get("request").user
+                ),
+            }
+        )
+        pet, _ = Pet.objects.get_or_create(**pet_data)
+ 
+        validated_data.update({"pet_id": pet.id})
         booking_service = Booking.objects.create(**validated_data)
         supplier = SupplierProfile.objects.get(
             id=self.context["view"].kwargs.get("supplier_id")
@@ -235,28 +259,61 @@ class BookingSerializer(BaseBookingSerializer):
                 supplier=supplier,
                 **dict(service_data),
             ).first()
-            specialist_type = service.specialist_type
-            service_data.update(
-                {
-                    "supplier_id": self.context["view"].kwargs.get("supplier_id"),
-                    "specialist_type": specialist_type,
-                }
-            )
-            Service.objects.filter(**service_data).update(booking=booking_service)
+            try:
+                specialist_type = service.specialist_type
+                service_data.update(
+                    {
+                        "supplier_id": self.context["view"].kwargs.get(
+                            "supplier_id"
+                        ),
+                        "specialist_type": specialist_type,
+                    }
+                )
+                Service.objects.filter(**service_data).update(
+                    booking=booking_service
+                )
+            except AttributeError:
+                raise serializers.ValidationError(
+                    {"error": "У специалиста нет такой услуги!"}
+                )
         return booking_service
 
     def validate(self, data):
-        service = data.get("service")
-        if Booking.objects.filter(
-            booking_services=service,
-            customer=self.context.get("request").user.profile_id,
-            supplier=self.context.get("view").kwargs.get("supplier_id"),
-        ).exists():
-            raise serializers.ValidationError("Такая бронь уже существует!")
+        _data = deepcopy(data)
+        service = _data.get("booking_services")
+        for service_data in service:
+            pet_data = _data.pop("pet")
+            age = Age.objects.get_or_create(**pet_data.pop("age"))
+            pet_data.update(
+                {
+                    "age": age[0],
+                    "owner": CustomerProfile.objects.get(
+                        related_user=self.context.get("request").user
+                    ),
+                }
+            )
+            if Pet.objects.filter(**pet_data).exists():
+                pet_id = Pet.objects.filter(**pet_data).first().id
+            else:
+                pet_id = None
+            if Booking.objects.filter(
+                booking_services__name=service_data.get("name"),
+                booking_services__price=service_data.get("price"),
+                booking_services__pet_type=service_data.get("pet_type"),
+                customer=self.context.get("request").user.profile_id,
+                supplier=self.context.get("view").kwargs.get("supplier_id"),
+                pet=pet_id,
+            ).exists():
+                raise serializers.ValidationError(
+                    "Такая бронь уже существует!"
+                )
         return data
 
     class Meta(BaseBookingSerializer.Meta):
-        fields = BaseBookingSerializer.Meta.fields + ("booking_services",)
+        fields = BaseBookingSerializer.Meta.fields + (
+            "id",
+            "booking_services",
+        )
 
 
 class BookingServiceRetrieveSerializer(BaseBookingSerializer):
@@ -270,8 +327,8 @@ class SupplierSerializer(BaseProfileSerializer):
     service = ServiceSerializer(
         many=True, read_only=True, source="service_set"
     )
-    class Meta:
-        model = SupplierProfile
-        verbose_name = "Специалист"
-        verbose_name_plural = "Специалисты"
-        fields = ("phone_number", "contact_email", "service", "address", "email", "password", "photo",)
+    # class Meta:
+    #     model = SupplierProfile
+    #     verbose_name = "Специалист"
+    #     verbose_name_plural = "Специалисты"
+    #     fields = ("phone_number", "contact_email", "service", "address", "email", "password", "photo",)

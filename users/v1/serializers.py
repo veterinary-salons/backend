@@ -57,7 +57,7 @@ class CustomerProfileSerializer(BaseProfileSerializer):
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
-    photo = Base64ImageField(allow_null=True)
+    photo = Base64ImageField(allow_null=True, required=False,)
 
     class Meta:
         model = SupplierProfile

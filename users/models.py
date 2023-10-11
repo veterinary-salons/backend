@@ -79,7 +79,6 @@ class User(AbstractUser):
     profile = GenericForeignKey("profile_content_type", "profile_id")
 
     objects = CustomUserManager()
-
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = [
         "first_name",
@@ -128,6 +127,8 @@ class BaseProfile(models.Model):
 
 class CustomerProfile(BaseProfile):
     pass
+    def __str__(self):
+        return f"{self.user.email}"
 
 
 class SupplierProfile(BaseProfile):

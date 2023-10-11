@@ -28,14 +28,14 @@ def validate_services(
 ):
     if service_type == Default.SERVICES[0][0] and pet_type != "dog":
         raise ValidationError("Кинолог работает только с собаками.")
-    # print(service_type, Default.SERVICES[0][0])
+ 
     # if service_type != Default.SERVICES[0][0] and any(
     #     (
     #         task,
     #         formats,
     #     )
     # ):
-    #     print("Поля `task` и `formats` только для Сервиса")
+ 
     #     raise ValidationError("Поля `task` и `formats` только для Кинолога.")
     # if service_type != Default.SERVICES[3][0] and grooming_type:
     #     raise ValidationError("Поле `grooming_type` только для Грумера.")

@@ -119,7 +119,6 @@ class Booking(BaseService):
     def __str__(self):
         return f"{self.name} - {self.date}"
 
-
 class Service(BaseService):
     pet_type = models.CharField(
         verbose_name="тип животного",
@@ -138,6 +137,8 @@ class Service(BaseService):
         Booking,
         on_delete=models.CASCADE,
         related_name="booking_services",
+        null=True,
+        blank=True,
     )
     schedule = models.ForeignKey(
         Schedule, on_delete=models.CASCADE, null=True, blank=True

@@ -26,22 +26,26 @@ from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
 
-
+ 
 class PetViewSet(ModelViewSet):
     queryset = Pet.objects.all()
     serializer_class = PetSerializer
+ 
 
     def list(self, request, *args, **kwargs):
+ 
         serializer = PetSerializer(self.queryset, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
+ 
         pet = get_object_or_404(self.queryset, owner_id=kwargs["customer_id"])
         serializer = PetSerializer(pet)
         return Response(serializer.data)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+ 
         if CustomerProfile.objects.get(
             related_user=self.request.user
         ).id != int(kwargs["customer_id"]):
@@ -56,6 +60,7 @@ class PetViewSet(ModelViewSet):
 
 
 class BaseServiceViewSet(ModelViewSet):
+ 
     queryset = Service.objects.select_related("supplier")
     permission_classes = [
         IsAuthenticated,
@@ -84,26 +89,13 @@ class ServiceViewSet(BaseServiceViewSet):
         serializer.save(supplier=supplier_profile)
 
 
-# class BookingServiceViewSet(ModelViewSet):
-#     queryset = BookingService.objects.all()
-#     serializer_class = BookingServiceSerializer
-#     permission_classes = [IsAuthenticated,]
-#
-#     def perform_create(self, serializer):
-#         # serializer.is_valid(raise_exception=True)
-#         customer_profile = CustomerProfile.objects.get(
-#             related_user=self.request.user
-#         )
-#         serializer.save(customer=customer_profile)
-
-
 class BookingServiceAPIView(generics.CreateAPIView):
+ 
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [
         IsAuthenticated,
     ]
-
 
     def perform_create(self, serializer):
         customer_profile = CustomerProfile.objects.get(

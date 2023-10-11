@@ -24,7 +24,6 @@ router.register(
     "services",
     ServiceViewSet,
 )
-
 urlpatterns = [
     path("auth/", include("authentication.v1.urls")),
     re_path(
