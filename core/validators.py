@@ -28,39 +28,17 @@ def validate_services(
 ):
     if service_type == Default.SERVICES[0][0] and pet_type != "dog":
         raise ValidationError("Кинолог работает только с собаками.")
- 
-    # if service_type != Default.SERVICES[0][0] and any(
-    #     (
-    #         task,
-    #         formats,
-    #     )
-    # ):
- 
-    #     raise ValidationError("Поля `task` и `formats` только для Кинолога.")
-    # if service_type != Default.SERVICES[3][0] and grooming_type:
-    #     raise ValidationError("Поле `grooming_type` только для Грумера.")
-    # if service_type == Default.SERVICES[3][0] and not grooming_type:
-    #     raise ValidationError("Поле `grooming_type` необходимо заполнить.")
-    # if service_type == Default.SERVICES[0][0] and not all(
-    #     (
-    #         task,
-    #         formats,
-    #     )
-    # ):
-    #     raise ValidationError("Поле `task` и `formats` необходимо заполнить.")
-    # if service_type == Default.SERVICES[1][0] and not vet_services:
-    #     raise ValidationError("Поле `vet_services` необходимо заполнить.")
-    # if service_type != Default.SERVICES[2][0] and vet_services:
-    #     raise ValidationError("Поле `vet_services` только для ветеринара.")
 
 
 class RangeValueValidator(BaseValidator):
+    """Проверяем значения на нахождение от value_from до value_to."""
+
     def __init__(self, value_from, value_to):
         self.value_from = value_from
         self.value_to = value_to
 
     def __call__(self, value):
-        if not self.value_from < int(value) < self.value_to:
+        if not self.value_from < int(value) <= self.value_to:
             raise ValidationError(
                 f"Значение {value} должно быть в пределах от {self.value_from}"
                 f" до {self.value_to}"

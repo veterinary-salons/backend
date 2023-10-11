@@ -26,7 +26,6 @@ class AnimalAbstract(models.Model):
     class Meta:
         abstract = True
 
-
 class Animal(AnimalAbstract):
     """Характеристика животного."""
 
@@ -37,12 +36,14 @@ class Animal(AnimalAbstract):
 
 class Age(models.Model):
     year = models.PositiveIntegerField(
-        validators=[MaxValueValidator(Limits.MAX_AGE_PET)],
-        null=True, blank=True,
+        validators=[RangeValueValidator(0, Limits.MAX_AGE_PET)],
+        null=True,
+        blank=True,
     )
     month = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(Limits.MAX_MONTH_QUANTITY)],
-        null=True, blank=True,
+        validators=[RangeValueValidator(0, Limits.MAX_MONTH_QUANTITY)],
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -51,9 +52,10 @@ class Age(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=Q(year__gt=0) | Q(month__gt=0),
-                name='year_or_month_not_zero'
+                name="year_or_month_not_zero",
             )
         ]
+
 
 class Pet(AnimalAbstract):
     """Характеристика питомца.

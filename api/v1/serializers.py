@@ -13,6 +13,7 @@ from users.v1.serializers import (
     BaseProfileSerializer,
     Base64ImageField,
     SupplierProfileSerializer,
+    SupplierSerializer,
 )
 
 
@@ -22,11 +23,13 @@ class AgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Age
         fields = (
+            "id",
             "year",
             "month",
         )
 
-    def validate_year(self, value):
+    @staticmethod
+    def validate_year(value):
         if value > Limits.MAX_AGE_PET or value < Limits.MIN_AGE_PET:
             raise ValidationError(
                 "Возраст питомца должен быть от "
@@ -34,7 +37,8 @@ class AgeSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def validate_month(self, value):
+    @staticmethod
+    def validate_month(value):
         if value > Limits.MAX_MONTH_QUANTITY or value < 0:
             raise ValidationError(
                 "Месяц возраста питомца должен быть от "
@@ -54,12 +58,15 @@ class BasePetSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Создание нового питомца."""
-        age_serializer = AgeSerializer(data=validated_data.get("age"))
+        ic(validated_data)
+        age_data = validated_data.pop("age")
+        age_serializer = AgeSerializer(data=age_data)
         age_serializer.is_valid(raise_exception=True)
-        validated_data["age"] = Age.objects.get_or_create(
-            **validated_data.get("age")
-        )[0]
-        return super().create(validated_data)
+        if Age.objects.filter(**age_data).exists():
+            age = Age.objects.filter(**age_data).first()
+        else:
+            age = Age.objects.create(**age_data)
+        return Pet.objects.create(age=age, **validated_data)
 
 
     def update(self, instance, validated_data):
@@ -80,26 +87,27 @@ class BasePetSerializer(serializers.ModelSerializer):
             "type",
             "age",
             "weight",
-            "pet_photo",
+            "owner",
+            "is_sterilized",
+            "is_vaccinated",
         )
 
 class PetSerializer(BasePetSerializer):
     """Сериализация питомцев с валидацией."""
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
 
     def validate(self, data):
- 
-        age = AgeSerializer(data=data)
+        age = AgeSerializer(data=data.get("age"))
         age.is_valid(raise_exception=True)
-        age, _ = Age.objects.get_or_create(**data.get("age"))
         if Pet.objects.filter(
             name=data.get("name"),
-            age_id=age.id,
+            age__year=age.validated_data.get("year"),
+            age__month=age.validated_data.get("month"),
             breed=data.get("breed"),
             type=data.get("type"),
         ).exists():
             raise serializers.ValidationError("Такой питомец уже существует!")
         return data
-
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -124,7 +132,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "sunday_hours",
             "breakTime",
         )
-
 
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализатор услуг для бронирования."""
@@ -151,11 +158,13 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 
 class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
+    supplier = SupplierSerializer(read_only=True)
 
     class Meta(BaseServiceSerializer.Meta):
         fields = BaseServiceSerializer.Meta.fields + (
             "specialist_type",
             "published",
+            "supplier",
         )
 
     @staticmethod
@@ -170,7 +179,6 @@ class ServiceSerializer(BaseServiceSerializer):
 
     def validate(self, data):
         """Проверяем уникальность услуги и тип пользователя."""
-
         name = data.get("name")
         user = self.context.get("request").user
         if Service.objects.filter(
@@ -222,13 +230,11 @@ class BaseBookingSerializer(serializers.ModelSerializer):
             "pet",
         )
 
-
 class BookingSerializer(BaseBookingSerializer):
     booking_services = BaseServiceSerializer(
         many=True,
     )
     pet = BasePetSerializer()
- 
 
     def create(self, validated_data, **kwargs):
         """Создание бронирования.
@@ -248,7 +254,7 @@ class BookingSerializer(BaseBookingSerializer):
             }
         )
         pet, _ = Pet.objects.get_or_create(**pet_data)
- 
+
         validated_data.update({"pet_id": pet.id})
         booking_service = Booking.objects.create(**validated_data)
         supplier = SupplierProfile.objects.get(
@@ -320,15 +326,3 @@ class BookingServiceRetrieveSerializer(BaseBookingSerializer):
     service = ServiceSerializer(
         read_only=True,
     )
-
-
-class SupplierSerializer(BaseProfileSerializer):
-    photo = Base64ImageField(allow_null=True)
-    service = ServiceSerializer(
-        many=True, read_only=True, source="service_set"
-    )
-    # class Meta:
-    #     model = SupplierProfile
-    #     verbose_name = "Специалист"
-    #     verbose_name_plural = "Специалисты"
-    #     fields = ("phone_number", "contact_email", "service", "address", "email", "password", "photo",)

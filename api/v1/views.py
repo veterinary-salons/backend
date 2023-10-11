@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from icecream import ic
 from rest_framework import generics, status
 from rest_framework.views import APIView
 
@@ -26,26 +27,18 @@ from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
 
- 
+
 class PetViewSet(ModelViewSet):
-    queryset = Pet.objects.all()
+    queryset = Pet.objects.select_related("owner")
     serializer_class = PetSerializer
- 
 
     def list(self, request, *args, **kwargs):
- 
-        serializer = PetSerializer(self.queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
- 
-        pet = get_object_or_404(self.queryset, owner_id=kwargs["customer_id"])
-        serializer = PetSerializer(pet)
+        owner_pets = self.queryset.filter(owner__id=kwargs["customer_id"])
+        serializer = PetSerializer(owner_pets, many=True)
         return Response(serializer.data)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
- 
         if CustomerProfile.objects.get(
             related_user=self.request.user
         ).id != int(kwargs["customer_id"]):
@@ -60,10 +53,9 @@ class PetViewSet(ModelViewSet):
 
 
 class BaseServiceViewSet(ModelViewSet):
- 
     queryset = Service.objects.select_related("supplier")
     permission_classes = [
-        IsAuthenticated,
+        # IsAuthenticated,
     ]
 
     @action(
@@ -77,7 +69,7 @@ class BaseServiceViewSet(ModelViewSet):
         return Response(data=serializer.data)
 
 
-class ServiceViewSet(BaseServiceViewSet):
+class ServiceAPIView(generics.ListCreateAPIView):
     queryset = Service.objects.select_related("supplier")
     serializer_class = ServiceSerializer
 
@@ -88,9 +80,18 @@ class ServiceViewSet(BaseServiceViewSet):
         )
         serializer.save(supplier=supplier_profile)
 
+    def get(self, request, *args, **kwargs):
+        ic(self.queryset)
+        supplier_id = int(self.kwargs.get("supplier_id"))
+        services = self.queryset.filter(supplier=supplier_id)
+        ic(services)
+        ic(ServiceSerializer(services, many=True))
+        serializer = ServiceSerializer(services, many=True)
+        return Response(data=serializer.data)
+        # return Response(data=serializers_data)
+
 
 class BookingServiceAPIView(generics.CreateAPIView):
- 
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [
@@ -103,4 +104,7 @@ class BookingServiceAPIView(generics.CreateAPIView):
         )
         supplier_id = self.kwargs.get("supplier_id")
         supplier_profile = SupplierProfile.objects.get(id=supplier_id)
-        serializer.save(customer=customer_profile, supplier=supplier_profile,)
+        serializer.save(
+            customer=customer_profile,
+            supplier=supplier_profile,
+        )
