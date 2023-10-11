@@ -81,13 +81,20 @@ class User(AbstractUser):
     profile = GenericForeignKey("profile_content_type", "profile_id")
 
     objects = CustomUserManager()
-
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name",]
+    REQUIRED_FIELDS = [
+        "first_name",
+        "last_name",
+    ]
 
     class Meta:
         indexes = [
-            models.Index(fields=["profile_content_type", "profile_id",]),
+            models.Index(
+                fields=[
+                    "profile_content_type",
+                    "profile_id",
+                ]
+            ),
         ]
 
 
@@ -126,6 +133,10 @@ class CustomerProfile(BaseProfile):
         blank=True,
         related_name="+"
     )
+
+    def __str__(self):
+        return f"{self.user.email}"
+
 
 
 class SupplierProfile(BaseProfile):
