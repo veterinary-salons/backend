@@ -78,9 +78,9 @@ class PhoneNumberValidator(BaseValidator):
         self.value_to = value_to
 
     def __call__(self, value):
-        if not re.match(r"^\+7\d{10}$", value):
+        if not re.match(r"^8\d{10}$", value):
             raise ValidationError(
-                "Номер телефона должен быть в формате +7999999999"
+                "Номер телефона должен быть в формате 89999999999"
             )
 
 
