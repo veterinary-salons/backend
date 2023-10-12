@@ -2,7 +2,6 @@ import base64
 from uuid import uuid4
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from icecream import ic
 from rest_framework import serializers
 
 from users.models import CustomerProfile, SupplierProfile, User
@@ -36,6 +35,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class BaseProfileSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
+    photo = Base64ImageField(
+        allow_null=True,
+        required=False,
+    )
 
     def create(self, validated_data):
         user_data = validated_data.pop("user")
@@ -49,28 +52,34 @@ class CustomerProfileSerializer(BaseProfileSerializer):
         model = CustomerProfile
         fields = "__all__"
 
-
 class SupplierProfileSerializer(BaseProfileSerializer):
-    photo = Base64ImageField(
-        allow_null=True,
-        required=False,
-    )
-
     class Meta:
         model = SupplierProfile
         fields = "__all__"
 
 
 class SupplierSerializer(BaseProfileSerializer):
-    photo = Base64ImageField(allow_null=True)
 
     class Meta:
         model = SupplierProfile
-        verbose_name = "Специалист"
-        verbose_name_plural = "Специалисты"
+        verbose_name = "специалист"
+        verbose_name_plural = "специалисты"
         fields = (
             "phone_number",
             "contact_email",
             "address",
             "photo",
+        )
+
+class CustomerSerializer(CustomerProfileSerializer):
+
+    class Meta:
+        model = CustomerProfile
+        verbose_name = "пользователь"
+        verbose_name_plural = "пользователи"
+        fields = (
+            "phone_number",
+            "contact_email",
+            "address",
+            "user",
         )

@@ -28,7 +28,7 @@ urlpatterns = [
         name="booking",
     ),
     re_path(
-        "suppliers/(?P<supplier_id>\d+)",
+        "suppliers/(?P<supplier_id>\d+)/profile",
         ServiceAPIView.as_view(),
         name="service",
     ),

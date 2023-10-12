@@ -37,8 +37,6 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
-        # checks from django UserManager source code
-        # in case we'll ever change `is_superuser` or `is_staff` default values
         if extra_fields.setdefault("is_staff", True) is False:
             raise ValueError("Superuser must have is_staff=True")
         if extra_fields.setdefault("is_superuser", True) is False:
@@ -116,6 +114,7 @@ class BaseProfile(models.Model):
         max_length=Limits.MAX_LEN_EMAIL, null=True, blank=True
     )
     address = models.CharField(max_length=Limits.MAX_LEN_ADDRESS)
+    photo = models.ImageField(blank=True, null=True)
 
     @property
     def user(self):
@@ -126,10 +125,11 @@ class BaseProfile(models.Model):
 
 
 class CustomerProfile(BaseProfile):
-    pass
-    def __str__(self):
-        return f"{self.user.email}"
 
+    def __str__(self):
+        return f"{self.phone_number}"
 
 class SupplierProfile(BaseProfile):
-    photo = models.ImageField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.email}"
