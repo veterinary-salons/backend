@@ -2,6 +2,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from icecream import ic
 from rest_framework import generics, status
+from rest_framework.mixins import DestroyModelMixin
 from rest_framework.views import APIView
 
 from api.v1.serializers import (
@@ -69,7 +70,7 @@ class BaseServiceViewSet(ModelViewSet):
         return Response(data=serializer.data)
 
 
-class ServiceAPIView(generics.ListCreateAPIView):
+class ServiceAPIView(generics.ListCreateAPIView, DestroyModelMixin,):
     queryset = Service.objects.select_related("supplier")
     serializer_class = ServiceSerializer
 
@@ -81,14 +82,20 @@ class ServiceAPIView(generics.ListCreateAPIView):
         serializer.save(supplier=supplier_profile)
 
     def get(self, request, *args, **kwargs):
-        ic(self.queryset)
         supplier_id = int(self.kwargs.get("supplier_id"))
-        services = self.queryset.filter(supplier=supplier_id)
-        ic(services)
-        ic(ServiceSerializer(services, many=True))
-        serializer = ServiceSerializer(services, many=True)
+        serializer = ServiceSerializer(
+            self.queryset.filter(supplier=supplier_id), many=True
+        )
         return Response(data=serializer.data)
-        # return Response(data=serializers_data)
+
+    def delete(self, request, *args, **kwargs):
+        supplier_id = int(self.kwargs.get("supplier_id"))
+        supplier = SupplierProfile.objects.filter(id=supplier_id)
+        last_name = get_object_or_404(supplier).user.last_name
+        first_name = get_object_or_404(supplier).user.first_name
+        return Response(
+            status=status.HTTP_204_NO_CONTENT, data={"message": f"Пользователь {last_name} {first_name} удален"}
+        )
 
 
 class BookingServiceAPIView(generics.CreateAPIView):

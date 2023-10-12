@@ -20,10 +20,6 @@ router.register(
     BaseServiceViewSet,
 )
 
-# router.register(
-#     "suppliers",
-#     ServiceAPIView.as_view(),
-# )
 urlpatterns = [
     path("auth/", include("authentication.v1.urls")),
     re_path(
@@ -36,6 +32,6 @@ urlpatterns = [
         ServiceAPIView.as_view(),
         name="service",
     ),
-    path("profiles/", include("users.v1.urls")),
+    path("", include("users.v1.urls")),
     path("", include(router.urls)),
 ]
