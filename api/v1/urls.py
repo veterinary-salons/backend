@@ -1,10 +1,9 @@
 from api.v1.views import (
     PetViewSet,
-    ServiceViewSet,
     BaseServiceViewSet,
     BookingServiceAPIView,
-    # BookingServiceAPIView,
-)  # BookingServiceViewSet, ServiceViewSet
+    ServiceAPIView,
+)
 from django.urls import include, path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -15,7 +14,7 @@ app_name = "api"
 
 router = DefaultRouter()
 router.register(
-    "profiles/customers/(?P<customer_id>\d+)/pet",
+    "customers/(?P<customer_id>\d+)/pet",
     PetViewSet,
     basename="petviewset",
 )
@@ -25,10 +24,10 @@ router.register(
 )
 
 # router.register(
-#     "profiles/customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)",
-#     BookingServiceAPIView.as_view(),
-#     name = "bookingview"
+#     "suppliers",
+#     ServiceAPIView.as_view(),
 # )
+
 router.register(
     "services",
     ServiceViewSet,
@@ -60,6 +59,11 @@ urlpatterns = [
         "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)",
         BookingServiceAPIView.as_view(),
         name="booking",
+    ),
+    re_path(
+        "suppliers/(?P<supplier_id>\d+)",
+        ServiceAPIView.as_view(),
+        name="service",
     ),
     path("profiles/", include("users.v1.urls")),
     path("", include(router.urls)),

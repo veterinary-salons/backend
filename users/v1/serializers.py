@@ -3,6 +3,7 @@ from hashlib import md5 as md5_hash
 from uuid import uuid4
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from icecream import ic
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -46,13 +47,6 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         User.objects.create_user(**user_data, profile=profile)
         return profile
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        user_representation = representation.pop("user")
-        for key in user_representation:
-            representation[key] = user_representation[key]
-        return representation
-
 
 class CustomerProfileSerializer(BaseProfileSerializer):
     class Meta:
@@ -61,8 +55,26 @@ class CustomerProfileSerializer(BaseProfileSerializer):
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
-    photo = Base64ImageField(allow_null=True)
+    photo = Base64ImageField(
+        allow_null=True,
+        required=False,
+    )
 
     class Meta:
         model = SupplierProfile
         fields = "__all__"
+
+
+class SupplierSerializer(BaseProfileSerializer):
+    photo = Base64ImageField(allow_null=True)
+
+    class Meta:
+        model = SupplierProfile
+        verbose_name = "Специалист"
+        verbose_name_plural = "Специалисты"
+        fields = (
+            "phone_number",
+            "contact_email",
+            "address",
+            "photo",
+        )
