@@ -56,7 +56,12 @@ class RecoveryEmailSerializer(serializers.Serializer):
         user = User.objects.get(email=email)
         token = RecoveryAccessToken.for_user(user)
         attrs["token"] = str(token)
+        code = get_recovery_code(email)
+        if not code.is_valid:
+            code.update_code()
+        attrs["code"] = code.code
         return attrs
+
 
 
 class RecoveryCodeSerializer(serializers.Serializer):
