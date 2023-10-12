@@ -24,7 +24,7 @@ class SignUpProfileSerializer(serializers.Serializer):
     def validate(self, attrs):
         user_data = {
             field: attrs.pop(field)
-            for field in {"first_name", "last_name", "email"}
+            for field in {"first_name", "last_name", "email", "password"}
         }
         attrs["user"] = user_data
         return attrs
@@ -67,8 +67,8 @@ class RecoveryCodeSerializer(serializers.Serializer):
     )
 
     def validate_code(self, value):
-        user = self.context["request"].user
-        recovery_code = get_recovery_code(user)
+        email = self.context["request"].user.email
+        recovery_code = get_recovery_code(email)
         if not recovery_code.is_valid:
             recovery_code.update_code()
             raise serializers.ValidationError("code is expired")
