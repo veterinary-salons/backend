@@ -1,28 +1,25 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from icecream import ic
 from rest_framework import generics, status
 from rest_framework.mixins import DestroyModelMixin
-from rest_framework.views import APIView
 
 from api.v1.serializers import (
-    PetSerializer,
     BookingSerializer,
     ServiceSerializer,
-    BookingServiceRetrieveSerializer,
-    AgeSerializer,
 )
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
 
-from pets.models import Pet, Age
+from pets.models import Pet
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated,
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+
+from pets.serializers import PetSerializer
 from services.models import Booking, Service
 from users.models import SupplierProfile, CustomerProfile
 

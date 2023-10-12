@@ -116,7 +116,7 @@ class Pet(AnimalAbstract):
     owner = models.ForeignKey(
         CustomerProfile,
         verbose_name="владелец питомца",
-        related_name="pets",
+        related_name="pet",
         on_delete=models.CASCADE,
     )
 

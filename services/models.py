@@ -1,4 +1,3 @@
-from django.core.validators import MaxValueValidator
 from django.db.models import UniqueConstraint
 from django.utils import timezone
 

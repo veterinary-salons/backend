@@ -47,6 +47,8 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractUser):
     username = models.NOT_PROVIDED
+    first_name = None
+    last_name = None
     email = models.EmailField(
         unique=True,
         max_length=50,
@@ -54,19 +56,6 @@ class User(AbstractUser):
             MinLengthValidator(5),
         ],
     )
-    first_name = models.CharField(
-        max_length=15,
-        validators=[
-            MinLengthValidator(2),
-        ],
-    )
-    last_name = models.CharField(
-        max_length=15,
-        validators=[
-            MinLengthValidator(2),
-        ],
-    )
-
     profile_content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
@@ -79,8 +68,8 @@ class User(AbstractUser):
     objects = CustomUserManager()
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = [
-        "first_name",
-        "last_name",
+        # "first_name",
+        # "last_name",
     ]
 
     class Meta:
@@ -100,7 +89,18 @@ class BaseProfile(models.Model):
         content_type_field="profile_content_type",
         object_id_field="profile_id",
     )
-
+    first_name = models.CharField(
+        max_length=15,
+        validators=[
+            MinLengthValidator(2),
+        ],
+    )
+    last_name = models.CharField(
+        max_length=15,
+        validators=[
+            MinLengthValidator(2),
+        ],
+    )
     phone_number = models.CharField(
         max_length=12,
         validators=[

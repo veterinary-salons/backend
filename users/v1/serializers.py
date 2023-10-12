@@ -2,8 +2,11 @@ import base64
 from uuid import uuid4
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from icecream import ic
 from rest_framework import serializers
 
+from pets.models import Pet
+from pets.serializers import PetSerializer
 from users.models import CustomerProfile, SupplierProfile, User
 
 
@@ -27,8 +30,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
         fields = (
             "email",
             "password",
-            "first_name",
-            "last_name",
         )
         extra_kwargs = {"password": {"write_only": True}}
 
@@ -50,16 +51,34 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 class CustomerProfileSerializer(BaseProfileSerializer):
     class Meta:
         model = CustomerProfile
-        fields = "__all__"
+        fields = (
+            "id",
+            "photo",
+            "phone_number",
+            "contact_email",
+            "user",
+        )
+
 
 class SupplierProfileSerializer(BaseProfileSerializer):
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user_representation = representation.pop("user")
+        for key in user_representation:
+            representation[key] = user_representation[key]
+        return representation
+
     class Meta:
         model = SupplierProfile
-        fields = "__all__"
+        fields = (
+            "photo",
+            "phone_number",
+            "contact_email",
+            "user",
+        )
 
 
 class SupplierSerializer(BaseProfileSerializer):
-
     class Meta:
         model = SupplierProfile
         verbose_name = "специалист"
@@ -71,15 +90,26 @@ class SupplierSerializer(BaseProfileSerializer):
             "photo",
         )
 
-class CustomerSerializer(CustomerProfileSerializer):
+class CustomerPatchSerializer(BaseProfileSerializer):
 
-    class Meta:
-        model = CustomerProfile
-        verbose_name = "пользователь"
-        verbose_name_plural = "пользователи"
-        fields = (
-            "phone_number",
-            "contact_email",
-            "address",
-            "user",
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user_representation = representation.pop("user")
+        for key in user_representation:
+            representation[key] = user_representation[key]
+        return representation
+
+    class Meta(CustomerProfileSerializer.Meta):
+        fields = CustomerProfileSerializer.Meta.fields + (
+            "first_name",
+            "last_name",
         )
+class CustomerSerializer(CustomerPatchSerializer):
+    pet = PetSerializer(
+        many=True, read_only=True,
+    )
+    class Meta(CustomerPatchSerializer.Meta):
+        fields = CustomerPatchSerializer.Meta.fields + ("pet",)
+
+
+
