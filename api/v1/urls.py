@@ -28,10 +28,10 @@ router.register(
 #     ServiceAPIView.as_view(),
 # )
 
-router.register(
-    "services",
-    ServiceViewSet,
-)
+#router.register(
+#    "services",
+#    ServiceViewSet,
+#)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -65,6 +65,7 @@ urlpatterns = [
         ServiceAPIView.as_view(),
         name="service",
     ),
+    path("services", ServiceAPIView.as_view(), name="services"),
     path("profiles/", include("users.v1.urls")),
     path("", include(router.urls)),
 ]

@@ -2,6 +2,7 @@ from hashlib import md5 as md5_hash
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from authentication.tokens import RecoveryAccessToken
 from authentication.utils import get_recovery_code
@@ -93,7 +94,7 @@ class RecoveryPasswordSerializer(serializers.Serializer):
         user.save()
         return user
 
-class BasicProfileInfoSerializer(serilizers.Serializer):
+class BasicProfileInfoSerializer(serializers.Serializer):
     profile_type = serializers.ChoiceField(
         choices=("customer", "supplier")
     )
@@ -124,7 +125,7 @@ class SignInSerializer(TokenObtainPairSerializer):
             profile_type = "customer"
             image = None
         profile_fields = {
-            "profile_type": profile_type
+            "profile_type": profile_type,
             "id": self.user.id,
             "email": self.user.email,
             "first_name": self.user.first_name,
