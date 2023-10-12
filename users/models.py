@@ -37,6 +37,8 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
+        # checks from django UserManager source code
+        # in case we'll ever change `is_superuser` or `is_staff` default values
         if extra_fields.setdefault("is_staff", True) is False:
             raise ValueError("Superuser must have is_staff=True")
         if extra_fields.setdefault("is_superuser", True) is False:
@@ -51,10 +53,7 @@ class User(AbstractUser):
     last_name = None
     email = models.EmailField(
         unique=True,
-        max_length=50,
-        validators=[
-            MinLengthValidator(5),
-        ],
+        max_length=Limits.MAX_LEN_EMAIL,
     )
     profile_content_type = models.ForeignKey(
         ContentType,
@@ -110,10 +109,10 @@ class BaseProfile(models.Model):
             phone_number_validator,
         ],
     )
-    contact_email = models.EmailField(
-        max_length=Limits.MAX_LEN_EMAIL, null=True, blank=True
+    address = models.CharField(
+        max_length=Limits.MAX_LEN_ADDRESS,
+        blank=True, null=True,
     )
-    address = models.CharField(max_length=Limits.MAX_LEN_ADDRESS)
     photo = models.ImageField(blank=True, null=True)
 
     @property
@@ -130,6 +129,12 @@ class CustomerProfile(BaseProfile):
         return f"{self.phone_number}"
 
 class SupplierProfile(BaseProfile):
+
+    favorite_services = models.ManyToManyField(
+        "services.Service",
+        blank=True,
+        related_name="+"
+    )
 
     def __str__(self):
         return f"{self.user.email}"
