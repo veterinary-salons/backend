@@ -22,17 +22,6 @@ router.register(
     "services/${serviceType}",
     BaseServiceViewSet,
 )
-
-# router.register(
-#     "suppliers",
-#     ServiceAPIView.as_view(),
-# )
-
-router.register(
-    "services",
-    ServiceViewSet,
-)
-
 schema_view = get_schema_view(
     openapi.Info(
         title="API",

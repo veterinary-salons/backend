@@ -37,8 +37,7 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
-        # checks from django UserManager source code
-        # in case we'll ever change `is_superuser` or `is_staff` default values
+
         if extra_fields.setdefault("is_staff", True) is False:
             raise ValueError("Superuser must have is_staff=True")
         if extra_fields.setdefault("is_superuser", True) is False:
@@ -66,10 +65,7 @@ class User(AbstractUser):
 
     objects = CustomUserManager()
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = [
-        # "first_name",
-        # "last_name",
-    ]
+    REQUIRED_FIELDS = []
 
     class Meta:
         indexes = [
@@ -135,6 +131,5 @@ class SupplierProfile(BaseProfile):
         blank=True,
         related_name="+"
     )
-
     def __str__(self):
         return f"{self.user.email}"

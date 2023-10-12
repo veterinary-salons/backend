@@ -114,6 +114,3 @@ class CustomerSerializer(CustomerPatchSerializer):
     )
     class Meta(CustomerPatchSerializer.Meta):
         fields = CustomerPatchSerializer.Meta.fields + ("pet",)
-
-
-
