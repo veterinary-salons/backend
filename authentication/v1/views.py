@@ -3,7 +3,6 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from authentication.email_messages import (
     FROM_EMAIL, RECOVERY_CODE_SUBJECT, RECOVERY_CODE_MESSAGE,
@@ -11,7 +10,8 @@ from authentication.email_messages import (
 from authentication.permissions import EmailCodeConfirmed
 from authentication.v1.serializers import (
     SignUpProfileSerializer, RecoveryEmailSerializer, 
-    RecoveryCodeSerializer, RecoveryPasswordSerializer
+    RecoveryCodeSerializer, RecoveryPasswordSerializer,
+    SignInSerializer,
 )
 from authentication.utils import get_recovery_code, send_email_message
 from core.exceptions import InvalidRequestData
@@ -82,7 +82,7 @@ class SignInViewSet(viewsets.GenericViewSet):
 
     def get_serializer_class(self):
         if self.action == "create":
-            return TokenObtainPairSerializer
+            return SignInSerializer
         elif self.action == "recovery":
             return RecoveryEmailSerializer
         elif self.action == "recovery_code":

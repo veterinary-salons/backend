@@ -55,6 +55,8 @@ urlpatterns = [
         ServiceAPIView.as_view(),
         name="service",
     ),
+    path("services", ServiceAPIView.as_view(), name="services"),
+    path("profiles/", include("users.v1.urls")),
     path("", include("users.v1.urls")),
     path("", include(router.urls)),
 ]

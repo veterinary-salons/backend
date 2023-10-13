@@ -2,10 +2,12 @@ from hashlib import md5 as md5_hash
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from authentication.tokens import RecoveryAccessToken
 from authentication.utils import get_recovery_code
 from core.constants import Limits
+from core.serializers import Base64ImageField
 
 
 User = get_user_model()
@@ -91,3 +93,52 @@ class RecoveryPasswordSerializer(serializers.Serializer):
         user.set_password(password)
         user.save()
         return user
+
+class BasicProfileInfoSerializer(serializers.Serializer):
+    profile_type = serializers.ChoiceField(
+        choices=("customer", "supplier")
+    )
+    id = serializers.IntegerField()
+    email = serializers.EmailField(
+        max_length=Limits.MAX_LEN_EMAIL,
+    )
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    phone_number = serializers.CharField()
+    image = Base64ImageField(
+        required=False, allow_null=True,
+    )
+
+
+class SignInSerializer(TokenObtainPairSerializer):
+    profile_data_serializer_class = BasicProfileInfoSerializer
+
+    def validate(self, attrs):
+        token_data = super().validate(attrs)
+        profile = self.user.profile
+        if not profile:
+            raise serializers.ValidationError("this profile does not exist")
+        if isinstance(profile, SupplierProfile):
+            profile_type = "supplier"
+            image = profile.image
+        else:
+            profile_type = "customer"
+            image = None
+        profile_fields = {
+            "profile_type": profile_type,
+            "id": self.user.id,
+            "email": self.user.email,
+            "first_name": self.user.first_name,
+            "last_name": self.user.last_name,
+            "phone_number": profile.phone_number,
+            "image": image
+        }
+        profile_serializer = self.profile_data_serializer_class(
+            data=profile_data
+        )
+        serializer.is_valid()
+        profile_data = serializer.validated_data()
+        return {
+            "token_data": token_data,
+            "profile_data": profile_data,
+        }
