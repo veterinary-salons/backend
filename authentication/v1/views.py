@@ -14,12 +14,9 @@ from authentication.v1.serializers import (
     SignInSerializer,
 )
 from authentication.utils import get_recovery_code, send_email_message
-from core.exceptions import InvalidRequestData
-from core.constants import Limits
 from users.v1.serializers import (
     CustomerProfileSerializer, SupplierProfileSerializer,
 )
-
 
 class SignUpViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)
@@ -70,7 +67,6 @@ class SignUpViewSet(viewsets.GenericViewSet):
             status=HTTP_200_OK
         )
         """
-
 class SignInViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)
     allowed_methods = ("POST",)

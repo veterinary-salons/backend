@@ -9,7 +9,6 @@ class AgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Age
         fields = (
-            "id",
             "year",
             "month",
         )
@@ -79,6 +78,7 @@ class BasePetSerializer(serializers.ModelSerializer):
 
 class PetSerializer(BasePetSerializer):
     """Сериализация питомцев с валидацией."""
+
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
 
     def validate(self, data):

@@ -51,6 +51,8 @@ class Schedule(models.Model):
 
 
 class BaseService(models.Model):
+    """Базовая модель для услуг."""
+
     name = models.CharField(
         verbose_name="название услуги",
         max_length=Limits.MAX_LEN_SERVICE_NAME,
@@ -70,11 +72,12 @@ class BaseService(models.Model):
         SupplierProfile,
         on_delete=models.CASCADE,
     )
-
     class Meta:
         abstract = True
 
 class Service(BaseService):
+    """Модель услуг."""
+
     pet_type = models.CharField(
         verbose_name="тип животного",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
@@ -103,7 +106,6 @@ class Service(BaseService):
     published = models.BooleanField(
         default=False,
     )
-
     class Meta:
         verbose_name = "услуга"
         verbose_name_plural = "услуги"
@@ -118,6 +120,8 @@ class Service(BaseService):
         )
 
     def clean(self):
+        """Проверяем соответствие типа специалиста и типа питомца."""
+
         super().clean()
         validate_services(
             self.specialist_type,

@@ -77,7 +77,6 @@ class User(AbstractUser):
             ),
         ]
 
-
 class BaseProfile(models.Model):
     related_user = GenericRelation(
         User,

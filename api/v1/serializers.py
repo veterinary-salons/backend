@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from rest_framework.exceptions import ValidationError
 from core.constants import Limits, Default
 
@@ -15,7 +17,11 @@ from services.models import Service
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
+    """Сериализатор расписания специалиста."""
+
     def to_representation(self, instance):
+        """Изменяем формат вывода."""
+
         representation = dict(super().to_representation(instance))
         for key in representation:
             if representation[key]:
@@ -59,11 +65,10 @@ class BaseServiceSerializer(serializers.ModelSerializer):
             "booking",
         )
 
-
 class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
-    supplier = SupplierSerializer(read_only=True)
 
+    supplier = SupplierSerializer(read_only=True)
     class Meta(BaseServiceSerializer.Meta):
         fields = BaseServiceSerializer.Meta.fields + (
             "specialist_type",
@@ -80,7 +85,6 @@ class ServiceSerializer(BaseServiceSerializer):
                 f"Стоимость услуги должна быть от {Limits.MIN_PRICE} до "
                 f"{Limits.MAX_PRICE} р."
             )
-
     def validate(self, data):
         """Проверяем уникальность услуги и тип пользователя."""
         name = data.get("name")
@@ -95,7 +99,6 @@ class ServiceSerializer(BaseServiceSerializer):
                 "Услуги создает только специалист!"
             )
         return data
-
 
 class FilterServicesSerializer(serializers.Serializer):
     price = serializers.ListField(
@@ -123,8 +126,9 @@ class FilterServicesSerializer(serializers.Serializer):
 
 
 class BaseBookingSerializer(serializers.ModelSerializer):
-    supplier = SupplierProfileSerializer(read_only=True)
+    """Базовый сериализатор бронирования."""
 
+    supplier = SupplierProfileSerializer(read_only=True)
     class Meta:
         model = Booking
         fields = (
@@ -135,6 +139,8 @@ class BaseBookingSerializer(serializers.ModelSerializer):
         )
 
 class BookingSerializer(BaseBookingSerializer):
+    """Сериализатор бронирования."""
+
     booking_services = BaseServiceSerializer(
         many=True,
     )
@@ -143,7 +149,8 @@ class BookingSerializer(BaseBookingSerializer):
     def create(self, validated_data, **kwargs):
         """Создание бронирования.
 
-        Обрабатываем вложенные поля service и pet и вложенное в pet age.
+        Обрабатываем вложенные поля `service` и `pet` и вложенное
+        в `pet` `age`.
 
         """
         booking_services_data = validated_data.pop("booking_services")
@@ -158,7 +165,6 @@ class BookingSerializer(BaseBookingSerializer):
             }
         )
         pet, _ = Pet.objects.get_or_create(**pet_data)
-
         validated_data.update({"pet_id": pet.id})
         booking_service = Booking.objects.create(**validated_data)
         supplier = SupplierProfile.objects.get(
@@ -224,7 +230,6 @@ class BookingSerializer(BaseBookingSerializer):
             "id",
             "booking_services",
         )
-
 
 class BookingServiceRetrieveSerializer(BaseBookingSerializer):
     service = ServiceSerializer(

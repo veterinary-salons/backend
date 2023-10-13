@@ -1,11 +1,8 @@
-from django.contrib.postgres.fields import ArrayField
-
-from core.constants import Default, Messages, Limits
-from django.core.validators import MaxValueValidator, MinValueValidator
+from core.constants import Default, Limits
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 
-from core.validators import RangeValueValidator, validate_age
 from users.models import CustomerProfile
 
 
@@ -25,14 +22,12 @@ class AnimalAbstract(models.Model):
     class Meta:
         abstract = True
 
-
 class Animal(AnimalAbstract):
     """Характеристика животного."""
 
     class Meta:
         verbose_name = "характеристика животного"
         verbose_name_plural = "характеристики животных"
-
 
 class Age(models.Model):
     """Возраст митомца.
@@ -100,7 +95,6 @@ class Pet(AnimalAbstract):
         related_name="pet",
         on_delete=models.CASCADE,
     )
-
     class Meta:
         verbose_name = "питомец"
         verbose_name_plural = "питомцы"
