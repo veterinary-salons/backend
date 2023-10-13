@@ -141,7 +141,7 @@ class Cart(models.Model):
                     'goods',
                     'user',
                 ),
-                name='%(app_label)s_%(class)s рецепт уже в корзине',
+                name='%(app_label)s_%(class)s товар уже в корзине',
             ),
         )
 

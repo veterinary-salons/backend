@@ -1,12 +1,11 @@
 from django.contrib.postgres.fields import ArrayField
 
-from core.classes import YesNoDontKnow
 from core.constants import Default, Messages, Limits
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import UniqueConstraint, Q
+from django.db.models import UniqueConstraint
 
-from core.validators import RangeValueValidator
+from core.validators import RangeValueValidator, validate_age
 from users.models import CustomerProfile
 
 
@@ -26,6 +25,7 @@ class AnimalAbstract(models.Model):
     class Meta:
         abstract = True
 
+
 class Animal(AnimalAbstract):
     """Характеристика животного."""
 
@@ -36,26 +36,16 @@ class Animal(AnimalAbstract):
 
 class Age(models.Model):
     year = models.PositiveIntegerField(
-        validators=[RangeValueValidator(0, Limits.MAX_AGE_PET)],
-        null=True,
-        blank=True,
+        validators=[MaxValueValidator(Limits.MAX_AGE_PET)],
     )
     month = models.PositiveSmallIntegerField(
-        validators=[RangeValueValidator(0, Limits.MAX_MONTH_QUANTITY)],
-        null=True,
-        blank=True,
+        validators=[
+            MaxValueValidator(Limits.MAX_MONTH_QUANTITY)
+        ],
     )
-
     class Meta:
         verbose_name = "возраст питомца"
         verbose_name_plural = "возрасты питомцев"
-        constraints = [
-            models.CheckConstraint(
-                check=Q(year__gt=0) | Q(month__gt=0),
-                name="year_or_month_not_zero",
-            )
-        ]
-
 
 class Pet(AnimalAbstract):
     """Характеристика питомца.
@@ -94,25 +84,12 @@ class Pet(AnimalAbstract):
         max_length=Limits.MAX_LEN_ANIMAL_NAME,
     )
     age = models.ForeignKey(
-        Age,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="pets",
+        Age, on_delete=models.SET_NULL, null=True, blank=True
     )
-    pet_photo = models.ImageField(null=True, blank=True)
-    weight = models.FloatField(
-        validators=[RangeValueValidator(0, Limits.MAX_WEIGHT)]
-    )
-    is_sterilized = models.CharField(
-        max_length=10,
-        choices=YesNoDontKnow.choices,
-        default=YesNoDontKnow.DONT_KNOW,
-    )
-    is_vaccinated = models.CharField(
-        max_length=10,
-        choices=YesNoDontKnow.choices,
-        default=YesNoDontKnow.DONT_KNOW,
-    )
+
+    weight = models.CharField(max_length=10, choices=Default.WEIGHT_CHOICES)
+    is_sterilized = models.BooleanField(default=False)
+    is_vaccinated = models.BooleanField(default=False)
     owner = models.ForeignKey(
         CustomerProfile,
         verbose_name="владелец питомца",

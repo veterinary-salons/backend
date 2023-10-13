@@ -126,10 +126,5 @@ class CustomerProfile(BaseProfile):
 
 class SupplierProfile(BaseProfile):
 
-    favorite_services = models.ManyToManyField(
-        "services.Service",
-        blank=True,
-        related_name="+"
-    )
     def __str__(self):
         return f"{self.user.email}"

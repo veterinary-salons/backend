@@ -29,7 +29,7 @@ class Command(BaseCommand):
             task=(lambda: [random.choice(Default.SYNOLOGY_TASKS)]),
             format=(lambda: [random.choice(Default.SYNOLOGY_FORMAT)]),
         )
- 
+        print("done!")
 
     def handle(self, *args, **options) -> None:
         self.generate()

@@ -22,6 +22,7 @@ router.register(
     "services/${serviceType}",
     BaseServiceViewSet,
 )
+
 schema_view = get_schema_view(
     openapi.Info(
         title="API",

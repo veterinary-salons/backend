@@ -1,19 +1,17 @@
-from copy import deepcopy
-
-from django.core.exceptions import ValidationError
-from icecream import ic
-from rest_framework import serializers
-
+from rest_framework.exceptions import ValidationError
 from core.constants import Limits, Default
+
+
 from pets.models import Pet, Age
 from pets.serializers import BasePetSerializer
-from services.models import Booking, Service
-from services.models import Schedule
+from services.models import Schedule, Booking
 from users.models import SupplierProfile, CustomerProfile
 from users.v1.serializers import (
     SupplierProfileSerializer,
     SupplierSerializer,
 )
+from rest_framework import serializers
+from services.models import Service
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
