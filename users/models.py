@@ -110,6 +110,9 @@ class BaseProfile(models.Model):
         blank=True, null=True,
     )
     photo = models.ImageField(blank=True, null=True)
+    contact_email = models.EmailField(
+        max_length=Limits.MAX_LEN_EMAIL, null=True, blank=True
+    )
 
     @property
     def user(self):
