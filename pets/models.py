@@ -35,6 +35,11 @@ class Animal(AnimalAbstract):
 
 
 class Age(models.Model):
+    """Возраст митомца.
+
+    Задается в годах и месяцах.
+
+    """
     year = models.PositiveIntegerField(
         validators=[MaxValueValidator(Limits.MAX_AGE_PET)],
     )
@@ -59,9 +64,8 @@ class Pet(AnimalAbstract):
             Порода питомца.
         name (str):
             Имя питомца.
-        age (int):
-            Возраст питомца. Должен быть положительным целым числом,
-            находящимся в заданных пределах.
+        age (Age):
+            Возраст питомца. Задается в `year` и `month`.
         weight (str):
             Категория веса питомца.
         is_sterilized (bool):

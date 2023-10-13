@@ -71,7 +71,6 @@ class SignUpViewSet(viewsets.GenericViewSet):
         )
         """
 
-
 class SignInViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)
     allowed_methods = ("POST",)

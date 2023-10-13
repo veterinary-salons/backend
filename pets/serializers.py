@@ -38,6 +38,7 @@ class BasePetSerializer(serializers.ModelSerializer):
         max_digits=4,
         decimal_places=1,
         required=False,
+        default=0,
     )
     age = AgeSerializer(required=True)
 
