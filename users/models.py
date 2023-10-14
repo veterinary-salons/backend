@@ -8,8 +8,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MinLengthValidator
 from django.db import models
 
-from core.constants import Limits
-from core.validators import RangeValueValidator, PhoneNumberValidator
+from core.constants import Limits, Default
+from core.models import OutDoor
+from core.validators import (
+    RangeValueValidator,
+    PhoneNumberValidator,
+    validate_letters,
+)
 from users.validators import phone_number_validator
 
 
@@ -37,8 +42,6 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
-        # checks from django UserManager source code
-        # in case we'll ever change `is_superuser` or `is_staff` default values
         if extra_fields.setdefault("is_staff", True) is False:
             raise ValueError("Superuser must have is_staff=True")
         if extra_fields.setdefault("is_superuser", True) is False:
@@ -49,28 +52,12 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractUser):
     username = models.NOT_PROVIDED
+    first_name = None
+    last_name = None
     email = models.EmailField(
         unique=True,
         max_length=Limits.MAX_LEN_EMAIL,
     )
-    first_name = models.CharField(
-        max_length=15,
-        validators=[
-            MinLengthValidator(2),
-        ],
-    )
-    last_name = models.CharField(
-        max_length=15,
-        validators=[
-            MinLengthValidator(2),
-        ],
-    )
-
-    email_confirmed = models.BooleanField(
-        default=False,
-        blank=True, null=True,
-    )
-
     profile_content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
@@ -82,10 +69,7 @@ class User(AbstractUser):
 
     objects = CustomUserManager()
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = [
-        "first_name",
-        "last_name",
-    ]
+    REQUIRED_FIELDS = []
 
     class Meta:
         indexes = [
@@ -104,7 +88,18 @@ class BaseProfile(models.Model):
         content_type_field="profile_content_type",
         object_id_field="profile_id",
     )
-
+    first_name = models.CharField(
+        max_length=15,
+        validators=[
+            MinLengthValidator(2),
+        ],
+    )
+    last_name = models.CharField(
+        max_length=15,
+        validators=[
+            MinLengthValidator(2),
+        ],
+    )
     phone_number = models.CharField(
         max_length=12,
         validators=[
@@ -116,7 +111,12 @@ class BaseProfile(models.Model):
     )
     address = models.CharField(
         max_length=Limits.MAX_LEN_ADDRESS,
-        blank=True, null=True,
+        blank=True,
+        null=True,
+    )
+    photo = models.ImageField(blank=True, null=True)
+    contact_email = models.EmailField(
+        max_length=Limits.MAX_LEN_EMAIL, null=True, blank=True
     )
 
     @property
@@ -128,16 +128,26 @@ class BaseProfile(models.Model):
 
 
 class CustomerProfile(BaseProfile):
-    favorite_services = models.ManyToManyField(
-        "services.Service", 
+    def __str__(self):
+        return f"{self.phone_number}"
+
+
+class SupplierProfile(BaseProfile):
+    specialist_type = models.CharField(
+        verbose_name="тип услуги",
+        max_length=Limits.MAX_LEN_SERVICE_TYPE,
+        choices=Default.SERVICES,
+        validators=(validate_letters,),
+        blank=False,
+        null=False,
+    )
+    outdoor = models.ForeignKey(
+        OutDoor,
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        related_name="+"
+        default=None,
     )
 
     def __str__(self):
         return f"{self.user.email}"
-
-
-
-class SupplierProfile(BaseProfile):
-    photo = models.ImageField(blank=True, null=True)

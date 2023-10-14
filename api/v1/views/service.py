@@ -1,44 +1,43 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from icecream import ic
 from rest_framework import generics, status
-from rest_framework.views import APIView
+from rest_framework.mixins import DestroyModelMixin
 
-from api.v1.serializers import (
-    PetSerializer,
-    BookingSerializer,
-    ServiceSerializer,
-    BookingServiceRetrieveSerializer,
-    AgeSerializer,
-)
+from api.v1.serializers.pets import PetSerializer
+from api.v1.serializers.service import ServiceSerializer, BookingSerializer
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
-
-from pets.models import Pet, Age
+from pets.models import Pet
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated,
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+
 from services.models import Booking, Service
 from users.models import SupplierProfile, CustomerProfile
 
+
 User = get_user_model()
 
-
 class PetViewSet(ModelViewSet):
+    """Представление питомца."""
+
     queryset = Pet.objects.select_related("owner")
     serializer_class = PetSerializer
 
     def list(self, request, *args, **kwargs):
+        """Вывод списка всех питомцев владельца по параметру из URL."""
+
         owner_pets = self.queryset.filter(owner__id=kwargs["customer_id"])
         serializer = PetSerializer(owner_pets, many=True)
         return Response(serializer.data)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        """Создание питомца."""
         if CustomerProfile.objects.get(
             related_user=self.request.user
         ).id != int(kwargs["customer_id"]):
@@ -54,10 +53,10 @@ class PetViewSet(ModelViewSet):
 
 class BaseServiceViewSet(ModelViewSet):
     queryset = Service.objects.select_related("supplier")
+    serializer_class = ServiceSerializer
     permission_classes = [
         # IsAuthenticated,
     ]
-
     @action(
         methods=["POST"],
         detail=False,
@@ -69,11 +68,15 @@ class BaseServiceViewSet(ModelViewSet):
         return Response(data=serializer.data)
 
 
-class ServiceAPIView(generics.ListCreateAPIView):
+class ServiceAPIView(generics.ListCreateAPIView, DestroyModelMixin,):
+    """Представление для услуг."""
+
     queryset = Service.objects.select_related("supplier")
     serializer_class = ServiceSerializer
 
     def perform_create(self, serializer):
+        """Добавляем пользователя в вывод сериализатора."""
+
         serializer.is_valid(raise_exception=True)
         supplier_profile = SupplierProfile.objects.get(
             related_user=self.request.user
@@ -81,17 +84,27 @@ class ServiceAPIView(generics.ListCreateAPIView):
         serializer.save(supplier=supplier_profile)
 
     def get(self, request, *args, **kwargs):
-        ic(self.queryset)
-        supplier_id = int(self.kwargs.get("supplier_id"))
-        services = self.queryset.filter(supplier=supplier_id)
-        ic(services)
-        ic(ServiceSerializer(services, many=True))
-        serializer = ServiceSerializer(services, many=True)
-        return Response(data=serializer.data)
-        # return Response(data=serializers_data)
+        """Выводим услуги конкретного специалиста."""
 
+        supplier_id = int(self.kwargs.get("supplier_id"))
+        serializer = ServiceSerializer(
+            self.queryset.filter(supplier=supplier_id), many=True
+        )
+        return Response(data=serializer.data)
+
+    def delete(self, request, *args, **kwargs):
+        """Удаляем специалиста и, заодно, все услуги."""
+        supplier_id = int(self.kwargs.get("supplier_id"))
+        supplier = SupplierProfile.objects.filter(id=supplier_id)
+        last_name = get_object_or_404(supplier).user.last_name
+        first_name = get_object_or_404(supplier).user.first_name
+        return Response(
+            status=status.HTTP_204_NO_CONTENT, data={"message": f"Пользователь {last_name} {first_name} удален"}
+        )
 
 class BookingServiceAPIView(generics.CreateAPIView):
+    """Представление для бронирования."""
+
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [
@@ -99,6 +112,8 @@ class BookingServiceAPIView(generics.CreateAPIView):
     ]
 
     def perform_create(self, serializer):
+        """Добавляем в вывод сериалиализатора заказчика и специалиста."""
+
         customer_profile = CustomerProfile.objects.get(
             related_user=self.request.user,
         )
