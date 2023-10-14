@@ -3,10 +3,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.mixins import DestroyModelMixin
 
-from api.v1.serializers import (
-    BookingSerializer,
-    ServiceSerializer,
-)
+from api.v1.serializers.pets import PetSerializer
+from api.v1.serializers.service import ServiceSerializer, BookingSerializer
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
@@ -18,7 +16,6 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from pets.serializers import PetSerializer
 from services.models import Booking, Service
 from users.models import SupplierProfile, CustomerProfile
 
@@ -56,6 +53,7 @@ class PetViewSet(ModelViewSet):
 
 class BaseServiceViewSet(ModelViewSet):
     queryset = Service.objects.select_related("supplier")
+    serializer_class = ServiceSerializer
     permission_classes = [
         # IsAuthenticated,
     ]

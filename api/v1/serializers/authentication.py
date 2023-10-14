@@ -4,11 +4,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from api.v1.serializers.core import Base64ImageField
 from authentication.tokens import RecoveryAccessToken
 from authentication.utils import get_recovery_code
 from core.constants import Limits
-from core.serializers import Base64ImageField
 
+from users.models import CustomerProfile, SupplierProfile
 
 User = get_user_model()
 
@@ -63,8 +64,6 @@ class RecoveryEmailSerializer(serializers.Serializer):
             code.update_code()
         attrs["code"] = code.code
         return attrs
-
-
 
 class RecoveryCodeSerializer(serializers.Serializer):
     code = serializers.CharField(

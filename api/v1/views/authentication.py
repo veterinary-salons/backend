@@ -4,19 +4,21 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
+from api.v1.serializers.authentication import (
+    SignUpProfileSerializer,
+    SignInSerializer,
+    RecoveryEmailSerializer,
+    RecoveryCodeSerializer,
+    RecoveryPasswordSerializer,
+)
+from api.v1.serializers.users import CustomerProfileSerializer, \
+    SupplierProfileSerializer
 from authentication.email_messages import (
     FROM_EMAIL, RECOVERY_CODE_SUBJECT, RECOVERY_CODE_MESSAGE,
 )
 from authentication.permissions import EmailCodeConfirmed
-from authentication.v1.serializers import (
-    SignUpProfileSerializer, RecoveryEmailSerializer, 
-    RecoveryCodeSerializer, RecoveryPasswordSerializer,
-    SignInSerializer,
-)
 from authentication.utils import get_recovery_code, send_email_message
-from users.v1.serializers import (
-    CustomerProfileSerializer, SupplierProfileSerializer,
-)
+
 
 class SignUpViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)

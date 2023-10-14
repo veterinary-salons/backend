@@ -1,12 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 
-from users.models import CustomerProfile, SupplierProfile
-from users.v1.serializers import (
+from api.v1.serializers.users import (
     CustomerSerializer,
-    SupplierProfileSerializer,
     CustomerPatchSerializer,
+    SupplierProfileSerializer,
 )
+from users.models import CustomerProfile, SupplierProfile
 
 class CustomerProfileViewSet(viewsets.ModelViewSet):
     queryset = CustomerProfile.objects.prefetch_related("related_user")

@@ -10,7 +10,6 @@ RECOVERY_CODE_MESSAGE = (
     "- Purrfect Care"
 )
 
-
 EMAIL_CONFIRMATION_SUBJECT = "Код подтверждения почты"
 
 EMAIL_CONFIRMATION_MESSAGE = (

@@ -3,7 +3,7 @@ from typing import Any
 from django.db.models import Q
 from rest_framework import filters
 
-from api.v1.serializers import FilterServicesSerializer
+from api.v1.serializers.service import FilterServicesSerializer
 
 
 class ServiceFilterBackend(filters.BaseFilterBackend):

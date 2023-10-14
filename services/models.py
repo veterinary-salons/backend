@@ -6,9 +6,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from core.models import Schedule
 from core.utils import default_price
 from core.validators import (
-    validate_letters,
     validate_alphanumeric,
     RangeValueValidator,
     validate_current_and_future_month,
@@ -19,37 +19,6 @@ from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
 
-class Schedule(models.Model):
-    """Расписание специалиста."""
-
-    hours = {}
-    for day, label in Default.DAYS_OF_WEEK:
-        hours[label.lower()] = ArrayField(
-            models.PositiveSmallIntegerField(
-                validators=[RangeValueValidator(0, 24)]
-            ),
-            null=True,
-            size=2,
-        )
-    breakTime = ArrayField(
-        models.PositiveSmallIntegerField(
-            validators=[RangeValueValidator(0, 24)]
-        ),
-        null=True,
-        size=2,
-    )
-    monday_hours = hours[Default.DAYS_OF_WEEK[0][1].lower()]
-    tuesday_hours = hours[Default.DAYS_OF_WEEK[1][1].lower()]
-    wednesday_hours = hours[Default.DAYS_OF_WEEK[2][1].lower()]
-    thursday_hours = hours[Default.DAYS_OF_WEEK[3][1].lower()]
-    friday_hours = hours[Default.DAYS_OF_WEEK[4][1].lower()]
-    saturday_hours = hours[Default.DAYS_OF_WEEK[5][1].lower()]
-    sunday_hours = hours[Default.DAYS_OF_WEEK[6][1].lower()]
-
-    class Meta:
-        verbose_name = "расписание специалиста"
-
-
 class BaseService(models.Model):
     """Базовая модель для услуг."""
 
@@ -59,14 +28,6 @@ class BaseService(models.Model):
         null=False,
         blank=False,
         validators=(validate_alphanumeric,),
-    )
-    specialist_type = models.CharField(
-        verbose_name="тип услуги",
-        max_length=Limits.MAX_LEN_SERVICE_TYPE,
-        choices=Default.SERVICES,
-        validators=(validate_letters,),
-        blank=False,
-        null=False,
     )
     supplier = models.ForeignKey(
         SupplierProfile,
@@ -123,17 +84,13 @@ class Service(BaseService):
         """Проверяем соответствие типа специалиста и типа питомца."""
 
         super().clean()
-        validate_services(
-            self.specialist_type,
-            self.pet_type,
-        )
 
     def save(self, *args, **kwargs):
         self.full_clean()
         return super(Service, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name} - {self.specialist_type}"
+        return f"{self.name}"
 
 
 class Booking(BaseService):

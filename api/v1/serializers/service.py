@@ -1,47 +1,21 @@
 from copy import deepcopy
 
 from rest_framework.exceptions import ValidationError
+
+from api.v1.serializers.core import ScheduleSerializer
+from api.v1.serializers.pets import BasePetSerializer
+from api.v1.serializers.users import SupplierSerializer, \
+    SupplierProfileSerializer
 from core.constants import Limits, Default
 
 
 from pets.models import Pet, Age
-from pets.serializers import BasePetSerializer
-from services.models import Schedule, Booking
+from services.models import Booking
 from users.models import SupplierProfile, CustomerProfile
-from users.v1.serializers import (
-    SupplierProfileSerializer,
-    SupplierSerializer,
-)
+
 from rest_framework import serializers
 from services.models import Service
 
-
-class ScheduleSerializer(serializers.ModelSerializer):
-    """Сериализатор расписания специалиста."""
-
-    def to_representation(self, instance):
-        """Изменяем формат вывода."""
-
-        representation = dict(super().to_representation(instance))
-        for key in representation:
-            if representation[key]:
-                representation[key] = {"available": representation[key]}
-            else:
-                representation[key] = {"unavailable": representation[key]}
-        return representation
-
-    class Meta:
-        model = Schedule
-        fields = (
-            "monday_hours",
-            "tuesday_hours",
-            "wednesday_hours",
-            "thursday_hours",
-            "friday_hours",
-            "saturday_hours",
-            "sunday_hours",
-            "breakTime",
-        )
 
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализатор услуг для бронирования."""
@@ -65,13 +39,14 @@ class BaseServiceSerializer(serializers.ModelSerializer):
             "booking",
         )
 
+
 class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
 
     supplier = SupplierSerializer(read_only=True)
+
     class Meta(BaseServiceSerializer.Meta):
         fields = BaseServiceSerializer.Meta.fields + (
-            "specialist_type",
             "published",
             "supplier",
         )
@@ -85,6 +60,7 @@ class ServiceSerializer(BaseServiceSerializer):
                 f"Стоимость услуги должна быть от {Limits.MIN_PRICE} до "
                 f"{Limits.MAX_PRICE} р."
             )
+
     def validate(self, data):
         """Проверяем уникальность услуги и тип пользователя."""
         name = data.get("name")
@@ -99,6 +75,7 @@ class ServiceSerializer(BaseServiceSerializer):
                 "Услуги создает только специалист!"
             )
         return data
+
 
 class FilterServicesSerializer(serializers.Serializer):
     price = serializers.ListField(
@@ -129,6 +106,7 @@ class BaseBookingSerializer(serializers.ModelSerializer):
     """Базовый сериализатор бронирования."""
 
     supplier = SupplierProfileSerializer(read_only=True)
+
     class Meta:
         model = Booking
         fields = (
@@ -137,6 +115,7 @@ class BaseBookingSerializer(serializers.ModelSerializer):
             "supplier_place",
             "pet",
         )
+
 
 class BookingSerializer(BaseBookingSerializer):
     """Сериализатор бронирования."""
@@ -230,8 +209,3 @@ class BookingSerializer(BaseBookingSerializer):
             "id",
             "booking_services",
         )
-
-class BookingServiceRetrieveSerializer(BaseBookingSerializer):
-    service = ServiceSerializer(
-        read_only=True,
-    )

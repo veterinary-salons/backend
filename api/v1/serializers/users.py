@@ -1,14 +1,8 @@
-from hashlib import md5 as md5_hash
-
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from pets.models import Pet
-from pets.serializers import PetSerializer
-from authentication.tokens import RecoveryAccessToken
+from api.v1.serializers.core import Base64ImageField
+from api.v1.serializers.pets import PetSerializer
 from users.models import CustomerProfile, SupplierProfile, User
-from core.constants import Limits
-from core.serializers import Base64ImageField
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
