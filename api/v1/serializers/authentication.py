@@ -133,10 +133,9 @@ class SignInSerializer(TokenObtainPairSerializer):
             "image": image
         }
         profile_serializer = self.profile_data_serializer_class(
-            data=profile_data
+            instance=profile_data
         )
-        serializer.is_valid()
-        profile_data = serializer.validated_data()
+        profile_data = serializer.data
         return {
             "token_data": token_data,
             "profile_data": profile_data,
