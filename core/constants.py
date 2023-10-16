@@ -45,7 +45,8 @@ class Messages:
 class Default:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
-
+    COST_FROM = 500
+    COST_TO = 1000
     PET_AGE = 1
     WEIGHT_CHOICES = (
         ("1", "до 5кг."),

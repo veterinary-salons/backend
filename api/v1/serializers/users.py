@@ -58,7 +58,6 @@ class SupplierProfileSerializer(BaseProfileSerializer):
             "user",
         )
 
-
 class SupplierSerializer(BaseProfileSerializer):
     class Meta:
         model = SupplierProfile

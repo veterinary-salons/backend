@@ -7,13 +7,14 @@ from django.contrib.contenttypes.fields import (
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MinLengthValidator
 from django.db import models
+from rest_framework import serializers
 
 from core.constants import Limits, Default
-from core.models import OutDoor
 from core.validators import (
     RangeValueValidator,
     PhoneNumberValidator,
     validate_letters,
+    validate_alphanumeric,
 )
 from users.validators import phone_number_validator
 
@@ -141,13 +142,33 @@ class SupplierProfile(BaseProfile):
         blank=False,
         null=False,
     )
-    outdoor = models.ForeignKey(
-        OutDoor,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        default=None,
+    pet_type = models.CharField(
+        verbose_name="тип животного",
+        max_length=Limits.MAX_LEN_ANIMAL_TYPE,
+        choices=Default.PET_TYPE,
     )
+    about = models.TextField(
+        max_length=Limits.MAX_LEN_ABOUT,
+        verbose_name="О себе",
+        blank=True,
+        null=True,
+        validators=(validate_alphanumeric,),
+    )
+
+    def clean(self):
+        """Проверяем соответствие типа специалиста и типа питомца."""
+        if (
+            self.specialist_type == Default.SERVICES[10][0]
+            and self.pet_type != Default.PET_TYPE[1][0]
+        ):
+            raise serializers.ValidationError(
+                "Кинолог работает только с собаками."
+            )
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(SupplierProfile, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.email}"
