@@ -23,7 +23,7 @@ app_name = "api"
 
 router = DefaultRouter()
 router.register(
-    "customers/(?P<customer_id>\d+)/pet",
+    "customers/(?P<customer_id>\d+)/profile/pet",
     PetViewSet,
     basename="petviewset",
 )

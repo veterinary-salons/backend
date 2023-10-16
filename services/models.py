@@ -26,10 +26,6 @@ class BaseService(models.Model):
         blank=False,
         validators=(validate_alphanumeric,),
     )
-    supplier = models.ForeignKey(
-        SupplierProfile,
-        on_delete=models.CASCADE,
-    )
 
     class Meta:
         abstract = True
@@ -38,6 +34,12 @@ class BaseService(models.Model):
 class Service(BaseService):
     """Модель услуг."""
 
+    supplier = models.ManyToManyField(
+        SupplierProfile,
+        verbose_name="поставщик услуги",
+        related_name="services",
+        through="Advertisement",
+    )
     customer_place = models.BooleanField(
         default=False,
     )
@@ -56,7 +58,6 @@ class Service(BaseService):
         default = Default.COST_TO,
         validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
     )
-
     class Meta:
         verbose_name = "услуга"
         verbose_name_plural = "услуги"
@@ -81,10 +82,17 @@ class Service(BaseService):
 class Booking(BaseService):
     """Модель бронирования услуги."""
 
-    service = models.ForeignKey(
+    supplier = models.ManyToManyField(
+        SupplierProfile,
+        verbose_name="поставщик услуги",
+        related_name="bookingservices",
+        through="BookingSupplier",
+    )
+    service = models.ManyToManyField(
         Service,
-        on_delete=models.CASCADE,
-        related_name="booking_services",
+        related_name="bookingservices",
+        verbose_name="услуга",
+        through="BookingService",
     )
     date = models.DateTimeField(auto_now_add=True)
     to_date = models.DateTimeField(
@@ -93,17 +101,9 @@ class Booking(BaseService):
         null=False,
         default=timezone.now,
     )
-    place = models.CharField(
-        max_length=Limits.MAX_PLACE_LENGTH,
-        blank=True,
-        null=True,
-        validators=(validate_alphanumeric,),
-    )
-    customer = models.ForeignKey(
+    customer = models.ManyToManyField(
         CustomerProfile,
-        models.CASCADE,
-        null=False,
-        blank=False,
+        through="BookingCustomer",
     )
     is_done = models.BooleanField(
         verbose_name="подтверждено или нет",
@@ -120,3 +120,62 @@ class Booking(BaseService):
 
     def __str__(self):
         return f"{self.service.name} - {self.date}"
+
+class BookingService(models.Model):
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name="bookingservices",
+        verbose_name="бронь услуги",
+    )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name="bookingservices",
+        verbose_name="услуга",
+    )
+    class Meta:
+        verbose_name = "бронь услуги"
+        verbose_name_plural = "брони услуг"
+
+class BookingCustomer(models.Model):
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name="bookingcustomers",
+        verbose_name="бронь услуги",
+    )
+    customer = models.ForeignKey(
+        CustomerProfile,
+        on_delete=models.CASCADE,
+        related_name="bookingcustomers",
+        verbose_name="пользователь",
+    )
+    class Meta:
+        verbose_name = "бронь клиента"
+        verbose_name_plural = "брони клиента"
+
+
+class Advertisement(BaseService):
+    """Модель объявления услуги."""
+
+    supplier = models.ForeignKey(
+        SupplierProfile,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name="advertisements",
+    )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name="advertisements",
+        null=False,
+        blank=False,
+    )
+    to_date = models.DateTimeField(
+        validators=(validate_current_and_future_month,),
+    )
+    class Meta:
+        verbose_name = "объявление услуги"
+        verbose_name_plural = "объявления услуг"

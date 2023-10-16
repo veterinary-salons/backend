@@ -22,6 +22,7 @@ from users.models import SupplierProfile, CustomerProfile
 
 User = get_user_model()
 
+
 class PetViewSet(ModelViewSet):
     """Представление питомца."""
 
@@ -41,7 +42,12 @@ class PetViewSet(ModelViewSet):
         if CustomerProfile.objects.get(
             related_user=self.request.user
         ).id != int(kwargs["customer_id"]):
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                status=status.HTTP_403_FORBIDDEN,
+                data={
+                    "error": "Нельзя создать питомца у другого пользователя!"
+                },
+            )
         serializer = PetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         customer_profile = CustomerProfile.objects.get(
@@ -57,6 +63,7 @@ class BaseServiceViewSet(ModelViewSet):
     permission_classes = [
         # IsAuthenticated,
     ]
+
     @action(
         methods=["POST"],
         detail=False,
@@ -68,7 +75,10 @@ class BaseServiceViewSet(ModelViewSet):
         return Response(data=serializer.data)
 
 
-class ServiceAPIView(generics.ListCreateAPIView, DestroyModelMixin,):
+class ServiceAPIView(
+    generics.ListCreateAPIView,
+    DestroyModelMixin,
+):
     """Представление для услуг."""
 
     queryset = Service.objects.select_related("supplier")
@@ -99,8 +109,10 @@ class ServiceAPIView(generics.ListCreateAPIView, DestroyModelMixin,):
         last_name = get_object_or_404(supplier).user.last_name
         first_name = get_object_or_404(supplier).user.first_name
         return Response(
-            status=status.HTTP_204_NO_CONTENT, data={"message": f"Пользователь {last_name} {first_name} удален"}
+            status=status.HTTP_204_NO_CONTENT,
+            data={"message": f"Пользователь {last_name} {first_name} удален"},
         )
+
 
 class BookingServiceAPIView(generics.CreateAPIView):
     """Представление для бронирования."""
