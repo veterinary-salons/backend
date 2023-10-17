@@ -119,7 +119,7 @@ class SignInSerializer(TokenObtainPairSerializer):
             raise serializers.ValidationError("this profile does not exist")
         if isinstance(profile, SupplierProfile):
             profile_type = "supplier"
-            image = profile.image
+            image = profile.photo
         else:
             profile_type = "customer"
             image = None
@@ -133,9 +133,9 @@ class SignInSerializer(TokenObtainPairSerializer):
             "image": image
         }
         profile_serializer = self.profile_data_serializer_class(
-            instance=profile_data
+            instance=profile_fields
         )
-        profile_data = serializer.data
+        profile_data = profile_serializer.data
         return {
             "token_data": token_data,
             "profile_data": profile_data,

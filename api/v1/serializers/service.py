@@ -4,8 +4,10 @@ from rest_framework.exceptions import ValidationError
 
 from api.v1.serializers.core import ScheduleSerializer
 from api.v1.serializers.pets import BasePetSerializer
-from api.v1.serializers.users import SupplierSerializer, \
-    SupplierProfileSerializer
+from api.v1.serializers.users import (
+    SupplierSerializer,
+    SupplierProfileSerializer,
+)
 from core.constants import Limits, Default
 
 
@@ -20,6 +22,7 @@ from services.models import Service
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализатор услуг для бронирования."""
 
+    supplier = SupplierSerializer(read_only=True)
     schedule = ScheduleSerializer(read_only=True)
     booking = serializers.PrimaryKeyRelatedField(
         required=False,
@@ -32,49 +35,63 @@ class BaseServiceSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
-            "pet_type",
-            "price",
-            "description",
-            "schedule",
-            "booking",
+            # "booking",
+            # "customer_place",
+            # "supplier_place",
+            # "cost_from",
+            # "cost_to",
+            # "schedule",
+            # "supplier",
         )
 
 
 class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
 
-    supplier = SupplierSerializer(read_only=True)
+    supplier = SupplierSerializer(read_only=True, many=True)
+
+    schedule = ScheduleSerializer(read_only=True)
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["supplier"] = SupplierProfile.objects.get(
+            related_user=self.context.get("request").user
+        ).user.email
+        return representation
 
     class Meta(BaseServiceSerializer.Meta):
         fields = BaseServiceSerializer.Meta.fields + (
-            "published",
             "supplier",
+            "customer_place",
+            "supplier_place",
+            "cost_from",
+            "cost_to",
+            "schedule",
         )
 
-    @staticmethod
-    def validate_price(data):
-        """Проверка на валидность стоимости."""
-
-        if data[0] < Limits.MIN_PRICE or data[0] > Limits.MAX_PRICE:
-            raise ValidationError(
-                f"Стоимость услуги должна быть от {Limits.MIN_PRICE} до "
-                f"{Limits.MAX_PRICE} р."
-            )
-
-    def validate(self, data):
-        """Проверяем уникальность услуги и тип пользователя."""
-        name = data.get("name")
-        user = self.context.get("request").user
-        if Service.objects.filter(
-            name=name,
-            supplier=user.profile_id,
-        ).exists():
-            raise serializers.ValidationError("Такая услуга уже существует!")
-        if not SupplierProfile.objects.filter(related_user=user).exists():
-            raise serializers.ValidationError(
-                "Услуги создает только специалист!"
-            )
-        return data
+    # @staticmethod
+    # def validate_price(data):
+    #     """Проверка на валидность стоимости."""
+    #
+    #     if data[0] < Limits.MIN_PRICE or data[0] > Limits.MAX_PRICE:
+    #         raise ValidationError(
+    #             f"Стоимость услуги должна быть от {Limits.MIN_PRICE} до "
+    #             f"{Limits.MAX_PRICE} р."
+    #         )
+    #
+    # def validate(self, data):
+    #     """Проверяем уникальность услуги и тип пользователя."""
+    #     name = data.get("name")
+    #     user = self.context.get("request").user
+    #     if Service.objects.filter(
+    #         name=name,
+    #         supplier=user.profile_id,
+    #     ).exists():
+    #         raise serializers.ValidationError("Такая услуга уже существует!")
+    #     if not SupplierProfile.objects.filter(related_user=user).exists():
+    #         raise serializers.ValidationError(
+    #             "Услуги создает только специалист!"
+    #         )
+    #     return data
 
 
 class FilterServicesSerializer(serializers.Serializer):
@@ -111,8 +128,6 @@ class BaseBookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = (
             "to_date",
-            "customer_place",
-            "supplier_place",
             "pet",
         )
 

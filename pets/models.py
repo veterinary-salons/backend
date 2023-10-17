@@ -12,13 +12,11 @@ class AnimalAbstract(models.Model):
     Необходимо, чтобы использовать поле `type` в UniqueConstraint.
 
     """
-
     type = models.CharField(
         verbose_name="вид животного",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
         choices=Default.PET_TYPE,
     )
-
     class Meta:
         abstract = True
 
@@ -71,7 +69,6 @@ class Pet(AnimalAbstract):
             Владелец питомца.
 
     """
-
     breed = models.CharField(
         verbose_name="порода",
         max_length=Limits.MAX_LEN_ANIMAL_BREED,

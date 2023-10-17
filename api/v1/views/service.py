@@ -4,7 +4,11 @@ from rest_framework import generics, status
 from rest_framework.mixins import DestroyModelMixin
 
 from api.v1.serializers.pets import PetSerializer
-from api.v1.serializers.service import ServiceSerializer, BookingSerializer
+from api.v1.serializers.service import (
+    BookingSerializer,
+    BaseServiceSerializer,
+    ServiceSerializer,
+)
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
@@ -75,13 +79,13 @@ class BaseServiceViewSet(ModelViewSet):
         return Response(data=serializer.data)
 
 
-class ServiceAPIView(
+class SupplierProfileView(
     generics.ListCreateAPIView,
     DestroyModelMixin,
 ):
     """Представление для услуг."""
 
-    queryset = Service.objects.select_related("supplier")
+    queryset = Service.objects.prefetch_related("supplier")
     serializer_class = ServiceSerializer
 
     def perform_create(self, serializer):
@@ -98,7 +102,7 @@ class ServiceAPIView(
 
         supplier_id = int(self.kwargs.get("supplier_id"))
         serializer = ServiceSerializer(
-            self.queryset.filter(supplier=supplier_id), many=True
+            self.queryset.filter(supplier=supplier_id), many=True,
         )
         return Response(data=serializer.data)
 
@@ -135,3 +139,12 @@ class BookingServiceAPIView(generics.CreateAPIView):
             customer=customer_profile,
             supplier=supplier_profile,
         )
+
+class SupplierCreateAdvertisement(generics.CreateAPIView, DestroyModelMixin):
+    """Представление для создания объявления."""
+
+    queryset = Service.objects.prefetch_related("supplier")
+    serializer_class = ServiceSerializer
+    permission_classes = [
+        IsAuthenticated,
+    ]

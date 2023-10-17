@@ -34,12 +34,6 @@ class BaseService(models.Model):
 class Service(BaseService):
     """Модель услуг."""
 
-    supplier = models.ManyToManyField(
-        SupplierProfile,
-        verbose_name="поставщик услуги",
-        related_name="services",
-        through="Advertisement",
-    )
     customer_place = models.BooleanField(
         default=False,
     )
@@ -58,17 +52,11 @@ class Service(BaseService):
         default = Default.COST_TO,
         validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
     )
+    supplier = models.ManyToManyField(SupplierProfile, through='Booking')
     class Meta:
         verbose_name = "услуга"
         verbose_name_plural = "услуги"
         constraints = (
-            UniqueConstraint(
-                fields=(
-                    "name",
-                    "supplier",
-                ),
-                name="unique_for_services",
-            ),
             CheckConstraint(
                 check=Q(cost_from__lte=F("cost_to")),
                 name="cost_range",
@@ -82,17 +70,26 @@ class Service(BaseService):
 class Booking(BaseService):
     """Модель бронирования услуги."""
 
-    supplier = models.ManyToManyField(
-        SupplierProfile,
-        verbose_name="поставщик услуги",
-        related_name="bookingservices",
-        through="BookingSupplier",
-    )
-    service = models.ManyToManyField(
+    service = models.ForeignKey(
         Service,
+        on_delete=models.CASCADE,
         related_name="bookingservices",
-        verbose_name="услуга",
-        through="BookingService",
+    )
+    customer = models.ForeignKey(
+        CustomerProfile,
+        on_delete=models.CASCADE,
+        related_name="bookings",
+        verbose_name="пользователь",
+        blank=False,
+        null=False,
+    )
+    supplier = models.ForeignKey(
+        SupplierProfile,
+        on_delete=models.CASCADE,
+        related_name="bookings",
+        verbose_name="исполнитель",
+        blank=False,
+        null=False,
     )
     date = models.DateTimeField(auto_now_add=True)
     to_date = models.DateTimeField(
@@ -101,81 +98,59 @@ class Booking(BaseService):
         null=False,
         default=timezone.now,
     )
-    customer = models.ManyToManyField(
-        CustomerProfile,
-        through="BookingCustomer",
-    )
-    is_done = models.BooleanField(
+    is_confirmed = models.BooleanField(
         verbose_name="подтверждено или нет",
         default=False,
     )
-    actual = models.BooleanField(
-        verbose_name="активно или нет",
+    is_done = models.BooleanField(
+        verbose_name="исполнено или нет",
         default=False,
     )
-
     class Meta:
         verbose_name = "бронь услуги"
         verbose_name_plural = "брони услуг"
+        constraints = (
+            UniqueConstraint(
+                fields=(
+                    "service",
+                    "supplier",
+                ),
+                name="unique_for_services",
+            ),
+            UniqueConstraint(
+                fields=(
+                    "service",
+                    "supplier",
+                ),
+                name="unique_for_booking",
+            ),
+        )
 
     def __str__(self):
         return f"{self.service.name} - {self.date}"
 
-class BookingService(models.Model):
-    booking = models.ForeignKey(
-        Booking,
-        on_delete=models.CASCADE,
-        related_name="bookingservices",
-        verbose_name="бронь услуги",
-    )
-    service = models.ForeignKey(
-        Service,
-        on_delete=models.CASCADE,
-        related_name="bookingservices",
-        verbose_name="услуга",
-    )
-    class Meta:
-        verbose_name = "бронь услуги"
-        verbose_name_plural = "брони услуг"
-
-class BookingCustomer(models.Model):
-    booking = models.ForeignKey(
-        Booking,
-        on_delete=models.CASCADE,
-        related_name="bookingcustomers",
-        verbose_name="бронь услуги",
-    )
-    customer = models.ForeignKey(
-        CustomerProfile,
-        on_delete=models.CASCADE,
-        related_name="bookingcustomers",
-        verbose_name="пользователь",
-    )
-    class Meta:
-        verbose_name = "бронь клиента"
-        verbose_name_plural = "брони клиента"
-
-
-class Advertisement(BaseService):
-    """Модель объявления услуги."""
-
-    supplier = models.ForeignKey(
-        SupplierProfile,
-        on_delete=models.CASCADE,
-        null=False,
-        blank=False,
-        related_name="advertisements",
-    )
-    service = models.ForeignKey(
-        Service,
-        on_delete=models.CASCADE,
-        related_name="advertisements",
-        null=False,
-        blank=False,
-    )
-    to_date = models.DateTimeField(
-        validators=(validate_current_and_future_month,),
-    )
-    class Meta:
-        verbose_name = "объявление услуги"
-        verbose_name_plural = "объявления услуг"
+# class Advertisement(BaseService):
+#     """Модель объявления услуги."""
+#
+#     supplier = models.ForeignKey(
+#         SupplierProfile,
+#         on_delete=models.CASCADE,
+#         null=False,
+#         blank=False,
+#         related_name="advertisements",
+#     )
+#     service = models.ForeignKey(
+#         Service,
+#         on_delete=models.CASCADE,
+#         related_name="advertisements",
+#         null=False,
+#         blank=False,
+#     )
+#     to_date = models.DateTimeField(
+#         validators=(validate_current_and_future_month,),
+#     )
+#     date = models.DateTimeField(auto_now_add=True)
+#
+#     class Meta:
+#         verbose_name = "объявление услуги"
+#         verbose_name_plural = "объявления услуг"

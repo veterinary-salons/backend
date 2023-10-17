@@ -1,4 +1,3 @@
-from django.template.defaulttags import url
 from django.urls import include, path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -14,10 +13,11 @@ from api.v1.views.service import (
     PetViewSet,
     BaseServiceViewSet,
     BookingServiceAPIView,
-    ServiceAPIView,
+    SupplierProfileView,
+    SupplierCreateAdvertisement,
 )
 from api.v1.views.users import CustomerProfileViewSet, SupplierProfileViewSet
-from backend import settings
+
 
 app_name = "api"
 
@@ -33,7 +33,6 @@ router.register(
 )
 router.register("customers", CustomerProfileViewSet)
 router.register("suppliers", SupplierProfileViewSet)
-
 router.register("auth/signup", SignUpViewSet, basename="signup")
 router.register("auth/signin", SignInViewSet, basename="signin")
 
@@ -62,10 +61,14 @@ urlpatterns = [
     ),
     re_path(
         "suppliers/(?P<supplier_id>\d+)/profile",
-        ServiceAPIView.as_view(),
-        name="service",
+        SupplierProfileView.as_view(),
+        name="service_get",
+    ),
+    re_path(
+        "suppliers/(?P<supplier_id>\d+)/ad-creation",
+        SupplierCreateAdvertisement.as_view(),
+        name="service_post",
     ),
     path("auth/token", TokenObtainPairView.as_view()),
     path("auth/refresh-token", TokenRefreshView.as_view()),
 ]
-

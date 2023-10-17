@@ -11,7 +11,6 @@ from rest_framework import serializers
 
 from core.constants import Limits, Default
 from core.validators import (
-    RangeValueValidator,
     PhoneNumberValidator,
     validate_letters,
     validate_alphanumeric,
@@ -128,11 +127,6 @@ class BaseProfile(models.Model):
         abstract = True
 
 
-class CustomerProfile(BaseProfile):
-    def __str__(self):
-        return f"{self.phone_number}"
-
-
 class SupplierProfile(BaseProfile):
     specialist_type = models.CharField(
         verbose_name="тип услуги",
@@ -158,7 +152,7 @@ class SupplierProfile(BaseProfile):
     def clean(self):
         """Проверяем соответствие типа специалиста и типа питомца."""
         if (
-            self.specialist_type == Default.SERVICES[10][0]
+            self.specialist_type == Default.SERVICES[1][0]
             and self.pet_type != Default.PET_TYPE[1][0]
         ):
             raise serializers.ValidationError(
@@ -172,3 +166,9 @@ class SupplierProfile(BaseProfile):
 
     def __str__(self):
         return f"{self.user.email}"
+
+
+class CustomerProfile(BaseProfile):
+
+    def __str__(self):
+        return f"{self.phone_number}"

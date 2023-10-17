@@ -21,24 +21,23 @@ class Base64ImageField(serializers.ImageField):
         )
 
 class ScheduleSerializer(serializers.ModelSerializer):
-    def to_representation(self, instance):
-        representation = dict(super().to_representation(instance))
-        for key in representation:
-            if representation[key]:
-                representation[key] = {"available": representation[key]}
-            else:
-                representation[key] = {"unavailable": representation[key]}
-        return representation
+    # def to_representation(self, instance):
+    #     representation = dict(super().to_representation(instance))
+    #     for key in representation:
+    #         if representation[key]:
+    #             representation[key] = {"available": representation[key]}
+    #         else:
+    #             representation[key] = {"unavailable": representation[key]}
+    #     return representation
 
     class Meta:
         model = Schedule
         fields = (
-            "monday_hours",
-            "tuesday_hours",
-            "wednesday_hours",
-            "thursday_hours",
-            "friday_hours",
-            "saturday_hours",
-            "sunday_hours",
-            "breakTime",
+            "weekday",
+            "is_working_day",
+            "start_work_time",
+            "end_work_time",
+            "break_start_time",
+            "break_end_time",
+            "supplier",
         )
