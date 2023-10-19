@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.v1.serializers.core import Base64ImageField
+from api.v1.serializers.core import Base64ImageField, ScheduleSerializer
 from api.v1.serializers.pets import PetSerializer
 from users.models import CustomerProfile, SupplierProfile, User
 
@@ -42,6 +42,8 @@ class CustomerProfileSerializer(BaseProfileSerializer):
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
+    schedule = ScheduleSerializer(many=True)
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         user_representation = representation.pop("user")
@@ -52,6 +54,7 @@ class SupplierProfileSerializer(BaseProfileSerializer):
     class Meta:
         model = SupplierProfile
         fields = (
+            "schedule",
             "photo",
             "phone_number",
             "contact_email",
@@ -64,6 +67,7 @@ class SupplierSerializer(BaseProfileSerializer):
         verbose_name = "специалист"
         verbose_name_plural = "специалисты"
         fields = (
+            "specialist_type",
             "phone_number",
             "contact_email",
             "address",

@@ -1,17 +1,21 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from icecream import ic
 from rest_framework import generics, status
 from rest_framework.mixins import DestroyModelMixin
 
+from api.v1.serializers.core import ScheduleSerializer
 from api.v1.serializers.pets import PetSerializer
 from api.v1.serializers.service import (
     BookingSerializer,
     BaseServiceSerializer,
     ServiceSerializer,
 )
+from api.v1.serializers.users import SupplierProfileSerializer
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
+from core.models import Schedule
 from pets.models import Pet
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -102,7 +106,8 @@ class SupplierProfileView(
 
         supplier_id = int(self.kwargs.get("supplier_id"))
         serializer = ServiceSerializer(
-            self.queryset.filter(supplier=supplier_id), many=True,
+            self.queryset.filter(supplier=supplier_id),
+            many=True,
         )
         return Response(data=serializer.data)
 
@@ -140,6 +145,7 @@ class BookingServiceAPIView(generics.CreateAPIView):
             supplier=supplier_profile,
         )
 
+
 class SupplierCreateAdvertisement(generics.CreateAPIView, DestroyModelMixin):
     """Представление для создания объявления."""
 
@@ -148,3 +154,43 @@ class SupplierCreateAdvertisement(generics.CreateAPIView, DestroyModelMixin):
     permission_classes = [
         IsAuthenticated,
     ]
+
+    def perform_create(self, serializer):
+        """Сохраняем расписание."""
+        schedule_data = self.request.data.pop("schedule")
+        supplier_profile = SupplierProfile.objects.get(
+            related_user=self.request.user
+        )
+        [
+            schedule.update({"supplier": supplier_profile.pk})
+            for schedule in schedule_data
+        ]
+        schedule_serializer = ScheduleSerializer(
+            data=schedule_data, many=True
+        )
+        schedule_serializer.is_valid(raise_exception=True)
+        schedule_serializer.save()
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+    # def create(self, request, *args, **kwargs):
+    #     """Создание объявления."""
+    #     schedule_data = self.request.data.pop("schedule")
+    #     ic(schedule_data)
+    #     ic(self.request.data)
+    #     serializer = self.get_serializer(data=self.request.data)
+    #     ic(serializer)
+    #     serializer.is_valid()
+    #     serializer.save()
+    #     ic(serializer.data)
+    #     supplier_data = SupplierProfileSerializer(
+    #         SupplierProfile.objects.get(related_user=self.request.user)
+    #     ).data
+    #     ic(supplier_data)
+    #     data = {
+    #         "services": serializer.data,
+    #         "supplier_profiles": supplier_data,
+    #     }
+    #     return Response(
+    #         data, status=status.HTTP_201_CREATED,
+    #     )

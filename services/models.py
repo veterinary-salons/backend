@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db.models import UniqueConstraint, CheckConstraint, Q, F
 from django.utils import timezone
 
@@ -5,6 +6,7 @@ from core.constants import Limits, Default
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from core.utils import service_choice
 from core.validators import (
     validate_alphanumeric,
     RangeValueValidator,
@@ -19,12 +21,14 @@ User = get_user_model()
 class BaseService(models.Model):
     """Базовая модель для услуг."""
 
-    name = models.CharField(
-        verbose_name="название услуги",
-        max_length=Limits.MAX_LEN_SERVICE_NAME,
-        null=False,
-        blank=False,
-        validators=(validate_alphanumeric,),
+    name = ArrayField(
+        models.CharField(
+            verbose_name="название услуги",
+            max_length=Limits.MAX_LEN_SERVICE_NAME,
+            null=False,
+            blank=False,
+            validators=(validate_alphanumeric,),
+        )
     )
 
     class Meta:
@@ -34,6 +38,18 @@ class BaseService(models.Model):
 class Service(BaseService):
     """Модель услуг."""
 
+    supplier = models.ManyToManyField(SupplierProfile, through="Booking")
+
+    name = ArrayField(
+        models.CharField(
+            verbose_name="название услуги",
+            max_length=Limits.MAX_LEN_SERVICE_NAME,
+            null=False,
+            blank=False,
+            validators=(validate_alphanumeric,),
+        ),
+        choices=[],
+    )
     customer_place = models.BooleanField(
         default=False,
     )
@@ -49,10 +65,11 @@ class Service(BaseService):
     cost_to = models.DecimalField(
         decimal_places=0,
         max_digits=5,
-        default = Default.COST_TO,
+        default=Default.COST_TO,
         validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
     )
-    supplier = models.ManyToManyField(SupplierProfile, through='Booking')
+
+
     class Meta:
         verbose_name = "услуга"
         verbose_name_plural = "услуги"
@@ -66,6 +83,11 @@ class Service(BaseService):
     def __str__(self):
         return f"{self.name}"
 
+    def save(self, *args, **kwargs):
+        if self.supplier.exists():
+            specialist_type = self.supplier.first().specialist_type
+            self.name.field.choices = service_choice(specialist_type)
+        super().save(*args, **kwargs)
 
 class Booking(BaseService):
     """Модель бронирования услуги."""
@@ -106,6 +128,7 @@ class Booking(BaseService):
         verbose_name="исполнено или нет",
         default=False,
     )
+
     class Meta:
         verbose_name = "бронь услуги"
         verbose_name_plural = "брони услуг"
@@ -128,6 +151,7 @@ class Booking(BaseService):
 
     def __str__(self):
         return f"{self.service.name} - {self.date}"
+
 
 # class Advertisement(BaseService):
 #     """Модель объявления услуги."""

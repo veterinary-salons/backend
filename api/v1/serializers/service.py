@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from rest_framework.exceptions import ValidationError
+from icecream import ic
 
 from api.v1.serializers.core import ScheduleSerializer
 from api.v1.serializers.pets import BasePetSerializer
@@ -9,7 +9,6 @@ from api.v1.serializers.users import (
     SupplierProfileSerializer,
 )
 from core.constants import Limits, Default
-
 
 from pets.models import Pet, Age
 from services.models import Booking
@@ -22,13 +21,13 @@ from services.models import Service
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализатор услуг для бронирования."""
 
-    supplier = SupplierSerializer(read_only=True)
-    schedule = ScheduleSerializer(read_only=True)
-    booking = serializers.PrimaryKeyRelatedField(
-        required=False,
-        default=False,
-        read_only=True,
-    )
+    # supplier = SupplierSerializer(read_only=True)
+    # schedule = ScheduleSerializer(read_only=True)
+    # booking = serializers.PrimaryKeyRelatedField(
+    #     required=False,
+    #     default=False,
+    #     read_only=True,
+    # )
 
     class Meta:
         model = Service
@@ -48,24 +47,29 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
 
-    supplier = SupplierSerializer(read_only=True, many=True)
+    # schedule = ScheduleSerializer(many=True)
+    # supplier = SupplierProfileSerializer()
 
-    schedule = ScheduleSerializer(read_only=True)
     def to_representation(self, instance):
+        """Добавляем в вывод расписание специалиста и его данные."""
         representation = super().to_representation(instance)
-        representation["supplier"] = SupplierProfile.objects.get(
+        supplier = SupplierProfile.objects.get(
             related_user=self.context.get("request").user
-        ).user.email
+        )
+        supplier_representation = SupplierSerializer(
+            supplier,
+        ).data
+        schedule = supplier.schedule_set.all()
+        representation["schedule"] = ScheduleSerializer(schedule, many=True).data
+        representation["supplier"] = supplier_representation
         return representation
 
     class Meta(BaseServiceSerializer.Meta):
         fields = BaseServiceSerializer.Meta.fields + (
-            "supplier",
             "customer_place",
             "supplier_place",
             "cost_from",
             "cost_to",
-            "schedule",
         )
 
     # @staticmethod
