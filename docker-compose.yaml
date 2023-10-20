@@ -1,0 +1,49 @@
+# версия docker-compose
+version: '3.8'
+
+# имена и описания контейнеров, которые должны быть развёрнуты
+services:
+  # описание контейнера db
+  db:
+    # образ, из которого должен быть запущен контейнер
+    image: postgres:13.0-alpine
+    # volume и связанная с ним директория в контейнере
+    volumes:
+      - database:/var/lib/postgresql/data/
+    # адрес файла, где хранятся переменные окружения
+    env_file:
+      - ./.env
+  web:
+    build: .
+    restart: always
+    volumes:
+      - static_value:/app/static/
+      - media_value:/app/media/
+    # "зависит от", 
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+
+  nginx:
+
+    image: nginx:1.21.3-alpine
+
+    ports:
+      - "80:80"
+
+    volumes:
+
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+
+      - static_value:/var/html/static/
+
+      - media_value:/var/html/media/
+
+    depends_on:
+      - web
+
+volumes:
+  database:
+  static_value:
+  media_value:
