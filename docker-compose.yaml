@@ -14,7 +14,7 @@ services:
     env_file:
       - ./.env
   backend:
-    build: .
+    build: image: maxjust1ce/purrfect_backend:latest
     restart: always
     volumes:
       - static_value:/app/static/
@@ -28,7 +28,6 @@ services:
   nginx:
 
     image: nginx:1.21.3-alpine
-
     ports:
       - "80:80"
 
