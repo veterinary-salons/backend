@@ -13,7 +13,7 @@ services:
     # адрес файла, где хранятся переменные окружения
     env_file:
       - ./.env
-  web:
+  backend:
     build: .
     restart: always
     volumes:
@@ -41,7 +41,7 @@ services:
       - media_value:/var/html/media/
 
     depends_on:
-      - web
+      - backend
 
 volumes:
   database:
