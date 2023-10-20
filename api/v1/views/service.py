@@ -170,8 +170,9 @@ class SupplierCreateAdvertisement(generics.CreateAPIView, DestroyModelMixin):
         )
         schedule_serializer.is_valid(raise_exception=True)
         schedule_serializer.save()
+        ic(supplier_profile)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer.save(supplier=supplier_profile)
 
     # def create(self, request, *args, **kwargs):
     #     """Создание объявления."""

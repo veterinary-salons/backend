@@ -1,5 +1,4 @@
-from django.contrib.postgres.fields import ArrayField
-from django.db.models import UniqueConstraint, CheckConstraint, Q, F
+from django.db.models import UniqueConstraint, CheckConstraint, Q, F, JSONField
 from django.utils import timezone
 from icecream import ic
 
@@ -7,7 +6,6 @@ from core.constants import Limits, Default
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from core.utils import service_choice
 from core.validators import (
     validate_alphanumeric,
     RangeValueValidator,
@@ -33,12 +31,17 @@ class BaseService(models.Model):
     class Meta:
         abstract = True
 
-
 class Service(BaseService):
     """Модель услуг."""
 
-    supplier = models.ManyToManyField(SupplierProfile, through="Booking")
-
+    supplier = models.ForeignKey(
+        SupplierProfile,
+        on_delete=models.CASCADE,
+        related_name="services",
+        verbose_name="исполнитель",
+        null=False,
+        blank=False,
+    )
     customer_place = models.BooleanField(
         default=False,
     )
@@ -57,6 +60,8 @@ class Service(BaseService):
         default=Default.COST_TO,
         validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
     )
+    extra_fields = JSONField()
+
     class Meta:
         verbose_name = "услуга"
         verbose_name_plural = "услуги"
@@ -70,14 +75,6 @@ class Service(BaseService):
     def __str__(self):
         return f"{self.name}"
 
-    def save(self, *args, **kwargs):
-        if self.supplier.exists():
-            ic()
-            specialist_type = self.supplier.first().specialist_type
-            ic()
-            self.name.field.choices = service_choice(specialist_type)
-            ic()
-        super().save(*args, **kwargs)
 
 class Booking(BaseService):
     """Модель бронирования услуги."""

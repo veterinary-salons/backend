@@ -23,35 +23,33 @@ def validate_alphanumeric(value):
 
 
 def validate_services(
-    service_type,
-    pet_type,
+    specialist_type,
+    pet,
 ):
-    if service_type == Default.SERVICES[0][0] and pet_type != "dog":
+    if specialist_type == Default.SERVICES[0][0] and pet != "dog":
         raise ValidationError("Кинолог работает только с собаками.")
-    # print(service_type, Default.SERVICES[0][0])
-    # if service_type != Default.SERVICES[0][0] and any(
-    #     (
-    #         task,
-    #         formats,
-    #     )
-    # ):
-    #     print("Поля `task` и `formats` только для Сервиса")
-    #     raise ValidationError("Поля `task` и `formats` только для Кинолога.")
-    # if service_type != Default.SERVICES[3][0] and grooming_type:
-    #     raise ValidationError("Поле `grooming_type` только для Грумера.")
-    # if service_type == Default.SERVICES[3][0] and not grooming_type:
-    #     raise ValidationError("Поле `grooming_type` необходимо заполнить.")
-    # if service_type == Default.SERVICES[0][0] and not all(
-    #     (
-    #         task,
-    #         formats,
-    #     )
-    # ):
-    #     raise ValidationError("Поле `task` и `formats` необходимо заполнить.")
-    # if service_type == Default.SERVICES[1][0] and not vet_services:
-    #     raise ValidationError("Поле `vet_services` необходимо заполнить.")
-    # if service_type != Default.SERVICES[2][0] and vet_services:
-    #     raise ValidationError("Поле `vet_services` только для ветеринара.")
+    if specialist_type != Default.SERVICES[0][0] and any(
+        (
+            task,
+            formats,
+        )
+    ):
+        raise ValidationError("Поля `task` и `formats` только для Кинолога.")
+    if specialist_type != Default.SERVICES[3][0] and grooming_type:
+        raise ValidationError("Поле `grooming_type` только для Грумера.")
+    if specialist_type == Default.SERVICES[3][0] and not grooming_type:
+        raise ValidationError("Поле `grooming_type` необходимо заполнить.")
+    if specialist_type == Default.SERVICES[0][0] and not all(
+        (
+            task,
+            formats,
+        )
+    ):
+        raise ValidationError("Поле `task` и `formats` необходимо заполнить.")
+    if specialist_type == Default.SERVICES[1][0] and not vet_services:
+        raise ValidationError("Поле `vet_services` необходимо заполнить.")
+    if specialist_type != Default.SERVICES[2][0] and vet_services:
+        raise ValidationError("Поле `vet_services` только для ветеринара.")
 
 
 class RangeValueValidator(BaseValidator):

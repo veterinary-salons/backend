@@ -70,6 +70,7 @@ class ServiceSerializer(BaseServiceSerializer):
             "supplier_place",
             "cost_from",
             "cost_to",
+            "extra_fields",
         )
 
     # @staticmethod
