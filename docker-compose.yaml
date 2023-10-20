@@ -14,7 +14,7 @@ services:
     env_file:
       - ./.env
   backend:
-    build: image: maxjust1ce/purrfect_backend:latest
+    image: maxjust1ce/purrfect_backend:latest
     restart: always
     volumes:
       - static_value:/app/static/
