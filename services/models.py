@@ -1,6 +1,7 @@
 from django.db.models import UniqueConstraint, CheckConstraint, Q, F, JSONField
 from django.utils import timezone
 from icecream import ic
+from rest_framework import serializers
 
 from core.constants import Limits, Default
 from django.contrib.auth import get_user_model
@@ -20,20 +21,25 @@ User = get_user_model()
 class BaseService(models.Model):
     """Базовая модель для услуг."""
 
-    name = models.CharField(
-        max_length=Limits.MAX_LEN_SERVICE_NAME,
+    ad_title = models.CharField(
+        max_length=Limits.MAX_LEN_TITLE_NAME,
         null=False,
         blank=False,
-        choices=[],
         validators=[validate_alphanumeric],
     )
 
     class Meta:
         abstract = True
 
+
 class Service(BaseService):
     """Модель услуг."""
 
+    description = models.CharField(
+        max_length=Limits.MAX_LEN_SERVICE_NAME,
+        null=False,
+        blank=False,
+    )
     supplier = models.ForeignKey(
         SupplierProfile,
         on_delete=models.CASCADE,
@@ -70,7 +76,99 @@ class Service(BaseService):
                 check=Q(cost_from__lte=F("cost_to")),
                 name="cost_range",
             ),
+            # UniqueConstraint(
+            #     fields=["name", "supplier"],
+            #     name="unique_name_for_service",
+            # )
         )
+
+    def clean(self):
+        """Проверяем соответствие типа специалиста и типа питомца."""
+        if (
+            self.supplier.specialist_type == Default.SERVICES[0][0]
+            and self.extra_fields.service not in Default.CYNOLOGY_SERVICES
+        ):
+            raise serializers.ValidationError(
+                f"У кинолога нет такой услуги: {self.extra_fields.service}. Выбор из услуг: {Default.CYNOLOGY_SERVICES}"
+            )
+        if (
+            self.supplier.specialist_type == Default.SERVICES[1][0]
+            and self.extra_fields.service not in Default.VET_SERVICES
+        ):
+            raise serializers.ValidationError(
+                f"У ветеринара нет такой услуги: {self.extra_fields.service}. Выбор из услуг: {Default.VET_SERVICES}"
+            )
+        if (
+            self.supplier.specialist_type == Default.SERVICES[2][0]
+            and self.extra_fields.service not in Default.GROOMING_TYPE
+        ):
+            raise serializers.ValidationError(
+                f"У грумера нет такой услуги: {self.extra_fields.service}. Выбор из услуг: {Default.GROOMING_TYPE}"
+            )
+        if (
+            self.supplier.specialist_type == Default.SERVICES[3][0]
+            and self.extra_fields.service != Default.SHELTER_SERVICE
+        ):
+            raise serializers.ValidationError(
+                f"У зооняни нет такой услуги: {self.extra_fields.service}. Зооняня не "
+                f"предлает других услуг, кроме. {Default.SHELTER_SERVICE} "
+                f"единственное возможное значение для этого поля"
+            )
+        if self.supplier.specialist_type != Default.SERVICES[0][0] and any(
+            (
+                self.extra_fields.get("task"),
+                self.extra_fields.get("formats"),
+            )
+        ):
+            raise serializers.ValidationError(
+                "Поля `task` и `formats` только для Кинолога."
+            )
+        if self.extra_fields.get("task") not in Default.CYNOLOGY_SERVICES:
+            raise serializers.ValidationError(
+                f"Поле `task` должно быть из списка услуг: {Default.CYNOLOGY_SERVICES}"
+            )
+        if self.extra_fields.get("format") not in Default.CYNOLOGY_FORMAT:
+            raise serializers.ValidationError(
+                f"Поле `format` должно быть из списка услуг: {Default.CYNOLOGY_FORMAT}"
+            )
+        if self.supplier.specialist_type != Default.SERVICES[3][
+            0
+        ] and self.extra_fields.get("grooming_type"):
+            raise serializers.ValidationError(
+                "Поле `grooming_type` только для Грумера."
+            )
+        if self.supplier.specialist_type == Default.SERVICES[3][
+            0
+        ] and not self.extra_fields.get("grooming_type"):
+            raise serializers.ValidationError(
+                "Поле `grooming_type` необходимо заполнить."
+            )
+        if self.supplier.specialist_type == Default.SERVICES[0][0] and not all(
+            (
+                self.extra_fields.get("task"),
+                self.extra_fields.get("formats"),
+            )
+        ):
+            raise serializers.ValidationError(
+                "Поле `task` и `formats` необходимо заполнить."
+            )
+        if self.supplier.specialist_type == Default.SERVICES[
+            1
+        ] and not self.extra_fields.get("vet_services"):
+            raise serializers.ValidationError(
+                "Поле `vet_services` необходимо заполнить."
+            )
+        if self.supplier.specialist_type != Default.SERVICES[
+            2
+        ] and self.extra_fields.get("vet_services"):
+            raise serializers.ValidationError(
+                "Поле `vet_services` только для ветеринара."
+            )
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(Service, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name}"

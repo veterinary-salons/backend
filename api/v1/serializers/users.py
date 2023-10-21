@@ -1,3 +1,4 @@
+from icecream import ic
 from rest_framework import serializers
 
 from api.v1.serializers.core import Base64ImageField, ScheduleSerializer
@@ -42,19 +43,21 @@ class CustomerProfileSerializer(BaseProfileSerializer):
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
-    schedule = ScheduleSerializer(many=True)
+    # schedule = ScheduleSerializer(many=True)
 
     def to_representation(self, instance):
+        ic()
         representation = super().to_representation(instance)
         user_representation = representation.pop("user")
         for key in user_representation:
             representation[key] = user_representation[key]
+        ic(representation)
         return representation
 
     class Meta:
         model = SupplierProfile
         fields = (
-            "schedule",
+            # "schedule",
             "photo",
             "phone_number",
             "contact_email",

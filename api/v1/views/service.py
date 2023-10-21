@@ -1,7 +1,8 @@
-from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.db import transaction, IntegrityError
 from django.shortcuts import get_object_or_404
 from icecream import ic
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.mixins import DestroyModelMixin
 
 from api.v1.serializers.core import ScheduleSerializer
@@ -155,9 +156,11 @@ class SupplierCreateAdvertisement(generics.CreateAPIView, DestroyModelMixin):
         IsAuthenticated,
     ]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: ServiceSerializer):
         """Сохраняем расписание."""
+        ic()
         schedule_data = self.request.data.pop("schedule")
+        ic()
         supplier_profile = SupplierProfile.objects.get(
             related_user=self.request.user
         )
@@ -170,28 +173,12 @@ class SupplierCreateAdvertisement(generics.CreateAPIView, DestroyModelMixin):
         )
         schedule_serializer.is_valid(raise_exception=True)
         schedule_serializer.save()
-        ic(supplier_profile)
         serializer.is_valid(raise_exception=True)
+        # try:
         serializer.save(supplier=supplier_profile)
+        ic()
+        # except (ValidationError, IntegrityError):
+        #     raise serializers.ValidationError(
+        #         {"error": "Такой объект уже существует"}
+        #     )
 
-    # def create(self, request, *args, **kwargs):
-    #     """Создание объявления."""
-    #     schedule_data = self.request.data.pop("schedule")
-    #     ic(schedule_data)
-    #     ic(self.request.data)
-    #     serializer = self.get_serializer(data=self.request.data)
-    #     ic(serializer)
-    #     serializer.is_valid()
-    #     serializer.save()
-    #     ic(serializer.data)
-    #     supplier_data = SupplierProfileSerializer(
-    #         SupplierProfile.objects.get(related_user=self.request.user)
-    #     ).data
-    #     ic(supplier_data)
-    #     data = {
-    #         "services": serializer.data,
-    #         "supplier_profiles": supplier_data,
-    #     }
-    #     return Response(
-    #         data, status=status.HTTP_201_CREATED,
-    #     )

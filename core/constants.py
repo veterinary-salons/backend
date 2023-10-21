@@ -10,7 +10,8 @@ class Limits:
     MIN_PRICE = 1
     MIN_LEN_PHONE_NUMBER = 10
 
-    MAX_LEN_SERVICE_NAME = 20
+    MAX_LEN_TITLE_NAME = 50
+    MAX_LEN_SERVICE_NAME = 50
     MAX_LEN_SERVICE_TYPE = 30
     MAX_LEN_ANIMAL_TYPE = 30
     MAX_LEN_ANIMAL_BREED = 30
@@ -54,34 +55,52 @@ class Default:
         ("3", "10 - 20кг."),
         ("4", "более 20кг."),
     )
-    GROOMING_TYPE = (
-        ("Hygienic", "Hygienic"),
-        ("Exhibition", "Exhibition"),
-        ("Decorative", "Decorative"),
-        ("ych", "You can choose"),
+
+    VET_SERVICES = (
+        "consultation",
+        "veterinary",
+        "injection",
+        "vaccinating",
+        "sterializing",
+        "vetpassport",
+        "sleeping",
+        "another",
     )
+    
+    SERVICES = (
+        ("cynology", "Кинолог" ),
+        ("veterenary", "Ветеринар" ),
+        ("shelter", "Зооняня" ),
+        ("grooming", "Грумер"),
+    )
+    
     CYNOLOGY_SERVICES = (
-        ("correction", "Коррекция проблемного поведения"),
-        ("etraining", "Воспитательная дрессировка щенка"),
-        ("education", "Обучение командам"),
-        (
-            "training",
-            "Дрессировка служебных/ охотничьих собак, подготовка "
-            "к экзамену ОКД",
-        ),
-        ("sport", "Спортивная дрессировка"),
-        ("adapt", "Адаптация собаки из приюта"),
-        ("prep", "Подготовка к участию на выставке"),
-        ("consult", "Консультация"),
-        ("another", "Другое"),
+        "Коррекция проблемного поведения",
+        "Воспитательная дрессировка щенка",
+        "Обучение командам",
+        "Дрессировка служебных/ охотничьих собак, подготовка к экзамену ОКД",
+        "Спортивная дрессировка",
+        "Адаптация собаки из приюта",
+        "Подготовка к участию на выставке",
+        "Консультация",
+        "Другое",
     )
+    
     CYNOLOGY_FORMAT = (
-        ("individual", "Индивидуальные занятия"),
-        ("minigroup", "Занятия в мини-группе"),
-        ("group", "Групповые занятия"),
-        ("training", "Дрессировка с передержкой у кинолога"),
-        ("another", "Другое"),
+        "individual",
+        "minigroup",
+        "group",
+        "training",
+        "another",
     )
+    
+    GROOMING_TYPE = (
+        "Hygienic",
+        "Exhibition",
+        "Decorative",
+        "ych",
+    )
+    SHELTER_SERVICE = "shelter"
     SERVICER_PRICE = [1000, 2000]
     PET_TYPE = (
         ("cat", "Кошка"),
@@ -92,12 +111,7 @@ class Default:
         ("rab", "Кролик"),
         ("ano", "Другое"),
     )
-    SERVICES = (
-        ("cynology", "Кинолог" ),
-        ("veterenary", "Ветеринар" ),
-        ("shelter", "Зооняня" ),
-        ("grooming", "Грумер"),
-    )
+
     GOODS_CATEGORIES = (
         ("food", "Корм и лакомства"),
         ("toys", "Игрушки и амуниция"),
@@ -114,16 +128,7 @@ class Default:
         ('11-20', '11-20'),
         ('21-30', '21-30'),
     )
-    VET_SERVICES=(
-        ("consultation", "Консультации"),
-        ("veterinary", "Диагностика заболевания и лечение"),
-        ("injection", "Введение инъекций"),
-        ("vaccinating", "Вакцинация"),
-        ("sterializing", "Стерилизация"),
-        ("vetpassport", "Оформление ветпаспорта"),
-        ("sleeping", "Усыпление"),
-        ("another", "Другое"),
-    )
+
     DAYS_OF_WEEK = (
         (0, "Понедельник"),
         (1, "Вторник"),

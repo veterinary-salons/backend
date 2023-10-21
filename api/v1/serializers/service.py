@@ -47,8 +47,7 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
 
-    # schedule = ScheduleSerializer(many=True)
-    # supplier = SupplierProfileSerializer()
+    supplier = SupplierProfileSerializer(read_only=True)
 
     def to_representation(self, instance):
         """Добавляем в вывод расписание специалиста и его данные."""
@@ -60,7 +59,9 @@ class ServiceSerializer(BaseServiceSerializer):
             supplier,
         ).data
         schedule = supplier.schedule_set.all()
-        representation["schedule"] = ScheduleSerializer(schedule, many=True).data
+        representation["schedule"] = ScheduleSerializer(
+            schedule, many=True
+        ).data
         representation["supplier"] = supplier_representation
         return representation
 
@@ -71,7 +72,15 @@ class ServiceSerializer(BaseServiceSerializer):
             "cost_from",
             "cost_to",
             "extra_fields",
+            "supplier",
         )
+        # validators = [
+        #     serializers.UniqueTogetherValidator(
+        #         queryset=Service.objects.all(),
+        #         fields=("name", "cost_to"), # supplier должно быть уникальным
+        #         message="A service with this name and supplier already exists.",
+        #     ),
+        # ]
 
     # @staticmethod
     # def validate_price(data):
