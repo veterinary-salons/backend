@@ -34,7 +34,7 @@ jobs:
     needs: build_and_push_to_docker_hub
     steps:
       - name: executing remote ssh commands to deploy
-        if: ${{ github.ref == 'refs/heads/deploy' }}
+        if: ${{ github.ref == 'refs/heads/CI/CD' }}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -43,6 +43,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }} 
           script: |
             sudo docker pull maxjust1ce/purrfect_backend:latest
+            sudo docker pull maxjust1ce/purrfect_frontend:latest
             sudo docker-compose stop
             sudo docker-compose rm backend
             sudo rm .env
