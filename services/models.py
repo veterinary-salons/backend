@@ -3,7 +3,7 @@ from django.utils import timezone
 from icecream import ic
 from rest_framework import serializers
 
-from core.constants import Limits, Default
+from core.constants import Limits, Default, Messages
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -11,6 +11,15 @@ from core.validators import (
     validate_alphanumeric,
     RangeValueValidator,
     validate_current_and_future_month,
+    validate_cynology_service,
+    validate_cynology_fields,
+    validate_vet_service,
+    validate_vet_fields,
+    validate_grooming_service,
+    validate_grooming_fields,
+    validate_shelter_service,
+    validate_shelter_fields,
+    validate_letters,
 )
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
@@ -34,7 +43,14 @@ class BaseService(models.Model):
 
 class Service(BaseService):
     """Модель услуг."""
-
+    category = models.CharField(
+        verbose_name="тип услуги",
+        max_length=Limits.MAX_LEN_SERVICE_TYPE,
+        choices=Default.SERVICES,
+        validators=(validate_letters,),
+        blank=False,
+        null=False,
+    )
     description = models.CharField(
         max_length=Limits.MAX_LEN_SERVICE_NAME,
         null=False,
@@ -54,28 +70,12 @@ class Service(BaseService):
     supplier_place = models.BooleanField(
         default=True,
     )
-    cost_from = models.DecimalField(
-        decimal_places=0,
-        max_digits=5,
-        default=Default.COST_FROM,
-        validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
-    )
-    cost_to = models.DecimalField(
-        decimal_places=0,
-        max_digits=5,
-        default=Default.COST_TO,
-        validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
-    )
     extra_fields = JSONField()
 
     class Meta:
         verbose_name = "услуга"
         verbose_name_plural = "услуги"
         constraints = (
-            CheckConstraint(
-                check=Q(cost_from__lte=F("cost_to")),
-                name="cost_range",
-            ),
             # UniqueConstraint(
             #     fields=["name", "supplier"],
             #     name="unique_name_for_service",
@@ -84,86 +84,22 @@ class Service(BaseService):
 
     def clean(self):
         """Проверяем соответствие типа специалиста и типа питомца."""
-        if (
-            self.supplier.specialist_type == Default.SERVICES[0][0]
-            and self.extra_fields.service not in Default.CYNOLOGY_SERVICES
-        ):
-            raise serializers.ValidationError(
-                f"У кинолога нет такой услуги: {self.extra_fields.service}. Выбор из услуг: {Default.CYNOLOGY_SERVICES}"
-            )
-        if (
-            self.supplier.specialist_type == Default.SERVICES[1][0]
-            and self.extra_fields.service not in Default.VET_SERVICES
-        ):
-            raise serializers.ValidationError(
-                f"У ветеринара нет такой услуги: {self.extra_fields.service}. Выбор из услуг: {Default.VET_SERVICES}"
-            )
-        if (
-            self.supplier.specialist_type == Default.SERVICES[2][0]
-            and self.extra_fields.service not in Default.GROOMING_TYPE
-        ):
-            raise serializers.ValidationError(
-                f"У грумера нет такой услуги: {self.extra_fields.service}. Выбор из услуг: {Default.GROOMING_TYPE}"
-            )
-        if (
-            self.supplier.specialist_type == Default.SERVICES[3][0]
-            and self.extra_fields.service != Default.SHELTER_SERVICE
-        ):
-            raise serializers.ValidationError(
-                f"У зооняни нет такой услуги: {self.extra_fields.service}. Зооняня не "
-                f"предлает других услуг, кроме. {Default.SHELTER_SERVICE} "
-                f"единственное возможное значение для этого поля"
-            )
-        if self.supplier.specialist_type != Default.SERVICES[0][0] and any(
-            (
-                self.extra_fields.get("task"),
-                self.extra_fields.get("formats"),
-            )
-        ):
-            raise serializers.ValidationError(
-                "Поля `task` и `formats` только для Кинолога."
-            )
-        if self.extra_fields.get("task") not in Default.CYNOLOGY_SERVICES:
-            raise serializers.ValidationError(
-                f"Поле `task` должно быть из списка услуг: {Default.CYNOLOGY_SERVICES}"
-            )
-        if self.extra_fields.get("format") not in Default.CYNOLOGY_FORMAT:
-            raise serializers.ValidationError(
-                f"Поле `format` должно быть из списка услуг: {Default.CYNOLOGY_FORMAT}"
-            )
-        if self.supplier.specialist_type != Default.SERVICES[3][
-            0
-        ] and self.extra_fields.get("grooming_type"):
-            raise serializers.ValidationError(
-                "Поле `grooming_type` только для Грумера."
-            )
-        if self.supplier.specialist_type == Default.SERVICES[3][
-            0
-        ] and not self.extra_fields.get("grooming_type"):
-            raise serializers.ValidationError(
-                "Поле `grooming_type` необходимо заполнить."
-            )
-        if self.supplier.specialist_type == Default.SERVICES[0][0] and not all(
-            (
-                self.extra_fields.get("task"),
-                self.extra_fields.get("formats"),
-            )
-        ):
-            raise serializers.ValidationError(
-                "Поле `task` и `formats` необходимо заполнить."
-            )
-        if self.supplier.specialist_type == Default.SERVICES[
-            1
-        ] and not self.extra_fields.get("vet_services"):
-            raise serializers.ValidationError(
-                "Поле `vet_services` необходимо заполнить."
-            )
-        if self.supplier.specialist_type != Default.SERVICES[
-            2
-        ] and self.extra_fields.get("vet_services"):
-            raise serializers.ValidationError(
-                "Поле `vet_services` только для ветеринара."
-            )
+        specialist_type = self.category
+        service_name = self.extra_fields.get("service_name")
+    
+        if specialist_type == Default.SERVICES[0][0]:
+            validate_cynology_service(service_name)
+            validate_cynology_fields(self)
+        elif specialist_type == Default.SERVICES[1][0]:
+            validate_vet_service(service_name)
+            validate_vet_fields(self)
+        elif specialist_type == Default.SERVICES[2][0]:
+            validate_grooming_service(service_name)
+            validate_grooming_fields(self)
+        elif specialist_type == Default.SERVICES[3][0]:
+            validate_shelter_service(service_name)
+            validate_shelter_fields(self)
+
         super().clean()
 
     def save(self, *args, **kwargs):
@@ -171,7 +107,7 @@ class Service(BaseService):
         return super(Service, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.extra_fields.get('service_name')} - {self.ad_title}"
 
 
 class Booking(BaseService):
@@ -236,6 +172,7 @@ class Booking(BaseService):
 
     def __str__(self):
         return f"{self.service.name} - {self.date}"
+
 
 
 # class Advertisement(BaseService):

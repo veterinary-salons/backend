@@ -3,6 +3,8 @@ import re
 
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, BaseValidator
+from icecream import ic
+from rest_framework import serializers
 
 from core.constants import Default, Messages, Limits
 
@@ -22,34 +24,98 @@ def validate_alphanumeric(value):
         )
 
 
-def validate_services(
-    specialist_type,
-    pet,
-):
-    if specialist_type == Default.SERVICES[0][0] and pet != "dog":
-        raise ValidationError("Кинолог работает только с собаками.")
-    if specialist_type != Default.SERVICES[0][0] and any(
-        (
-            task,
-            formats,
+def validate_cynology_service(service_name):
+    if service_name not in Default.CYNOLOGY_SERVICES:
+        raise serializers.ValidationError(
+            Messages.CYN_SERVICE_ERROR.format(
+                service_name=service_name,
+                cynology_services=Default.CYNOLOGY_SERVICES,
+            )
         )
-    ):
-        raise ValidationError("Поля `task` и `formats` только для Кинолога.")
-    if specialist_type != Default.SERVICES[3][0] and grooming_type:
-        raise ValidationError("Поле `grooming_type` только для Грумера.")
-    if specialist_type == Default.SERVICES[3][0] and not grooming_type:
-        raise ValidationError("Поле `grooming_type` необходимо заполнить.")
-    if specialist_type == Default.SERVICES[0][0] and not all(
-        (
-            task,
-            formats,
+
+
+def validate_cynology_fields(model):
+    service_name = model.extra_fields.get("service_name")
+    formats = model.extra_fields.get("formats")
+    pet_type = model.extra_fields.get("pet_type")
+    if not service_name or not formats:
+        raise serializers.ValidationError(Messages.CYNOLOGY_FIELDS_ERROR)
+
+    if formats not in Default.CYNOLOGY_FORMAT:
+        raise serializers.ValidationError(
+            Messages.FORMAT_ERROR.format(
+                cynology_format=Default.CYNOLOGY_FORMAT
+            )
         )
-    ):
-        raise ValidationError("Поле `task` и `formats` необходимо заполнить.")
-    if specialist_type == Default.SERVICES[1][0] and not vet_services:
-        raise ValidationError("Поле `vet_services` необходимо заполнить.")
-    if specialist_type != Default.SERVICES[2][0] and vet_services:
-        raise ValidationError("Поле `vet_services` только для ветеринара.")
+
+    if pet_type != Default.PET_TYPE[0][0]:
+        raise serializers.ValidationError(
+            Messages.PET_TYPE_ERROR,
+        )
+
+
+def validate_vet_service(service_name):
+    if service_name not in Default.VET_SERVICES:
+        raise serializers.ValidationError(
+            Messages.VET_SERVICE_ERROR.format(
+                service_name=service_name, vet_services=Default.VET_SERVICES
+            )
+        )
+
+
+def validate_vet_fields(model):
+    vet_services = model.extra_fields.get("vet_services")
+    if not vet_services:
+        raise serializers.ValidationError(Messages.VET_FIELDS_ERROR)
+
+
+def validate_grooming_service(service_name):
+    if service_name not in Default.GROOMING_TYPE:
+        raise serializers.ValidationError(
+            Messages.GROOMING_SERVICE_ERROR.format(
+                service_name=service_name, grooming_type=Default.GROOMING_TYPE
+            )
+        )
+
+
+def validate_grooming_fields(model):
+    grooming_type = model.extra_fields.get("grooming_type")
+    if not grooming_type:
+        raise serializers.ValidationError(Messages.GROOMING_FIELDS_ERROR)
+
+
+def validate_shelter_service(service_name):
+    if service_name != Default.SHELTER_SERVICE:
+        raise serializers.ValidationError(
+            Messages.SHELTER_SERVICE_ERROR.format(
+                service_name=service_name,
+                shelter_service=Default.SHELTER_SERVICE,
+            )
+        )
+
+
+def validate_shelter_fields(model):
+    grooming_type = model.extra_fields.get("grooming_type")
+    if grooming_type:
+        raise serializers.ValidationError(Messages.GROOMER_FIELDS_ERROR)
+
+
+# def validate_extra_fields(model: Service) -> None:
+#     specialist_type = model.category
+#     service_name = model.extra_fields.get("service_name")
+#
+#     if specialist_type == Default.SERVICES[0][0]:
+#         validate_cynology_service(service_name)
+#         validate_cynology_fields(model)
+#     elif specialist_type == Default.SERVICES[1][0]:
+#         validate_vet_service(service_name)
+#         validate_vet_fields(model)
+#     elif specialist_type == Default.SERVICES[2][0]:
+#         validate_grooming_service(service_name)
+#         validate_grooming_fields(model)
+#     elif specialist_type == Default.SERVICES[3][0]:
+#         validate_shelter_service(service_name)
+#         validate_shelter_fields(model)
 
 
 class RangeValueValidator(BaseValidator):

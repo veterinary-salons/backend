@@ -158,27 +158,8 @@ class SupplierCreateAdvertisement(generics.CreateAPIView, DestroyModelMixin):
 
     def perform_create(self, serializer: ServiceSerializer):
         """Сохраняем расписание."""
-        ic()
-        schedule_data = self.request.data.pop("schedule")
-        ic()
         supplier_profile = SupplierProfile.objects.get(
             related_user=self.request.user
         )
-        [
-            schedule.update({"supplier": supplier_profile.pk})
-            for schedule in schedule_data
-        ]
-        schedule_serializer = ScheduleSerializer(
-            data=schedule_data, many=True
-        )
-        schedule_serializer.is_valid(raise_exception=True)
-        schedule_serializer.save()
         serializer.is_valid(raise_exception=True)
-        # try:
         serializer.save(supplier=supplier_profile)
-        ic()
-        # except (ValidationError, IntegrityError):
-        #     raise serializers.ValidationError(
-        #         {"error": "Такой объект уже существует"}
-        #     )
-

@@ -2,13 +2,14 @@ from copy import deepcopy
 
 from icecream import ic
 
-from api.v1.serializers.core import ScheduleSerializer
+from api.v1.serializers.core import ScheduleSerializer, PriceSerializer
 from api.v1.serializers.pets import BasePetSerializer
 from api.v1.serializers.users import (
     SupplierSerializer,
     SupplierProfileSerializer,
 )
 from core.constants import Limits, Default
+from core.models import Schedule
 
 from pets.models import Pet, Age
 from services.models import Booking
@@ -33,7 +34,7 @@ class BaseServiceSerializer(serializers.ModelSerializer):
         model = Service
         fields = (
             "id",
-            "name",
+            # "name",
             # "booking",
             # "customer_place",
             # "supplier_place",
@@ -46,41 +47,48 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 
 class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
-
+    schedules = ScheduleSerializer(many=True)
     supplier = SupplierProfileSerializer(read_only=True)
-
-    def to_representation(self, instance):
-        """Добавляем в вывод расписание специалиста и его данные."""
-        representation = super().to_representation(instance)
-        supplier = SupplierProfile.objects.get(
-            related_user=self.context.get("request").user
-        )
-        supplier_representation = SupplierSerializer(
-            supplier,
-        ).data
-        schedule = supplier.schedule_set.all()
-        representation["schedule"] = ScheduleSerializer(
-            schedule, many=True
-        ).data
-        representation["supplier"] = supplier_representation
-        return representation
+    price = PriceSerializer(many=True)
 
     class Meta(BaseServiceSerializer.Meta):
         fields = BaseServiceSerializer.Meta.fields + (
-            "customer_place",
-            "supplier_place",
-            "cost_from",
-            "cost_to",
+            "category",
+            "ad_title",
+            "description",
+             "price",
             "extra_fields",
             "supplier",
+            "customer_place",
+            "supplier_place",
+            "schedules",
         )
-        # validators = [
-        #     serializers.UniqueTogetherValidator(
-        #         queryset=Service.objects.all(),
-        #         fields=("name", "cost_to"), # supplier должно быть уникальным
-        #         message="A service with this name and supplier already exists.",
-        #     ),
-        # ]
+    def create(self, validated_data):
+        schedules_data = validated_data.pop("schedules", [])
+        service = super().create(validated_data)
+        schedules = []
+        for schedule_data in schedules_data:
+            schedule = Schedule(service=service, **schedule_data)
+
+            schedules.append(schedule)
+        Schedule.objects.bulk_create(schedules)
+        return service
+
+    # def to_representation(self, instance):
+    #     """Добавляем в вывод расписание специалиста и его данные."""
+    #     representation = super().to_representation(instance)
+    #     supplier = SupplierProfile.objects.get(
+    #         related_user=self.context.get("request").user
+    #     )
+    #     supplier_representation = SupplierSerializer(
+    #         supplier,
+    #     ).data
+    #     schedule = supplier.schedule_set.all()
+    #     representation["schedule"] = ScheduleSerializer(
+    #         schedule, many=True
+    #     ).data
+    #     representation["supplier"] = supplier_representation
+    #     return representation
 
     # @staticmethod
     # def validate_price(data):
@@ -131,7 +139,6 @@ class FilterServicesSerializer(serializers.Serializer):
     date = serializers.DateField(
         required=False, format=None, input_formats=("%d.%m.%Y",)
     )
-
 
 class BaseBookingSerializer(serializers.ModelSerializer):
     """Базовый сериализатор бронирования."""

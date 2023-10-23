@@ -141,13 +141,6 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddConstraint(
-            model_name="service",
-            constraint=models.CheckConstraint(
-                check=models.Q(("cost_from__lte", models.F("cost_to"))),
-                name="cost_range",
-            ),
-        ),
-        migrations.AddConstraint(
             model_name="booking",
             constraint=models.UniqueConstraint(
                 fields=("service", "supplier"), name="unique_for_services"

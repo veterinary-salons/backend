@@ -128,14 +128,7 @@ class BaseProfile(models.Model):
 
 
 class SupplierProfile(BaseProfile):
-    specialist_type = models.CharField(
-        verbose_name="тип услуги",
-        max_length=Limits.MAX_LEN_SERVICE_TYPE,
-        choices=Default.SERVICES,
-        validators=(validate_letters,),
-        blank=False,
-        null=False,
-    )
+
     pet_type = models.CharField(
         verbose_name="тип животного",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
@@ -149,20 +142,20 @@ class SupplierProfile(BaseProfile):
         validators=(validate_alphanumeric,),
     )
 
-    def clean(self):
-        """Проверяем соответствие типа специалиста и типа питомца."""
-        if (
-            self.specialist_type == Default.SERVICES[1][0]
-            and self.pet_type != Default.PET_TYPE[1][0]
-        ):
-            raise serializers.ValidationError(
-                "Кинолог работает только с собаками."
-            )
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super(SupplierProfile, self).save(*args, **kwargs)
+    # def clean(self):
+    #     """Проверяем соответствие типа специалиста и типа питомца."""
+    #     if (
+    #         self.specialist_type == Default.SERVICES[1][0]
+    #         and self.pet_type != Default.PET_TYPE[1][0]
+    #     ):
+    #         raise serializers.ValidationError(
+    #             "Кинолог работает только с собаками."
+    #         )
+    #     super().clean()
+    #
+    # def save(self, *args, **kwargs):
+    #     self.full_clean()
+    #     return super(SupplierProfile, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.email}"

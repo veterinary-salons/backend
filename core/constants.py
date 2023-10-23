@@ -42,6 +42,24 @@ class Messages:
     CORRECT_AGE_MESSAGE = "Введите корректный возраст!"
     CORRECT_PRICE_MESSAGE = "Введите корректную цену."
     CORRECT_DURATION_MESSAGE = "Некорректная продолжительность."
+    CYN_SERVICE_ERROR = ("У кинолога нет такой услуги: {service_name}. "
+                         "Выбор из услуг: {cynology_services}")
+    VET_SERVICE_ERROR = ("У ветеринара нет такой услуги: {service_name}. "
+                         "Выбор из услуг: {vet_services}")
+    GROOMING_SERVICE_ERROR = ("У грумера нет такой услуги: {service_name}. "
+                              "Выбор из услуг: {grooming_type}")
+    SHELTER_SERVICE_ERROR = ("У зооняни нет такой услуги: {service_name}. "
+                             "Зооняня не предлает других услуг, кроме "
+                             "{shelter_service}.")
+    CYNOLOGY_FIELDS_ERROR = "Поля service_name и format необходимо заполнить."
+    VET_FIELDS_ERROR = "Поле vet_services необходимо заполнить."
+    GROOMING_FIELDS_ERROR = "Поле grooming_type необходимо заполнить."
+    GROOMER_FIELDS_ERROR = "Поле grooming_type только для Грумера."
+    CLEANUP_FIELDS_ERROR = "Поля service_name и formats только для Кинолога."
+    SERVICE_NAME_ERROR = ("Поле service_name должно быть из списка услуг: "
+                          "{cynology_services}")
+    FORMAT_ERROR = "Поле format должно быть из списка услуг: {cynology_format}"
+    PET_TYPE_ERROR = "Кинолог работает только с собаками"
 
 class Default:
     def __setattr__(self, name: str, value: tuple) -> None:
@@ -103,8 +121,8 @@ class Default:
     SHELTER_SERVICE = "shelter"
     SERVICER_PRICE = [1000, 2000]
     PET_TYPE = (
-        ("cat", "Кошка"),
         ("dog", "Собака"),
+        ("cat", "Кошка"),
         ("pig", "Морская свинка"),
         ("hom", "Хомяк"),
         ("hor", "Хорек"),
@@ -130,13 +148,13 @@ class Default:
     )
 
     DAYS_OF_WEEK = (
-        (0, "Понедельник"),
-        (1, "Вторник"),
-        (2, "Среда"),
-        (3, "Четверг"),
-        (4, "Пятница"),
-        (5, "Суббота"),
-        (6, "Воскресенье"),
+        ("Пн.", "Понедельник"),
+        ("Вт.", "Вторник"),
+        ("Ср.", "Среда"),
+        ("Чт", "Четверг"),
+        ("Пт.", "Пятница"),
+        ("Сб.", "Суббота"),
+        ("Вс.", "Воскресенье"),
     )
     GOODS_IMAGE_SIZE = 500, 300
 

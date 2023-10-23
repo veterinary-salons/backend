@@ -1,14 +1,16 @@
 from django.db import models
+from django.db.models import CheckConstraint, Q, F
 
-from core.constants import Default
+from core.constants import Default, Limits
+from core.validators import RangeValueValidator
 from services.models import Service
 from users.models import SupplierProfile
 
 
 class Schedule(models.Model):
-    """Расписание специалиста."""
+    """Расписание услуги."""
 
-    weekday = models.IntegerField(
+    weekday = models.CharField(
         choices=Default.DAYS_OF_WEEK,
         verbose_name="День недели",
         null=False,
@@ -35,12 +37,48 @@ class Schedule(models.Model):
         blank=True,
         default="14:00:00",
     )
-    supplier = models.ForeignKey(
-        SupplierProfile,
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name="schedules",
+        null=False,
+        blank=False,
+    )
+    class Meta:
+        verbose_name = "расписание специалиста"
+
+
+class Price(models.Model):
+    """Стоимость услуги."""
+
+    service_name = models.CharField(
+        max_length=Limits.MAX_LEN_SERVICE_NAME,
+    )
+    cost_from = models.DecimalField(
+        decimal_places=0,
+        max_digits=5,
+        default=Default.COST_FROM,
+        validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
+    )
+    cost_to = models.DecimalField(
+        decimal_places=0,
+        max_digits=5,
+        default=Default.COST_TO,
+        validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
+    )
+    service = models.ForeignKey(
+        Service,
         on_delete=models.CASCADE,
         null=False,
         blank=False,
     )
 
     class Meta:
-        verbose_name = "расписание специалиста"
+        verbose_name = "стоимость услуги"
+        verbose_name_plural = "стоимости услуг"
+        constraints = (
+            CheckConstraint(
+                check=Q(cost_from__lte=F("cost_to")),
+                name="cost_range",
+            ),
+        )

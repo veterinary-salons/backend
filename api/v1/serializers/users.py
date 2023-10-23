@@ -43,21 +43,17 @@ class CustomerProfileSerializer(BaseProfileSerializer):
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
-    # schedule = ScheduleSerializer(many=True)
 
     def to_representation(self, instance):
-        ic()
         representation = super().to_representation(instance)
         user_representation = representation.pop("user")
         for key in user_representation:
             representation[key] = user_representation[key]
-        ic(representation)
         return representation
 
     class Meta:
         model = SupplierProfile
         fields = (
-            # "schedule",
             "photo",
             "phone_number",
             "contact_email",
@@ -70,7 +66,6 @@ class SupplierSerializer(BaseProfileSerializer):
         verbose_name = "специалист"
         verbose_name_plural = "специалисты"
         fields = (
-            "specialist_type",
             "phone_number",
             "contact_email",
             "address",
