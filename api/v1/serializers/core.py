@@ -37,6 +37,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
         fields = (
+            "id",
             "weekday",
             "is_working_day",
             "start_work_time",

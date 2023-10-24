@@ -55,7 +55,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)$",
+        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)",
         BookingServiceAPIView.as_view(),
         name="booking",
     ),
@@ -64,8 +64,13 @@ urlpatterns = [
         SupplierProfileView.as_view(),
         name="service_get",
     ),
+    # re_path(
+    #     "booking/suppliers/(?P<supplier_id>\d+)/(?P<pk>\d+)",
+    #     SupplierCreateAdvertisement.as_view(),
+    #     name="service_patch",
+    # ),
     re_path(
-        "suppliers/(?P<supplier_id>\d+)/ad-creation",
+        "booking/suppliers/(?P<supplier_id>\d+)",
         SupplierCreateAdvertisement.as_view(),
         name="service_post",
     ),

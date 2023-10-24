@@ -2,7 +2,8 @@ from copy import deepcopy
 
 from icecream import ic
 
-from api.v1.serializers.core import ScheduleSerializer, PriceSerializer
+from api.v1.serializers.core import ScheduleSerializer, PriceSerializer, \
+    Base64ImageField
 from api.v1.serializers.pets import BasePetSerializer
 from api.v1.serializers.users import (
     SupplierSerializer,
@@ -19,45 +20,21 @@ from rest_framework import serializers
 from services.models import Service
 
 
-class BaseServiceSerializer(serializers.ModelSerializer):
-    """Сериализатор услуг для бронирования."""
-
-    # supplier = SupplierSerializer(read_only=True)
-    # schedule = ScheduleSerializer(read_only=True)
-    # booking = serializers.PrimaryKeyRelatedField(
-    #     required=False,
-    #     default=False,
-    #     read_only=True,
-    # )
+class ServiceSerializer(serializers.ModelSerializer):
+    """Сериализация всех услуг."""
+    schedules = ScheduleSerializer(many=True)
+    price = PriceSerializer(many=True, source="prices")
+    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Service
         fields = (
-            "id",
-            # "name",
-            # "booking",
-            # "customer_place",
-            # "supplier_place",
-            # "cost_from",
-            # "cost_to",
-            # "schedule",
-            # "supplier",
-        )
-
-class ServiceSerializer(BaseServiceSerializer):
-    """Сериализация всех услуг."""
-    schedules = ScheduleSerializer(many=True)
-    supplier = SupplierProfileSerializer(read_only=True)
-    price = PriceSerializer(many=True, source="prices")
-
-    class Meta(BaseServiceSerializer.Meta):
-        fields = BaseServiceSerializer.Meta.fields + (
             "category",
             "ad_title",
             "description",
             "price",
+            "image",
             "extra_fields",
-            "supplier",
             "customer_place",
             "supplier_place",
             "schedules",
@@ -79,6 +56,29 @@ class ServiceSerializer(BaseServiceSerializer):
         Schedule.objects.bulk_create(schedules)
         Price.objects.bulk_create(prices)
         return service
+
+    def update(self, instance, validated_data):
+        schedules_data = validated_data.pop("schedules", [])
+        prices_data = validated_data.pop("prices", [])
+        instance = super().update(instance, validated_data)
+        service_id = instance.pk
+        ic(service_id)
+        for schedule_data in schedules_data:
+            schedule_id = instance.schedules.first().id
+            ic(schedule_id)
+            if schedule_id:
+                schedule = instance.schedules.get(id=schedule_id)
+                schedule.clean()
+                schedule.__dict__.update(schedule_data)
+                schedule.save()
+        for price_data in prices_data:
+            price_id = price_data.get("pk")
+            if price_id:
+                price = instance.prices.get(id=price_id)
+                price.clean()
+                price.__dict__.update(price_data)
+                price.save()
+        return instance
 
     # def to_representation(self, instance):
     #     """Добавляем в вывод расписание специалиста и его данные."""
@@ -162,7 +162,7 @@ class BaseBookingSerializer(serializers.ModelSerializer):
 class BookingSerializer(BaseBookingSerializer):
     """Сериализатор бронирования."""
 
-    booking_services = BaseServiceSerializer(
+    booking_services = ServiceSerializer(
         many=True,
     )
     pet = BasePetSerializer()

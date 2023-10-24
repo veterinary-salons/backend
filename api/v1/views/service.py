@@ -121,7 +121,7 @@ class SupplierProfileView(
         )
 
 
-class BookingServiceAPIView(generics.CreateAPIView):
+class BookingServiceAPIView(generics.CreateAPIView,):
     """Представление для бронирования."""
 
     queryset = Booking.objects.all()
@@ -144,7 +144,7 @@ class BookingServiceAPIView(generics.CreateAPIView):
         )
 
 
-class SupplierCreateAdvertisement(generics.CreateAPIView, DestroyModelMixin):
+class SupplierCreateAdvertisement(generics.RetrieveUpdateDestroyAPIView):
     """Представление для создания объявления."""
 
     queryset = Service.objects.prefetch_related("supplier")
