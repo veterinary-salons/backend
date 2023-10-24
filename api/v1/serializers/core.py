@@ -5,8 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from core.models import Schedule, Price
-from services.models import Service
+from core.models import Price, Schedule
 
 
 class Base64ImageField(serializers.ImageField):
@@ -26,14 +25,14 @@ class ScheduleSerializer(serializers.ModelSerializer):
     service = PrimaryKeyRelatedField(
         read_only=True,
     )
-    def to_representation(self, instance):
-        representation = dict(super().to_representation(instance))
-        for key in representation:
-            if representation[key]:
-                representation[key] = {"available": representation[key]}
-            else:
-                representation[key] = {"unavailable": representation[key]}
-        return representation
+    # def to_representation(self, instance):
+    #     representation = dict(super().to_representation(instance))
+    #     for key in representation:
+    #         if representation[key]:
+    #             representation[key] = {"available": representation[key]}
+    #         else:
+    #             representation[key] = {"unavailable": representation[key]}
+    #     return representation
 
     class Meta:
         model = Schedule
@@ -53,4 +52,5 @@ class PriceSerializer(serializers.ModelSerializer):
         fields = (
             "service_name",
             "cost_from",
+            "cost_to",
         )

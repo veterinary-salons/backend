@@ -9,7 +9,7 @@ from api.v1.serializers.users import (
     SupplierProfileSerializer,
 )
 from core.constants import Limits, Default
-from core.models import Schedule
+from core.models import Schedule, Price
 
 from pets.models import Pet, Age
 from services.models import Booking
@@ -44,19 +44,18 @@ class BaseServiceSerializer(serializers.ModelSerializer):
             # "supplier",
         )
 
-
 class ServiceSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
     schedules = ScheduleSerializer(many=True)
     supplier = SupplierProfileSerializer(read_only=True)
-    price = PriceSerializer(many=True)
+    price = PriceSerializer(many=True, source="prices")
 
     class Meta(BaseServiceSerializer.Meta):
         fields = BaseServiceSerializer.Meta.fields + (
             "category",
             "ad_title",
             "description",
-             "price",
+            "price",
             "extra_fields",
             "supplier",
             "customer_place",
@@ -65,13 +64,20 @@ class ServiceSerializer(BaseServiceSerializer):
         )
     def create(self, validated_data):
         schedules_data = validated_data.pop("schedules", [])
+        prices_data = validated_data.pop("prices", [])
         service = super().create(validated_data)
         schedules = []
+        prices = []
         for schedule_data in schedules_data:
             schedule = Schedule(service=service, **schedule_data)
-
+            schedule.clean()
             schedules.append(schedule)
+        for price_data in prices_data:
+            price = Price(service=service, **price_data)
+            price.clean()
+            prices.append(price)
         Schedule.objects.bulk_create(schedules)
+        Price.objects.bulk_create(prices)
         return service
 
     # def to_representation(self, instance):

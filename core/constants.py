@@ -52,7 +52,7 @@ class Messages:
                              "Зооняня не предлает других услуг, кроме "
                              "{shelter_service}.")
     CYNOLOGY_FIELDS_ERROR = "Поля service_name и format необходимо заполнить."
-    VET_FIELDS_ERROR = "Поле vet_services необходимо заполнить."
+    VET_FIELDS_ERROR = "Поле service_name необходимо заполнить."
     GROOMING_FIELDS_ERROR = "Поле grooming_type необходимо заполнить."
     GROOMER_FIELDS_ERROR = "Поле grooming_type только для Грумера."
     CLEANUP_FIELDS_ERROR = "Поля service_name и formats только для Кинолога."
@@ -60,7 +60,7 @@ class Messages:
                           "{cynology_services}")
     FORMAT_ERROR = "Поле format должно быть из списка услуг: {cynology_format}"
     PET_TYPE_ERROR = "Кинолог работает только с собаками"
-
+    PET_TYPE_LIST_LENGTH_ERROR = "Длина списка питомцев должна быть равна 1."
 class Default:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
@@ -118,7 +118,7 @@ class Default:
         "Decorative",
         "ych",
     )
-    SHELTER_SERVICE = "shelter"
+    SHELTER_SERVICE = ["shelter"]
     SERVICER_PRICE = [1000, 2000]
     PET_TYPE = (
         ("dog", "Собака"),
@@ -156,5 +156,6 @@ class Default:
         ("Сб.", "Суббота"),
         ("Вс.", "Воскресенье"),
     )
+    TIME_PER_VISIT_CHOICES = ((0.5, 0.5), (1.0, 1.0), (1.5, 1.5), (2.0, 2.0))
     GOODS_IMAGE_SIZE = 500, 300
 

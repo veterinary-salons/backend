@@ -9,7 +9,6 @@ from django.db import models
 
 from core.validators import (
     validate_alphanumeric,
-    RangeValueValidator,
     validate_current_and_future_month,
     validate_cynology_service,
     validate_cynology_fields,
@@ -20,6 +19,7 @@ from core.validators import (
     validate_shelter_service,
     validate_shelter_fields,
     validate_letters,
+    validate_pet_type,
 )
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
@@ -99,6 +99,7 @@ class Service(BaseService):
         elif specialist_type == Default.SERVICES[3][0]:
             validate_shelter_service(service_name)
             validate_shelter_fields(self)
+        validate_pet_type(self)
 
         super().clean()
 
@@ -200,3 +201,4 @@ class Booking(BaseService):
 #     class Meta:
 #         verbose_name = "объявление услуги"
 #         verbose_name_plural = "объявления услуг"
+#

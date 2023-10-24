@@ -9,14 +9,11 @@ from api.v1.serializers.core import ScheduleSerializer
 from api.v1.serializers.pets import PetSerializer
 from api.v1.serializers.service import (
     BookingSerializer,
-    BaseServiceSerializer,
     ServiceSerializer,
 )
-from api.v1.serializers.users import SupplierProfileSerializer
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
-from core.models import Schedule
 from pets.models import Pet
 from rest_framework.decorators import action
 from rest_framework.permissions import (

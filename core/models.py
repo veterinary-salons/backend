@@ -1,8 +1,12 @@
 from django.db import models
 from django.db.models import CheckConstraint, Q, F
+from icecream import ic
+from rest_framework import serializers
 
 from core.constants import Default, Limits
-from core.validators import RangeValueValidator
+from core.validators import (
+    RangeValueValidator,
+)
 from services.models import Service
 from users.models import SupplierProfile
 
@@ -10,6 +14,13 @@ from users.models import SupplierProfile
 class Schedule(models.Model):
     """Расписание услуги."""
 
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name="schedules",
+        null=False,
+        blank=False,
+    )
     weekday = models.CharField(
         choices=Default.DAYS_OF_WEEK,
         verbose_name="День недели",
@@ -37,12 +48,14 @@ class Schedule(models.Model):
         blank=True,
         default="14:00:00",
     )
-    service = models.ForeignKey(
-        Service,
-        on_delete=models.CASCADE,
-        related_name="schedules",
-        null=False,
-        blank=False,
+    time_per_visit = models.DecimalField(
+        decimal_places=1,
+        max_digits=3,
+        default=Default.TIME_PER_VISIT_CHOICES[0][0],
+        choices=Default.TIME_PER_VISIT_CHOICES,
+    )
+    arround_clock = models.BooleanField(
+        default=False,
     )
     class Meta:
         verbose_name = "расписание специалиста"
@@ -69,9 +82,26 @@ class Price(models.Model):
     service = models.ForeignKey(
         Service,
         on_delete=models.CASCADE,
+        related_name="prices",
         null=False,
         blank=False,
     )
+
+    def clean(self):
+        """Проверяем соответствие типа специалиста и типа питомца."""
+        if not self.service_name in self.service.extra_fields.get(
+            "service_name"
+        ):
+            raise serializers.ValidationError(
+                "Поле `service_name` в `price` должно быть в `service_name` в "
+                "`extra_fields`."
+            )
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        ic()
+        self.full_clean()
+        return super(Price, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = "стоимость услуги"
@@ -82,3 +112,6 @@ class Price(models.Model):
                 name="cost_range",
             ),
         )
+
+    def __str__(self):
+        return f"{self.service_name}: {self.cost_from} - {self.cost_to}"

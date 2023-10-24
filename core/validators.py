@@ -2,21 +2,46 @@ import datetime
 import re
 
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, BaseValidator
+from django.core.validators import BaseValidator
+from django.db import models
 from icecream import ic
 from rest_framework import serializers
 
 from core.constants import Default, Messages, Limits
 
 
-def validate_letters(value):
+def validate_letters(value: str) -> None:
+    """
+    Проверить, содержит ли данное значение только буквы на русском языке
+    или английском.
+    
+    Attributes:
+        value (str): Значение, которое необходимо проверить.
+    
+    Raises:
+        ValidationError: Если значение содержит символы, отличные от
+        русских или английских букв.
+    
+    """
     if not re.match(r"^[a-zA-Zа-яА-Я]*$", value):
         raise ValidationError(
             "Поле должно содержать только русские и английские буквы."
         )
 
 
-def validate_alphanumeric(value):
+def validate_alphanumeric(value:str) -> None:
+    """
+    Проверить, содержит ли данное значение только буквы на русском или
+    английском языке или цифры.
+
+    Attributes:
+        value (str): Значение, которое необходимо проверить.
+
+    Raises:
+        ValidationError: Если значение содержит символы, отличные от
+        русских или английских букв или цифр.
+
+    """
     if not re.match(r"^[a-zA-Zа-яА-Я0-9\s.,?!()-]*$", value):
         raise ValidationError(
             "Поле должно содержать только русские и английские буквы, цифры, "
@@ -24,15 +49,28 @@ def validate_alphanumeric(value):
         )
 
 
-def validate_cynology_service(service_name):
-    if service_name not in Default.CYNOLOGY_SERVICES:
+def validate_cynology_service(service_name: list) -> None:
+    """
+    Проверяем услуги кинолога на соответствие списку его услуг.
+
+    Args:
+        service_name: Имя проверяемой услуги.
+
+    Raises:
+        serializers.ValidationError: Если имя_службы отсутствует в списке
+        услуг кинолога.
+
+    Returns:
+        None.
+
+    """
+    if not set(service_name).issubset(set(Default.CYNOLOGY_SERVICES)):
         raise serializers.ValidationError(
             Messages.CYN_SERVICE_ERROR.format(
                 service_name=service_name,
                 cynology_services=Default.CYNOLOGY_SERVICES,
             )
         )
-
 
 def validate_cynology_fields(model):
     service_name = model.extra_fields.get("service_name")
@@ -41,21 +79,24 @@ def validate_cynology_fields(model):
     if not service_name or not formats:
         raise serializers.ValidationError(Messages.CYNOLOGY_FIELDS_ERROR)
 
-    if formats not in Default.CYNOLOGY_FORMAT:
+    if not set(formats).issubset(set(Default.CYNOLOGY_FORMAT)):
         raise serializers.ValidationError(
             Messages.FORMAT_ERROR.format(
                 cynology_format=Default.CYNOLOGY_FORMAT
             )
         )
-
-    if pet_type != Default.PET_TYPE[0][0]:
+    if pet_type[0] != Default.PET_TYPE[0][0]:
         raise serializers.ValidationError(
             Messages.PET_TYPE_ERROR,
+        )
+    if len(pet_type) > 1:
+        raise serializers.ValidationError(
+            Messages.PET_TYPE_LIST_LENGTH_ERROR,
         )
 
 
 def validate_vet_service(service_name):
-    if service_name not in Default.VET_SERVICES:
+    if not set(service_name).issubset(set(Default.VET_SERVICES)):
         raise serializers.ValidationError(
             Messages.VET_SERVICE_ERROR.format(
                 service_name=service_name, vet_services=Default.VET_SERVICES
@@ -64,13 +105,28 @@ def validate_vet_service(service_name):
 
 
 def validate_vet_fields(model):
-    vet_services = model.extra_fields.get("vet_services")
+    vet_services = model.extra_fields.get("service_name")
     if not vet_services:
         raise serializers.ValidationError(Messages.VET_FIELDS_ERROR)
 
 
-def validate_grooming_service(service_name):
-    if service_name not in Default.GROOMING_TYPE:
+def validate_grooming_service(service_name: list) -> None:
+    """
+    Проверяет услугу по уходу за животными, проверяя, находится ли она в
+    списке предустановленных типов услуг.
+
+    Attributes:
+        service_name: Название услуги по уходу за животными для проверки.
+
+    Raises:
+        serializers.ValidationError: Если `service_name` не находится в списке
+        предустановленных типов услуг.
+
+    Returns:
+        None
+
+    """
+    if not set(service_name).issubset(Default.GROOMING_TYPE):
         raise serializers.ValidationError(
             Messages.GROOMING_SERVICE_ERROR.format(
                 service_name=service_name, grooming_type=Default.GROOMING_TYPE
@@ -85,7 +141,7 @@ def validate_grooming_fields(model):
 
 
 def validate_shelter_service(service_name):
-    if service_name != Default.SHELTER_SERVICE:
+    if not set(service_name).issubset(set(Default.SHELTER_SERVICE)):
         raise serializers.ValidationError(
             Messages.SHELTER_SERVICE_ERROR.format(
                 service_name=service_name,
@@ -99,24 +155,16 @@ def validate_shelter_fields(model):
     if grooming_type:
         raise serializers.ValidationError(Messages.GROOMER_FIELDS_ERROR)
 
-
-# def validate_extra_fields(model: Service) -> None:
-#     specialist_type = model.category
-#     service_name = model.extra_fields.get("service_name")
-#
-#     if specialist_type == Default.SERVICES[0][0]:
-#         validate_cynology_service(service_name)
-#         validate_cynology_fields(model)
-#     elif specialist_type == Default.SERVICES[1][0]:
-#         validate_vet_service(service_name)
-#         validate_vet_fields(model)
-#     elif specialist_type == Default.SERVICES[2][0]:
-#         validate_grooming_service(service_name)
-#         validate_grooming_fields(model)
-#     elif specialist_type == Default.SERVICES[3][0]:
-#         validate_shelter_service(service_name)
-#         validate_shelter_fields(model)
-
+def validate_pet_type(model: models.Model) -> None:
+    allowed_pet_types = set(pet[0] for pet in Default.PET_TYPE)
+    pet_type = model.extra_fields["pet_type"]
+    if not set(pet_type).issubset(allowed_pet_types):
+        raise serializers.ValidationError(
+            {
+                "pet_type": f"Тип питомца должен быть одним из: "
+                            f"{', '.join(allowed_pet_types)}",
+            }
+        )
 
 class RangeValueValidator(BaseValidator):
     def __init__(self, value_from, value_to):
@@ -167,12 +215,3 @@ class PhoneNumberValidator(BaseValidator):
             raise ValidationError(
                 "Номер телефона должен быть в формате 89999999999"
             )
-
-
-#
-# def validate_cost(value):
-#     if not isinstance(value, dict) or len(value) != 2:
-#         raise ValidationError(
-#             "Поле cost должно содержать ровно две пары значений.",
-#             params={"value": value},
-#         )
