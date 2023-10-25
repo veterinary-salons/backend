@@ -144,7 +144,7 @@ class BookingServiceAPIView(generics.CreateAPIView,):
         )
 
 
-class SupplierCreateAdvertisement(generics.RetrieveUpdateDestroyAPIView):
+class SupplierCreateAdvertisement(generics.RetrieveUpdateDestroyAPIView, generics.CreateAPIView):
     """Представление для создания объявления."""
 
     queryset = Service.objects.prefetch_related("supplier")

@@ -64,11 +64,11 @@ urlpatterns = [
         SupplierProfileView.as_view(),
         name="service_get",
     ),
-    # re_path(
-    #     "booking/suppliers/(?P<supplier_id>\d+)/(?P<pk>\d+)",
-    #     SupplierCreateAdvertisement.as_view(),
-    #     name="service_patch",
-    # ),
+    re_path(
+        "booking/suppliers/(?P<supplier_id>\d+)/(?P<pk>\d+)",
+        SupplierCreateAdvertisement.as_view(),
+        name="service_patch",
+    ),
     re_path(
         "booking/suppliers/(?P<supplier_id>\d+)",
         SupplierCreateAdvertisement.as_view(),

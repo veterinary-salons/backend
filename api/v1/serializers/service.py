@@ -2,11 +2,13 @@ from copy import deepcopy
 
 from icecream import ic
 
-from api.v1.serializers.core import ScheduleSerializer, PriceSerializer, \
-    Base64ImageField
+from api.v1.serializers.core import (
+    ScheduleSerializer,
+    PriceSerializer,
+    Base64ImageField,
+)
 from api.v1.serializers.pets import BasePetSerializer
 from api.v1.serializers.users import (
-    SupplierSerializer,
     SupplierProfileSerializer,
 )
 from core.constants import Limits, Default
@@ -22,6 +24,7 @@ from services.models import Service
 
 class ServiceSerializer(serializers.ModelSerializer):
     """Сериализация всех услуг."""
+
     schedules = ScheduleSerializer(many=True)
     price = PriceSerializer(many=True, source="prices")
     image = Base64ImageField(required=False, allow_null=True)
@@ -39,6 +42,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "supplier_place",
             "schedules",
         )
+
     def create(self, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
@@ -60,24 +64,37 @@ class ServiceSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
-        instance = super().update(instance, validated_data)
-        service_id = instance.pk
-        ic(service_id)
-        for schedule_data in schedules_data:
-            schedule_id = instance.schedules.first().id
-            ic(schedule_id)
-            if schedule_id:
-                schedule = instance.schedules.get(id=schedule_id)
-                schedule.clean()
-                schedule.__dict__.update(schedule_data)
-                schedule.save()
+        ic(prices_data)
+        schedules = instance.schedules.all()
+        existing_schedule_names = {schedule.weekday for schedule in schedules}
+        given_schedule_names = {
+            schedule_data.get("weekday") for schedule_data in schedules_data
+        }
+        to_update_names = given_schedule_names.intersection(existing_schedule_names)
+        to_create_names = given_schedule_names.difference(existing_schedule_names)
+        to_delete_names = existing_schedule_names.difference(given_schedule_names)
+        ic(to_delete_names)
+        ic(to_update_names)
+        ic(to_create_names)
+        for name in to_update_names:
+            data = list(filter(lambda x: x.get("weekday") == name, schedules_data))
+            Schedule.objects.filter(weekday=name, service=instance).update(**data[0])
+
+        for name in to_create_names:
+            data = list(filter(lambda x: x.get("weekday") == name, schedules_data))
+            Schedule.objects.create(service=instance, **data[0])
+
+        for name in to_delete_names:
+            Schedule.objects.filter(weekday=name, service=instance).delete()
+
+        # Update prices
         for price_data in prices_data:
-            price_id = price_data.get("pk")
-            if price_id:
-                price = instance.prices.get(id=price_id)
-                price.clean()
-                price.__dict__.update(price_data)
-                price.save()
+            price = instance.prices.filter(service=instance)
+            ic(price)
+            if price:
+                pass
+
+        instance = super().update(instance, validated_data)
         return instance
 
     # def to_representation(self, instance):
@@ -145,6 +162,7 @@ class FilterServicesSerializer(serializers.Serializer):
     date = serializers.DateField(
         required=False, format=None, input_formats=("%d.%m.%Y",)
     )
+
 
 class BaseBookingSerializer(serializers.ModelSerializer):
     """Базовый сериализатор бронирования."""

@@ -25,14 +25,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
     service = PrimaryKeyRelatedField(
         read_only=True,
     )
-    # def to_representation(self, instance):
-    #     representation = dict(super().to_representation(instance))
-    #     for key in representation:
-    #         if representation[key]:
-    #             representation[key] = {"available": representation[key]}
-    #         else:
-    #             representation[key] = {"unavailable": representation[key]}
-    #     return representation
 
     class Meta:
         model = Schedule
@@ -46,6 +38,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "break_end_time",
             "service",
         )
+
 
 class PriceSerializer(serializers.ModelSerializer):
     class Meta:
