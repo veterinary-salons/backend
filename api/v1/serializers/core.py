@@ -6,6 +6,7 @@ from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from core.models import Price, Schedule
+from core.validators import validate_price, validate_schedule
 
 
 class Base64ImageField(serializers.ImageField):
@@ -38,9 +39,16 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "break_end_time",
             "service",
         )
+    def validate(self, attrs):
+        validate_schedule(attrs)
+        return attrs
 
 
 class PriceSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        validate_price(attrs)
+        return attrs
+
     class Meta:
         model = Price
         fields = (

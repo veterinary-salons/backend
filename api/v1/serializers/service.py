@@ -13,6 +13,14 @@ from api.v1.serializers.users import (
 )
 from core.constants import Limits, Default
 from core.models import Schedule, Price
+from core.utils import (
+    update_schedules,
+    create_schedules,
+    delete_schedules,
+    update_prices,
+    create_prices,
+    delete_prices,
+)
 
 from pets.models import Pet, Age
 from services.models import Booking
@@ -64,37 +72,18 @@ class ServiceSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
-        ic(prices_data)
-        schedules = instance.schedules.all()
-        existing_schedule_names = {schedule.weekday for schedule in schedules}
-        given_schedule_names = {
-            schedule_data.get("weekday") for schedule_data in schedules_data
-        }
-        to_update_names = given_schedule_names.intersection(existing_schedule_names)
-        to_create_names = given_schedule_names.difference(existing_schedule_names)
-        to_delete_names = existing_schedule_names.difference(given_schedule_names)
-        ic(to_delete_names)
-        ic(to_update_names)
-        ic(to_create_names)
-        for name in to_update_names:
-            data = list(filter(lambda x: x.get("weekday") == name, schedules_data))
-            Schedule.objects.filter(weekday=name, service=instance).update(**data[0])
-
-        for name in to_create_names:
-            data = list(filter(lambda x: x.get("weekday") == name, schedules_data))
-            Schedule.objects.create(service=instance, **data[0])
-
-        for name in to_delete_names:
-            Schedule.objects.filter(weekday=name, service=instance).delete()
-
-        # Update prices
-        for price_data in prices_data:
-            price = instance.prices.filter(service=instance)
-            ic(price)
-            if price:
-                pass
-
         instance = super().update(instance, validated_data)
+        schedules = instance.schedules.all()
+        prices = instance.prices.all()
+
+        update_schedules(instance, schedules, schedules_data)
+        create_schedules(instance, schedules_data)
+        delete_schedules(instance, schedules, schedules_data)
+
+        update_prices(instance, prices, prices_data)
+        create_prices(instance, prices_data)
+        delete_prices(instance, prices, prices_data)
+
         return instance
 
     # def to_representation(self, instance):

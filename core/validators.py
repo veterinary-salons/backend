@@ -215,3 +215,30 @@ class PhoneNumberValidator(BaseValidator):
             raise ValidationError(
                 "Номер телефона должен быть в формате 89999999999"
             )
+
+def validate_price(attrs):
+    if attrs["cost_from"] > attrs["cost_to"]:
+        raise serializers.ValidationError(
+            "`cost_from` не может быть больше `cost_to`"
+        )
+    return attrs
+
+def validate_schedule(attrs):
+    start_work_time = attrs.get("start_work_time")
+    end_work_time = attrs.get("end_work_time")
+    break_start_time = attrs.get("break_start_time")
+    break_end_time = attrs.get("break_end_time")
+
+    if start_work_time > end_work_time:
+        raise serializers.ValidationError("`start_work_time` не может быть больше `end_work_time`")
+
+    if break_start_time > break_end_time:
+        raise serializers.ValidationError("`break_start_time` не может быть больше `break_end_time`")
+
+    if start_work_time > break_start_time:
+        raise serializers.ValidationError("`start_work_time` не может быть больше `break_start_time`")
+
+    if break_end_time > end_work_time:
+        raise serializers.ValidationError("`break_end_time` не может быть больше `end_work_time`")
+
+    return attrs
