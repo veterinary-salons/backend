@@ -37,6 +37,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "end_work_time",
             "break_start_time",
             "break_end_time",
+            "time_per_visit",
             "service",
         )
     def validate(self, attrs):

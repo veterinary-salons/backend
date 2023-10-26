@@ -14,14 +14,14 @@ def validate_letters(value: str) -> None:
     """
     Проверить, содержит ли данное значение только буквы на русском языке
     или английском.
-    
+
     Attributes:
         value (str): Значение, которое необходимо проверить.
-    
+
     Raises:
         ValidationError: Если значение содержит символы, отличные от
         русских или английских букв.
-    
+
     """
     if not re.match(r"^[a-zA-Zа-яА-Я]*$", value):
         raise ValidationError(
@@ -29,7 +29,7 @@ def validate_letters(value: str) -> None:
         )
 
 
-def validate_alphanumeric(value:str) -> None:
+def validate_alphanumeric(value: str) -> None:
     """
     Проверить, содержит ли данное значение только буквы на русском или
     английском языке или цифры.
@@ -71,6 +71,7 @@ def validate_cynology_service(service_name: list) -> None:
                 cynology_services=Default.CYNOLOGY_SERVICES,
             )
         )
+
 
 def validate_cynology_fields(model):
     service_name = model.extra_fields.get("service_name")
@@ -155,6 +156,7 @@ def validate_shelter_fields(model):
     if grooming_type:
         raise serializers.ValidationError(Messages.GROOMER_FIELDS_ERROR)
 
+
 def validate_pet_type(model: models.Model) -> None:
     allowed_pet_types = set(pet[0] for pet in Default.PET_TYPE)
     pet_type = model.extra_fields["pet_type"]
@@ -162,9 +164,10 @@ def validate_pet_type(model: models.Model) -> None:
         raise serializers.ValidationError(
             {
                 "pet_type": f"Тип питомца должен быть одним из: "
-                            f"{', '.join(allowed_pet_types)}",
+                f"{', '.join(allowed_pet_types)}",
             }
         )
+
 
 class RangeValueValidator(BaseValidator):
     def __init__(self, value_from, value_to):
@@ -216,12 +219,14 @@ class PhoneNumberValidator(BaseValidator):
                 "Номер телефона должен быть в формате 89999999999"
             )
 
+
 def validate_price(attrs):
     if attrs["cost_from"] > attrs["cost_to"]:
         raise serializers.ValidationError(
             "`cost_from` не может быть больше `cost_to`"
         )
     return attrs
+
 
 def validate_schedule(attrs):
     start_work_time = attrs.get("start_work_time")
@@ -230,15 +235,20 @@ def validate_schedule(attrs):
     break_end_time = attrs.get("break_end_time")
 
     if start_work_time > end_work_time:
-        raise serializers.ValidationError("`start_work_time` не может быть больше `end_work_time`")
-
+        raise serializers.ValidationError(
+            "`start_work_time` не может быть больше `end_work_time`"
+        )
     if break_start_time > break_end_time:
-        raise serializers.ValidationError("`break_start_time` не может быть больше `break_end_time`")
-
+        raise serializers.ValidationError(
+            "`break_start_time` не может быть больше `break_end_time`"
+        )
     if start_work_time > break_start_time:
-        raise serializers.ValidationError("`start_work_time` не может быть больше `break_start_time`")
-
+        raise serializers.ValidationError(
+            "`start_work_time` не может быть больше `break_start_time`"
+        )
     if break_end_time > end_work_time:
-        raise serializers.ValidationError("`break_end_time` не может быть больше `end_work_time`")
+        raise serializers.ValidationError(
+            "`break_end_time` не может быть больше `end_work_time`"
+        )
 
     return attrs

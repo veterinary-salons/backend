@@ -29,14 +29,11 @@ from users.models import SupplierProfile, CustomerProfile
 from rest_framework import serializers
 from services.models import Service
 
-
-class ServiceSerializer(serializers.ModelSerializer):
-    """Сериализация всех услуг."""
-
+class BaseServiceSerializer(serializers.ModelSerializer):
+    """Сериализация базовой модели услуг."""
     schedules = ScheduleSerializer(many=True)
     price = PriceSerializer(many=True, source="prices")
     image = Base64ImageField(required=False, allow_null=True)
-
     class Meta:
         model = Service
         fields = (
@@ -50,6 +47,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             "supplier_place",
             "schedules",
         )
+class ServiceCreateSerializer(BaseServiceSerializer):
+    """Сериализация всех услуг."""
 
     def create(self, validated_data):
         schedules_data = validated_data.pop("schedules", [])
@@ -69,6 +68,9 @@ class ServiceSerializer(serializers.ModelSerializer):
         Price.objects.bulk_create(prices)
         return service
 
+class ServiceUpdateSerializer(BaseServiceSerializer):
+    """Сериализация всех услуг."""
+
     def update(self, instance, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
@@ -76,57 +78,15 @@ class ServiceSerializer(serializers.ModelSerializer):
         schedules = instance.schedules.all()
         prices = instance.prices.all()
 
-        update_schedules(instance, schedules, schedules_data)
+        update_schedules(schedules, schedules_data)
         create_schedules(instance, schedules_data)
         delete_schedules(instance, schedules, schedules_data)
 
-        update_prices(instance, prices, prices_data)
+        update_prices( prices, prices_data)
         create_prices(instance, prices_data)
         delete_prices(instance, prices, prices_data)
 
         return instance
-
-    # def to_representation(self, instance):
-    #     """Добавляем в вывод расписание специалиста и его данные."""
-    #     representation = super().to_representation(instance)
-    #     supplier = SupplierProfile.objects.get(
-    #         related_user=self.context.get("request").user
-    #     )
-    #     supplier_representation = SupplierSerializer(
-    #         supplier,
-    #     ).data
-    #     schedule = supplier.schedule_set.all()
-    #     representation["schedule"] = ScheduleSerializer(
-    #         schedule, many=True
-    #     ).data
-    #     representation["supplier"] = supplier_representation
-    #     return representation
-
-    # @staticmethod
-    # def validate_price(data):
-    #     """Проверка на валидность стоимости."""
-    #
-    #     if data[0] < Limits.MIN_PRICE or data[0] > Limits.MAX_PRICE:
-    #         raise ValidationError(
-    #             f"Стоимость услуги должна быть от {Limits.MIN_PRICE} до "
-    #             f"{Limits.MAX_PRICE} р."
-    #         )
-    #
-    # def validate(self, data):
-    #     """Проверяем уникальность услуги и тип пользователя."""
-    #     name = data.get("name")
-    #     user = self.context.get("request").user
-    #     if Service.objects.filter(
-    #         name=name,
-    #         supplier=user.profile_id,
-    #     ).exists():
-    #         raise serializers.ValidationError("Такая услуга уже существует!")
-    #     if not SupplierProfile.objects.filter(related_user=user).exists():
-    #         raise serializers.ValidationError(
-    #             "Услуги создает только специалист!"
-    #         )
-    #     return data
-
 
 class FilterServicesSerializer(serializers.Serializer):
     price = serializers.ListField(
@@ -169,7 +129,7 @@ class BaseBookingSerializer(serializers.ModelSerializer):
 class BookingSerializer(BaseBookingSerializer):
     """Сериализатор бронирования."""
 
-    booking_services = ServiceSerializer(
+    booking_services = ServiceCreateSerializer(
         many=True,
     )
     pet = BasePetSerializer()

@@ -1,7 +1,7 @@
 from core.models import Schedule, Price
 
 
-def update_schedules(instance, schedules, schedules_data):
+def update_schedules(schedules, schedules_data):
     for schedule in schedules:
         schedule_data = next(
             (
@@ -13,12 +13,11 @@ def update_schedules(instance, schedules, schedules_data):
         )
         schedule_update = []
         if schedule_data:
-            schedule.service = instance
             schedule.weekday = schedule_data["weekday"]
-            schedule.start_time = schedule_data["start_work_time"]
-            schedule.end_time = schedule_data["end_work_time"]
-            schedule.break_start = schedule_data["break_start_time"]
-            schedule.break_end = schedule_data["break_end_time"]
+            schedule.start_work_time = schedule_data["start_work_time"]
+            schedule.end_work_time = schedule_data["end_work_time"]
+            schedule.break_start_time = schedule_data["break_start_time"]
+            schedule.break_end_time = schedule_data["break_end_time"]
             schedule.clean()
             schedule_update.append(schedule)
         Schedule.objects.bulk_update(
@@ -66,7 +65,7 @@ def delete_schedules(instance, schedules, schedules_data):
     ).delete()
 
 
-def update_prices(instance, prices, prices_data):
+def update_prices(prices, prices_data):
     price_update = []
     for price in prices:
         price_data = next(

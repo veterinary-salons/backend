@@ -1,15 +1,13 @@
-from django.core.exceptions import ValidationError
-from django.db import transaction, IntegrityError
+from django.db import transaction
 from django.shortcuts import get_object_or_404
-from icecream import ic
-from rest_framework import generics, status, serializers
+from rest_framework import generics, status
 from rest_framework.mixins import DestroyModelMixin
 
-from api.v1.serializers.core import ScheduleSerializer
 from api.v1.serializers.pets import PetSerializer
 from api.v1.serializers.service import (
     BookingSerializer,
-    ServiceSerializer,
+    ServiceCreateSerializer,
+    ServiceUpdateSerializer,
 )
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
@@ -65,7 +63,7 @@ class PetViewSet(ModelViewSet):
 
 class BaseServiceViewSet(ModelViewSet):
     queryset = Service.objects.select_related("supplier")
-    serializer_class = ServiceSerializer
+    serializer_class = ServiceCreateSerializer
     permission_classes = [
         # IsAuthenticated,
     ]
@@ -88,7 +86,7 @@ class SupplierProfileView(
     """Представление для услуг."""
 
     queryset = Service.objects.prefetch_related("supplier")
-    serializer_class = ServiceSerializer
+    serializer_class = ServiceCreateSerializer
 
     def perform_create(self, serializer):
         """Добавляем пользователя в вывод сериализатора."""
@@ -103,7 +101,7 @@ class SupplierProfileView(
         """Выводим услуги конкретного специалиста."""
 
         supplier_id = int(self.kwargs.get("supplier_id"))
-        serializer = ServiceSerializer(
+        serializer = ServiceCreateSerializer(
             self.queryset.filter(supplier=supplier_id),
             many=True,
         )
@@ -148,15 +146,20 @@ class SupplierCreateAdvertisement(generics.RetrieveUpdateDestroyAPIView, generic
     """Представление для создания объявления."""
 
     queryset = Service.objects.prefetch_related("supplier")
-    serializer_class = ServiceSerializer
     permission_classes = [
         IsAuthenticated,
     ]
 
-    def perform_create(self, serializer: ServiceSerializer):
+    def perform_create(self, serializer: ServiceCreateSerializer | ServiceUpdateSerializer):
         """Сохраняем расписание."""
         supplier_profile = SupplierProfile.objects.get(
             related_user=self.request.user
         )
         serializer.is_valid(raise_exception=True)
         serializer.save(supplier=supplier_profile)
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ServiceCreateSerializer
+        elif self.request.method == 'PATCH':
+            return ServiceUpdateSerializer
