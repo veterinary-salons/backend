@@ -49,7 +49,6 @@ class BaseServiceSerializer(serializers.ModelSerializer):
         )
 class ServiceCreateSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
-
     def create(self, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])

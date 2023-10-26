@@ -9,11 +9,11 @@ from rest_framework_simplejwt.views import (
 )
 
 from api.v1.views.authentication import SignUpViewSet, SignInViewSet
+from api.v1.views.pet import PetViewSet
 from api.v1.views.service import (
-    PetViewSet,
     BaseServiceViewSet,
     BookingServiceAPIView,
-    SupplierProfileView,
+    SupplierServiceProfileView,
     SupplierCreateAdvertisement,
 )
 from api.v1.views.users import CustomerProfileViewSet, SupplierProfileViewSet
@@ -61,7 +61,7 @@ urlpatterns = [
     ),
     re_path(
         "suppliers/(?P<supplier_id>\d+)/profile",
-        SupplierProfileView.as_view(),
+        SupplierServiceProfileView.as_view(),
         name="service_get",
     ),
     re_path(

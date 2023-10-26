@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from icecream import ic
 from rest_framework import generics, status
 from rest_framework.mixins import DestroyModelMixin
 
@@ -8,6 +9,7 @@ from api.v1.serializers.service import (
     BookingSerializer,
     ServiceCreateSerializer,
     ServiceUpdateSerializer,
+    BaseServiceSerializer,
 )
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
@@ -25,40 +27,6 @@ from users.models import SupplierProfile, CustomerProfile
 
 
 User = get_user_model()
-
-
-class PetViewSet(ModelViewSet):
-    """Представление питомца."""
-
-    queryset = Pet.objects.select_related("owner")
-    serializer_class = PetSerializer
-
-    def list(self, request, *args, **kwargs):
-        """Вывод списка всех питомцев владельца по параметру из URL."""
-
-        owner_pets = self.queryset.filter(owner__id=kwargs["customer_id"])
-        serializer = PetSerializer(owner_pets, many=True)
-        return Response(serializer.data)
-
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        """Создание питомца."""
-        if CustomerProfile.objects.get(
-            related_user=self.request.user
-        ).id != int(kwargs["customer_id"]):
-            return Response(
-                status=status.HTTP_403_FORBIDDEN,
-                data={
-                    "error": "Нельзя создать питомца у другого пользователя!"
-                },
-            )
-        serializer = PetSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        customer_profile = CustomerProfile.objects.get(
-            related_user=self.request.user
-        )
-        serializer.save(owner=customer_profile)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class BaseServiceViewSet(ModelViewSet):
@@ -79,32 +47,30 @@ class BaseServiceViewSet(ModelViewSet):
         return Response(data=serializer.data)
 
 
-class SupplierProfileView(
+class SupplierServiceProfileView(
     generics.ListCreateAPIView,
     DestroyModelMixin,
 ):
     """Представление для услуг."""
 
     queryset = Service.objects.prefetch_related("supplier")
-    serializer_class = ServiceCreateSerializer
+    serializer_class = BaseServiceSerializer
 
-    def perform_create(self, serializer):
-        """Добавляем пользователя в вывод сериализатора."""
-
-        serializer.is_valid(raise_exception=True)
-        supplier_profile = SupplierProfile.objects.get(
-            related_user=self.request.user
-        )
-        serializer.save(supplier=supplier_profile)
+    # def perform_create(self, serializer):
+    #     """Добавляем пользователя в вывод сериализатора."""
+    #     ic(self.kwargs)
+    #     serializer.is_valid(raise_exception=True)
+    #     supplier_profile = SupplierProfile.objects.get(
+    #         related_user=User.objects.get(id=self.kwargs.get("pk"))
+    #     )
+    #     serializer.save(supplier=supplier_profile)
 
     def get(self, request, *args, **kwargs):
         """Выводим услуги конкретного специалиста."""
-
         supplier_id = int(self.kwargs.get("supplier_id"))
-        serializer = ServiceCreateSerializer(
-            self.queryset.filter(supplier=supplier_id),
-            many=True,
-        )
+        ic(self.queryset.filter(supplier=supplier_id).first().prices.all())
+        serializer = self.get_serializer(self.queryset.filter(supplier=supplier_id), many=True)
+        ic(serializer.data)
         return Response(data=serializer.data)
 
     def delete(self, request, *args, **kwargs):
@@ -117,7 +83,6 @@ class SupplierProfileView(
             status=status.HTTP_204_NO_CONTENT,
             data={"message": f"Пользователь {last_name} {first_name} удален"},
         )
-
 
 class BookingServiceAPIView(generics.CreateAPIView,):
     """Представление для бронирования."""
