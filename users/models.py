@@ -81,7 +81,6 @@ class User(AbstractUser):
             ),
         ]
 
-
 class BaseProfile(models.Model):
     related_user = GenericRelation(
         User,
@@ -141,22 +140,6 @@ class SupplierProfile(BaseProfile):
         null=True,
         validators=(validate_alphanumeric,),
     )
-
-    # def clean(self):
-    #     """Проверяем соответствие типа специалиста и типа питомца."""
-    #     if (
-    #         self.specialist_type == Default.SERVICES[1][0]
-    #         and self.pet_type != Default.PET_TYPE[1][0]
-    #     ):
-    #         raise serializers.ValidationError(
-    #             "Кинолог работает только с собаками."
-    #         )
-    #     super().clean()
-    #
-    # def save(self, *args, **kwargs):
-    #     self.full_clean()
-    #     return super(SupplierProfile, self).save(*args, **kwargs)
-
     def __str__(self):
         return f"{self.user.email}"
 

@@ -1,4 +1,5 @@
-from core.models import Schedule, Price
+from core.models import Schedule
+from services.models import Price
 
 
 def update_schedules(schedules, schedules_data):

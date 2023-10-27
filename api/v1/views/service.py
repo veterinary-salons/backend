@@ -22,7 +22,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from services.models import Booking, Service
+from services.models import Booking, Service, Price
 from users.models import SupplierProfile, CustomerProfile
 
 
@@ -68,9 +68,7 @@ class SupplierServiceProfileView(
     def get(self, request, *args, **kwargs):
         """Выводим услуги конкретного специалиста."""
         supplier_id = int(self.kwargs.get("supplier_id"))
-        ic(self.queryset.filter(supplier=supplier_id).first().prices.all())
         serializer = self.get_serializer(self.queryset.filter(supplier=supplier_id), many=True)
-        ic(serializer.data)
         return Response(data=serializer.data)
 
     def delete(self, request, *args, **kwargs):
@@ -94,17 +92,15 @@ class BookingServiceAPIView(generics.CreateAPIView,):
     ]
 
     def perform_create(self, serializer):
-        """Добавляем в вывод сериалиализатора заказчика и специалиста."""
-
+        """Добавляем в вывод сериалиализатора клиента."""
         customer_profile = CustomerProfile.objects.get(
             related_user=self.request.user,
         )
-        supplier_id = self.kwargs.get("supplier_id")
-        supplier_profile = SupplierProfile.objects.get(id=supplier_id)
         serializer.save(
             customer=customer_profile,
-            supplier=supplier_profile,
         )
+
+
 
 
 class SupplierCreateAdvertisement(generics.RetrieveUpdateDestroyAPIView, generics.CreateAPIView):

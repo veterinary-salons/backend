@@ -5,8 +5,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from core.models import Price, Schedule
+from core.models import Schedule
 from core.validators import validate_price, validate_schedule
+from services.models import Price
 
 
 class Base64ImageField(serializers.ImageField):

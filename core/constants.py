@@ -17,6 +17,7 @@ class Limits:
     MAX_LEN_ANIMAL_BREED = 30
     MAX_LEN_ANIMAL_NAME = 30
     MAX_LEN_CATEGORY_NAME = 30
+    MAX_LEN_DESCRIPTION = 1000
     MAX_LEN_GOODS_NAME = 200
     MAX_LEN_BRAND_NAME = 50
     MAX_AGE_PET = 50
@@ -28,7 +29,7 @@ class Limits:
     MAX_LEN_EMAIL = 50
     MAX_LEN_ADDRESS = 100
     MAX_MONTH_QUANTITY = 11
-
+    MAX_CHOICE_LENGTH = 10
     CONFIRMATION_CODE_LENGTH = 5
 
     RECOVERY_ACCESS_TOKEN_LIFETIME = timedelta(minutes=10)
@@ -67,6 +68,16 @@ class Default:
     COST_FROM = 500
     COST_TO = 1000
     PET_AGE = 1
+    STERILIZED_CHOICES = (
+        ("Да", "Стерилизован"),
+        ("Нет", "Не стерилизован"),
+        ("Не знаю", "Не знаю"),
+    )
+    VACCINATED_CHOICES = (
+        ("Да", "Вакцинирован"),
+        ("Нет", "Не вакцинирован"),
+        ("Не знаю", "Не знаю"),
+    )
     WEIGHT_CHOICES = (
         ("1", "до 5кг."),
         ("2", "5 - 10кг."),

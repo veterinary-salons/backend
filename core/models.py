@@ -1,14 +1,8 @@
 from django.db import models
-from django.db.models import CheckConstraint, Q, F
-from icecream import ic
-from rest_framework import serializers
 
-from core.constants import Default, Limits
-from core.validators import (
-    RangeValueValidator,
-)
+from core.constants import Default
 from services.models import Service
-from users.models import SupplierProfile
+from users.models import SupplierProfile, CustomerProfile
 
 
 class Schedule(models.Model):
@@ -60,58 +54,3 @@ class Schedule(models.Model):
     class Meta:
         verbose_name = "расписание специалиста"
 
-
-class Price(models.Model):
-    """Стоимость услуги."""
-
-    service_name = models.CharField(
-        max_length=Limits.MAX_LEN_SERVICE_NAME,
-    )
-    cost_from = models.DecimalField(
-        decimal_places=0,
-        max_digits=5,
-        default=Default.COST_FROM,
-        validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
-    )
-    cost_to = models.DecimalField(
-        decimal_places=0,
-        max_digits=5,
-        default=Default.COST_TO,
-        validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
-    )
-    service = models.ForeignKey(
-        Service,
-        on_delete=models.CASCADE,
-        related_name="prices",
-        null=False,
-        blank=False,
-    )
-
-    def clean(self):
-        """Проверяем соответствие типа специалиста и типа питомца."""
-        if not self.service_name in self.service.extra_fields.get(
-            "service_name"
-        ):
-            raise serializers.ValidationError(
-                "Поле `service_name` в `price` должно быть в `service_name` в "
-                "`extra_fields`."
-            )
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        ic()
-        self.full_clean()
-        return super(Price, self).save(*args, **kwargs)
-
-    class Meta:
-        verbose_name = "стоимость услуги"
-        verbose_name_plural = "стоимости услуг"
-        constraints = (
-            CheckConstraint(
-                check=Q(cost_from__lte=F("cost_to")),
-                name="cost_range",
-            ),
-        )
-
-    def __str__(self):
-        return f"{self.service_name}: {self.cost_from} - {self.cost_to}"
