@@ -124,21 +124,24 @@ class BaseBookingSerializer(serializers.ModelSerializer):
 
 class BookingSerializer(serializers.ModelSerializer):
     """Сериализатор бронирования."""
-    price = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Price.objects.all()
-    )
+    # price = serializers.PrimaryKeyRelatedField(
+    #     many=True, queryset=Price.objects.all(),
+    # )
 
     class Meta:
         model = Booking
         fields = ["description", "price", "to_date", "is_confirmed", "is_done"]
 
-    def create(self, validated_data):
-        prices = validated_data.pop("price")
-        customer = validated_data.pop("customer")
-    
-        bookings = []
-        for price in prices:
-            booking = Booking(price=price, customer=customer)
-            bookings.append(booking)
-    
-        return Booking.objects.bulk_create(bookings)
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     representation['pet'] = Pet
+    #     return representation
+
+class BookingListSerializer(serializers.ListSerializer):
+    # price = serializers.PrimaryKeyRelatedField(
+    #     many=True, queryset=Price.objects.all(),
+    # )
+    child = BookingSerializer()
+    class Meta:
+        model = Booking
+        fields = ["description", "price", "to_date", "is_confirmed", "is_done", "customer"]

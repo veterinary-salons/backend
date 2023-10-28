@@ -2,15 +2,19 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from icecream import ic
 from rest_framework import generics, status
+from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import DestroyModelMixin
 
+from api.v1.serializers.core import PriceSerializer
 from api.v1.serializers.pets import PetSerializer
 from api.v1.serializers.service import (
     BookingSerializer,
     ServiceCreateSerializer,
     ServiceUpdateSerializer,
     BaseServiceSerializer,
+    BookingListSerializer,
 )
+from api.v1.serializers.users import CustomerProfileSerializer
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
@@ -68,7 +72,9 @@ class SupplierServiceProfileView(
     def get(self, request, *args, **kwargs):
         """Выводим услуги конкретного специалиста."""
         supplier_id = int(self.kwargs.get("supplier_id"))
-        serializer = self.get_serializer(self.queryset.filter(supplier=supplier_id), many=True)
+        serializer = self.get_serializer(
+            self.queryset.filter(supplier=supplier_id), many=True
+        )
         return Response(data=serializer.data)
 
     def delete(self, request, *args, **kwargs):
@@ -82,7 +88,8 @@ class SupplierServiceProfileView(
             data={"message": f"Пользователь {last_name} {first_name} удален"},
         )
 
-class BookingServiceAPIView(generics.CreateAPIView,):
+
+class BookingServiceAPIView(generics.CreateAPIView):
     """Представление для бронирования."""
 
     queryset = Booking.objects.all()
@@ -91,19 +98,34 @@ class BookingServiceAPIView(generics.CreateAPIView,):
         IsAuthenticated,
     ]
 
-    def perform_create(self, serializer):
-        """Добавляем в вывод сериалиализатора клиента."""
+    def create(self, request, *args, **kwargs):
+        prices = request.data.pop("price", [])
         customer_profile = CustomerProfile.objects.get(
             related_user=self.request.user,
         )
-        serializer.save(
-            customer=customer_profile,
-        )
+        bookings = []
+        for price in prices:
+            booking = Booking.objects.create(
+                price_id=price, customer=customer_profile, **request.data
+            )
+            bookings.append(booking)
+        serialized_data = []
+        for booking in bookings:
+            serializer = BookingSerializer(booking)
+            booking_data = serializer.data
+            booking_data["customer"] = CustomerProfileSerializer(
+                booking.customer
+            ).data
+            booking_data["price"] = PriceSerializer(
+                booking.price
+            ).data
+            serialized_data.append(booking_data)
+        return Response(serialized_data)
 
 
-
-
-class SupplierCreateAdvertisement(generics.RetrieveUpdateDestroyAPIView, generics.CreateAPIView):
+class SupplierCreateAdvertisement(
+    generics.RetrieveUpdateDestroyAPIView, generics.CreateAPIView
+):
     """Представление для создания объявления."""
 
     queryset = Service.objects.prefetch_related("supplier")
@@ -111,7 +133,9 @@ class SupplierCreateAdvertisement(generics.RetrieveUpdateDestroyAPIView, generic
         IsAuthenticated,
     ]
 
-    def perform_create(self, serializer: ServiceCreateSerializer | ServiceUpdateSerializer):
+    def perform_create(
+        self, serializer: ServiceCreateSerializer | ServiceUpdateSerializer
+    ):
         """Сохраняем расписание."""
         supplier_profile = SupplierProfile.objects.get(
             related_user=self.request.user
@@ -120,7 +144,7 @@ class SupplierCreateAdvertisement(generics.RetrieveUpdateDestroyAPIView, generic
         serializer.save(supplier=supplier_profile)
 
     def get_serializer_class(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return ServiceCreateSerializer
-        elif self.request.method == 'PATCH':
+        elif self.request.method == "PATCH":
             return ServiceUpdateSerializer

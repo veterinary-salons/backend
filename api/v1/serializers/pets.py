@@ -4,6 +4,7 @@ from rest_framework import serializers
 from core.constants import Limits
 from pets.models import Age, Pet
 
+
 class AgeSerializer(serializers.ModelSerializer):
     """Сериализация возраста."""
 
@@ -31,6 +32,8 @@ class AgeSerializer(serializers.ModelSerializer):
                 f"0 до {Limits.MAX_MONTH_QUANTITY} месяцев"
             )
         return value
+
+
 class BasePetSerializer(serializers.ModelSerializer):
     """Сериализация питомцев."""
 
@@ -52,7 +55,6 @@ class BasePetSerializer(serializers.ModelSerializer):
         else:
             age = Age.objects.create(**age_data)
         return Pet.objects.create(age=age, **validated_data)
-
 
     def update(self, instance, validated_data):
         """Обновление питомца."""
@@ -77,13 +79,15 @@ class BasePetSerializer(serializers.ModelSerializer):
             "is_vaccinated",
         )
 
+
 class PetSerializer(BasePetSerializer):
     """Сериализация питомцев с валидацией."""
 
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
-    def to_representation(self, instance: Pet) -> dict[str, str|int]:
+
+    def to_representation(self, instance: Pet) -> dict[str, str | int]:
         """Выносим год и месяц из возраста в основное поле питомца.
-        
+
         Убираем визуально вложенность.
         """
         representation = super().to_representation(instance)
@@ -91,13 +95,13 @@ class PetSerializer(BasePetSerializer):
         representation.update(age)
         return representation
 
-    def to_internal_value(self, data: dict[str, str|int]):
+    def to_internal_value(self, data: dict[str, str | int]):
         """Обрабатываем данные питомца..
 
         Необходимо, чтобы принимать данные, не используя вложенного поля `Age`.
         """
-        month = data.pop("month")
-        year = data.pop("year")
+        month = data.pop("month", [])
+        year = data.pop("year", [])
         age = AgeSerializer(data={"year": year, "month": month})
         age.is_valid(raise_exception=True)
         data["age"] = age.validated_data
@@ -115,4 +119,3 @@ class PetSerializer(BasePetSerializer):
         ).exists():
             raise serializers.ValidationError("Такой питомец уже существует!")
         return data
-

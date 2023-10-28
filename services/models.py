@@ -117,8 +117,6 @@ class Price(models.Model):
         CustomerProfile,
         related_name="prices",
         verbose_name="клиенты",
-        blank=True,
-        null=True,
         through="Booking",
     )
     service_name = models.CharField(
@@ -185,7 +183,7 @@ class Booking(models.Model):
     price = models.ForeignKey(
         Price,
         on_delete=models.CASCADE,
-        related_name="bookings",
+        # related_name="bookings",
     )
     customer = models.ForeignKey(
         CustomerProfile,
