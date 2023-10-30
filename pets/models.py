@@ -66,9 +66,9 @@ class Pet(AnimalAbstract):
             Возраст питомца. Задается в `year` и `month`.
         weight (str):
             Категория веса питомца.
-        is_sterilized (bool):
+        is_sterilized (str):
             Указывает, стерилизовано ли животное.
-        is_vaccinated (bool):
+        is_vaccinated (str):
             Указывает, привито ли животное.
         owner (CustomerProfile):
             Владелец питомца.
@@ -107,7 +107,7 @@ class Pet(AnimalAbstract):
         related_name="pet",
         on_delete=models.CASCADE,
     )
-
+    photo = models.ImageField(blank=True, null=True)
     class Meta:
         verbose_name = "питомец"
         verbose_name_plural = "питомцы"

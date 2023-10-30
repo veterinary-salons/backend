@@ -16,7 +16,12 @@ from api.v1.views.service import (
     SupplierServiceProfileView,
     SupplierCreateAdvertisement,
 )
-from api.v1.views.users import CustomerProfileViewSet, SupplierProfileViewSet
+from api.v1.views.users import (
+    CustomerProfileView,
+    SupplierProfileViewSet,
+    CustomerBookingList,
+    CustomerBookingHistoryList,
+)
 
 
 app_name = "api"
@@ -31,7 +36,7 @@ router.register(
     "services/${serviceType}",
     BaseServiceViewSet,
 )
-router.register("customers", CustomerProfileViewSet)
+# router.register("customers", CustomerProfileViewSet)
 router.register("suppliers", SupplierProfileViewSet)
 router.register("auth/signup", SignUpViewSet, basename="signup")
 router.register("auth/signin", SignInViewSet, basename="signin")
@@ -54,11 +59,27 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
+
     re_path(
         "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)",
         BookingServiceAPIView.as_view(),
         name="booking",
     ),
+    re_path(
+        "customers/(?P<pk>\d+)/profile/$",
+        CustomerProfileView.as_view(),
+        name="customer_profile",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/profile/services/$",
+        CustomerBookingList.as_view(),
+        name="customer_services",
+    ),
+    re_path(
+    "customers/(?P<customer_id>\d+)/profile/services/history/$",
+    CustomerBookingHistoryList.as_view(),
+    name="customer_history_services",
+),
     re_path(
         "suppliers/(?P<supplier_id>\d+)/profile",
         SupplierServiceProfileView.as_view(),

@@ -12,13 +12,12 @@ from api.v1.serializers.service import (
     ServiceCreateSerializer,
     ServiceUpdateSerializer,
     BaseServiceSerializer,
-    BookingListSerializer,
 )
 from api.v1.serializers.users import CustomerProfileSerializer
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
-from pets.models import Pet
+from core.utils import get_customer
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated,
@@ -26,7 +25,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from services.models import Booking, Service, Price
+from services.models import Booking, Service
 from users.models import SupplierProfile, CustomerProfile
 
 
@@ -98,15 +97,24 @@ class BookingServiceAPIView(generics.CreateAPIView):
         IsAuthenticated,
     ]
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         prices = request.data.pop("price", [])
+        pet_data = request.data.pop("pet", None)
+        pet_serializer = PetSerializer(data=pet_data)
+        pet_serializer.is_valid(raise_exception=True)
+        customer_profile = get_customer(self.request)
+        pet_serializer.save(owner=customer_profile)
         customer_profile = CustomerProfile.objects.get(
             related_user=self.request.user,
         )
         bookings = []
         for price in prices:
             booking = Booking.objects.create(
-                price_id=price, customer=customer_profile, **request.data
+                price_id=price,
+                is_active=True,
+                customer=customer_profile,
+                **request.data,
             )
             bookings.append(booking)
         serialized_data = []
@@ -116,10 +124,9 @@ class BookingServiceAPIView(generics.CreateAPIView):
             booking_data["customer"] = CustomerProfileSerializer(
                 booking.customer
             ).data
-            booking_data["price"] = PriceSerializer(
-                booking.price
-            ).data
+            booking_data["price"] = PriceSerializer(booking.price).data
             serialized_data.append(booking_data)
+        serialized_data.append({"pet": pet_serializer.data})
         return Response(serialized_data)
 
 

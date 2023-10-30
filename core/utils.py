@@ -1,5 +1,8 @@
+from django.http import HttpRequest
+
 from core.models import Schedule
 from services.models import Price
+from users.models import CustomerProfile, SupplierProfile
 
 
 def update_schedules(schedules, schedules_data):
@@ -118,3 +121,15 @@ def delete_prices(instance, prices, prices_data):
     Price.objects.filter(
         service_name__in=to_delete_price_names, service=instance
     ).delete()
+
+def get_customer(request: HttpRequest):
+    try:
+        return CustomerProfile.objects.get(related_user=request.user).id
+    except CustomerProfile.DoesNotExist:
+        return None
+
+def get_supplier(request: HttpRequest):
+    try:
+        return SupplierProfile.objects.get(related_user=request.user).id
+    except SupplierProfile.DoesNotExist:
+        return None

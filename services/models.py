@@ -208,11 +208,14 @@ class Booking(models.Model):
         verbose_name="окончено или нет",
         default=False,
     )
+    is_active = models.BooleanField(
+        verbose_name="активно или нет",
+        default=False,
+    )
     class Meta:
         verbose_name = "бронь услуги"
         verbose_name_plural = "брони услуг"
-        constraints = (
-        )
+
 
     def __str__(self):
         return f"{self.price} - {self.date}"

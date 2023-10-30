@@ -27,9 +27,11 @@ from services.models import Service
 
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализация базовой модели услуг."""
+
     schedules = ScheduleSerializer(many=True)
     price = PriceSerializer(many=True, source="prices")
     image = Base64ImageField(required=False, allow_null=True)
+
     class Meta:
         model = Service
         fields = (
@@ -44,8 +46,11 @@ class BaseServiceSerializer(serializers.ModelSerializer):
             "supplier_place",
             "schedules",
         )
+
+
 class ServiceCreateSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
+
     def create(self, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
@@ -64,6 +69,7 @@ class ServiceCreateSerializer(BaseServiceSerializer):
         Price.objects.bulk_create(prices)
         return service
 
+
 class ServiceUpdateSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
 
@@ -78,11 +84,12 @@ class ServiceUpdateSerializer(BaseServiceSerializer):
         create_schedules(instance, schedules_data)
         delete_schedules(instance, schedules, schedules_data)
 
-        update_prices( prices, prices_data)
+        update_prices(prices, prices_data)
         create_prices(instance, prices_data)
         delete_prices(instance, prices, prices_data)
 
         return instance
+
 
 class FilterServicesSerializer(serializers.Serializer):
     price = serializers.ListField(
@@ -124,24 +131,29 @@ class BaseBookingSerializer(serializers.ModelSerializer):
 
 class BookingSerializer(serializers.ModelSerializer):
     """Сериализатор бронирования."""
-    # price = serializers.PrimaryKeyRelatedField(
-    #     many=True, queryset=Price.objects.all(),
-    # )
 
     class Meta:
         model = Booking
-        fields = ["description", "price", "to_date", "is_confirmed", "is_done"]
+        fields = [
+            "description",
+            "price",
+            "to_date",
+            "is_confirmed",
+            "is_done",
+        ]
 
-    # def to_representation(self, instance):
-    #     representation = super().to_representation(instance)
-    #     representation['pet'] = Pet
-    #     return representation
-
-class BookingListSerializer(serializers.ListSerializer):
-    # price = serializers.PrimaryKeyRelatedField(
-    #     many=True, queryset=Price.objects.all(),
-    # )
-    child = BookingSerializer()
-    class Meta:
-        model = Booking
-        fields = ["description", "price", "to_date", "is_confirmed", "is_done", "customer"]
+#
+# class BookingListSerializer(serializers.ListSerializer):
+#
+#     child = BookingSerializer()
+#
+#     class Meta:
+#         model = Booking
+#         fields = [
+#             "description",
+#             "price",
+#             "to_date",
+#             "is_confirmed",
+#             "is_done",
+#             "customer",
+#         ]
