@@ -41,7 +41,7 @@ class BaseCustomerBookingListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if get_customer(self.request) == int(self.kwargs.get("customer_id")):
+        if get_customer(self.request).id == int(self.kwargs.get("customer_id")):
             return self.get_bookings()
         else:
             raise serializers.ValidationError(
@@ -55,16 +55,16 @@ class CustomerBookingList(BaseCustomerBookingListView):
 
     def get_bookings(self):
         return Booking.objects.filter(
-           customer=get_customer(self.request),
+           customer=get_customer(self.request).id,
            is_active=True
         )
 
 
 class CustomerBookingHistoryList(BaseCustomerBookingListView):
 
-    def get_bookings2(self):
+    def get_bookings(self):
         return Booking.objects.filter(
-           customer=get_customer(self.request),
+           customer=get_customer(self.request).id,
            is_done=True,
            is_active=False
         )

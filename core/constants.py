@@ -5,6 +5,7 @@ class Limits:
     def __setattr__(self, name: str, value: tuple) -> None:
         raise AttributeError(f"can't reassign constant '{name}'")
 
+    MIN_RATING = 1
     MIN_AGE_PET = 0
     MIN_DURATION = 1
     MIN_PRICE = 1
@@ -20,6 +21,7 @@ class Limits:
     MAX_LEN_DESCRIPTION = 1000
     MAX_LEN_GOODS_NAME = 200
     MAX_LEN_BRAND_NAME = 50
+    MAX_LEN_REVIEW = 500
     MAX_AGE_PET = 50
     MAX_DURATION = 650
     MAX_LEN_ABOUT = 300
@@ -30,6 +32,7 @@ class Limits:
     MAX_LEN_ADDRESS = 100
     MAX_MONTH_QUANTITY = 11
     MAX_CHOICE_LENGTH = 10
+    MAX_RATING = 5
     CONFIRMATION_CODE_LENGTH = 5
 
     RECOVERY_ACCESS_TOKEN_LIFETIME = timedelta(minutes=10)

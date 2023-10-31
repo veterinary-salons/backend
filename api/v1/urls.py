@@ -15,6 +15,7 @@ from api.v1.views.service import (
     BookingServiceAPIView,
     SupplierServiceProfileView,
     SupplierCreateAdvertisement,
+    ReviewView,
 )
 from api.v1.views.users import (
     CustomerProfileView,
@@ -59,7 +60,6 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-
     re_path(
         "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)",
         BookingServiceAPIView.as_view(),
@@ -76,10 +76,15 @@ urlpatterns = [
         name="customer_services",
     ),
     re_path(
-    "customers/(?P<customer_id>\d+)/profile/services/history/$",
-    CustomerBookingHistoryList.as_view(),
-    name="customer_history_services",
-),
+        "customers/(?P<customer_id>\d+)/profile/services/history/$",
+        CustomerBookingHistoryList.as_view(),
+        name="customer_history_services",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/profile/services/history/(?P<service_id>\d+)/$",
+        ReviewView.as_view(),
+        name="service_review",
+    ),
     re_path(
         "suppliers/(?P<supplier_id>\d+)/profile",
         SupplierServiceProfileView.as_view(),

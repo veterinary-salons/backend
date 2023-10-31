@@ -124,7 +124,7 @@ def delete_prices(instance, prices, prices_data):
 
 def get_customer(request: HttpRequest):
     try:
-        return CustomerProfile.objects.get(related_user=request.user).id
+        return CustomerProfile.objects.get(related_user=request.user)
     except CustomerProfile.DoesNotExist:
         return None
 

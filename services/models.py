@@ -183,7 +183,7 @@ class Booking(models.Model):
     price = models.ForeignKey(
         Price,
         on_delete=models.CASCADE,
-        # related_name="bookings",
+        related_name="bookings",
     )
     customer = models.ForeignKey(
         CustomerProfile,
@@ -219,3 +219,23 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.price} - {self.date}"
+
+class Review(models.Model):
+    text = models.TextField(max_length=Limits.MAX_LEN_REVIEW)
+    rating = models.PositiveSmallIntegerField(
+        validators=[RangeValueValidator(Limits.MIN_RATING, Limits.MAX_RATING)],
+    )
+    customer = models.ForeignKey(
+        CustomerProfile,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+    )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name="services",
+    )
+    date = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        verbose_name = "отзыв"
+        verbose_name_plural = "отзывы"

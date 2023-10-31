@@ -4,7 +4,6 @@ import re
 from django.core.exceptions import ValidationError
 from django.core.validators import BaseValidator
 from django.db import models
-from icecream import ic
 from rest_framework import serializers
 
 from core.constants import Default, Messages, Limits
@@ -175,7 +174,7 @@ class RangeValueValidator(BaseValidator):
         self.value_to = value_to
 
     def __call__(self, value):
-        if not self.value_from < int(value) < self.value_to:
+        if not self.value_from <= int(value) <= self.value_to:
             raise ValidationError(
                 f"Значение {value} должно быть в пределах от {self.value_from}"
                 f" до {self.value_to}"

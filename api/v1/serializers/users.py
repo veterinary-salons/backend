@@ -46,7 +46,14 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
 
 class CustomerProfileSerializer(BaseProfileSerializer):
-    pass
+    class Meta:
+        model = CustomerProfile
+        fields = (
+            "id",
+            "photo",
+            "last_name",
+            "first_name",
+        )
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
@@ -65,19 +72,6 @@ class SupplierProfileSerializer(BaseProfileSerializer):
             "contact_email",
             "user",
         )
-
-
-class SupplierSerializer(BaseProfileSerializer):
-    class Meta:
-        model = SupplierProfile
-        verbose_name = "специалист"
-        verbose_name_plural = "специалисты"
-        fields = [
-            "phone_number",
-            "contact_email",
-            "address",
-            "photo",
-        ]
 
 
 class CustomerPatchSerializer(BaseProfileSerializer):
@@ -120,12 +114,18 @@ class CustomerSerializer(CustomerPatchSerializer):
 class BookingListSerializer(serializers.ModelSerializer):
     price = PriceSerializer(read_only=True)
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["supplier"] = SupplierProfileSerializer(
+            instance.price.service.supplier
+        ).data
+        return representation
+
     class Meta:
         model = Booking
         fields = [
             "description",
             "price",
             "to_date",
-            "customer",
             "is_done",
         ]

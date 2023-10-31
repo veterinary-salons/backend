@@ -12,11 +12,14 @@ from api.v1.serializers.service import (
     ServiceCreateSerializer,
     ServiceUpdateSerializer,
     BaseServiceSerializer,
+    ReviewSerializer,
+    SmallServiceSerializer,
 )
 from api.v1.serializers.users import CustomerProfileSerializer
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
+from core.permissions import IsCustomer, IsAuthor
 from core.utils import get_customer
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -25,7 +28,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from services.models import Booking, Service
+from services.models import Booking, Service, Price
 from users.models import SupplierProfile, CustomerProfile
 
 
@@ -103,7 +106,7 @@ class BookingServiceAPIView(generics.CreateAPIView):
         pet_data = request.data.pop("pet", None)
         pet_serializer = PetSerializer(data=pet_data)
         pet_serializer.is_valid(raise_exception=True)
-        customer_profile = get_customer(self.request)
+        customer_profile = get_customer(self.request).id
         pet_serializer.save(owner=customer_profile)
         customer_profile = CustomerProfile.objects.get(
             related_user=self.request.user,
@@ -155,3 +158,23 @@ class SupplierCreateAdvertisement(
             return ServiceCreateSerializer
         elif self.request.method == "PATCH":
             return ServiceUpdateSerializer
+
+class ReviewView(generics.CreateAPIView):
+    """Представление для создания отзыва."""
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated, IsCustomer, IsAuthor,]
+
+
+    def create(self, request, *args, **kwargs):
+
+        service_id = int(kwargs.get("service_id"))
+        request.data["service_id"] = service_id
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        service = Service.objects.get(id=service_id)
+        service_serializer = SmallServiceSerializer(service)
+        data = serializer.data
+        data['service'] = service_serializer.data
+        customer = CustomerProfile.objects.get(id=get_customer(request).id)
+        data["customer"] = CustomerProfileSerializer(customer).data
+        return Response(data)

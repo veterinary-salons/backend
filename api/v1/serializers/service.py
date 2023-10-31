@@ -1,4 +1,4 @@
-from icecream import ic
+from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.v1.serializers.core import (
     ScheduleSerializer,
@@ -19,11 +19,20 @@ from core.utils import (
     delete_prices,
 )
 
-from services.models import Booking, Price
+from services.models import Booking, Price, Review
 
 from rest_framework import serializers
 from services.models import Service
 
+
+class SmallServiceSerializer(serializers.ModelSerializer):
+    """Сериализация услуг с минимальными данными."""
+    class Meta:
+        model = Service
+        fields = (
+            "id",
+            "category",
+        )
 
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализация базовой модели услуг."""
@@ -143,17 +152,14 @@ class BookingSerializer(serializers.ModelSerializer):
         ]
 
 #
-# class BookingListSerializer(serializers.ListSerializer):
-#
-#     child = BookingSerializer()
-#
-#     class Meta:
-#         model = Booking
-#         fields = [
-#             "description",
-#             "price",
-#             "to_date",
-#             "is_confirmed",
-#             "is_done",
-#             "customer",
-#         ]
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор отзывов."""
+
+    class Meta:
+        model = Review
+        fields = (
+            "text",
+            "rating",
+            "text",
+            "rating",
+        )
