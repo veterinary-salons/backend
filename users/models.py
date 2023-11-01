@@ -88,19 +88,19 @@ class BaseProfile(models.Model):
         object_id_field="profile_id",
     )
     first_name = models.CharField(
-        max_length=15,
+        max_length=Limits.MAX_LEN_CUSTOMER_NAME,
         validators=[
             MinLengthValidator(2),
         ],
     )
     last_name = models.CharField(
-        max_length=15,
+        max_length=Limits.MAX_LEN_CUSTOMER_NAME,
         validators=[
             MinLengthValidator(2),
         ],
     )
     phone_number = models.CharField(
-        max_length=12,
+        max_length=Limits.MAX_LEN_PHONE_NUMBER,
         validators=[
             PhoneNumberValidator(
                 Limits.MIN_LEN_PHONE_NUMBER, Limits.MAX_LEN_PHONE_NUMBER
@@ -147,4 +147,4 @@ class SupplierProfile(BaseProfile):
 class CustomerProfile(BaseProfile):
 
     def __str__(self):
-        return f"{self.phone_number}"
+        return f"{self.last_name} {self.first_name}"

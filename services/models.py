@@ -1,13 +1,12 @@
-from django.db.models import UniqueConstraint, CheckConstraint, Q, F, JSONField
-from django.utils import timezone
+from django.db.models import CheckConstraint, Q, F, JSONField
 from icecream import ic
 from rest_framework import serializers
 
-from core.constants import Limits, Default, Messages
+from core.constants import Limits, Default
 from django.contrib.auth import get_user_model
 from django.db import models
 
-# from core.models import Price
+from core.utils import default_booking_time
 from core.validators import (
     validate_alphanumeric,
     validate_current_and_future_month,
@@ -198,7 +197,11 @@ class Booking(models.Model):
         validators=(validate_current_and_future_month,),
         blank=False,
         null=False,
-        default=timezone.now,
+        default=default_booking_time,
+    )
+    is_active = models.BooleanField(
+        verbose_name="активно или нет",
+        default=False,
     )
     is_confirmed = models.BooleanField(
         verbose_name="подтверждено или нет",
@@ -208,8 +211,8 @@ class Booking(models.Model):
         verbose_name="окончено или нет",
         default=False,
     )
-    is_active = models.BooleanField(
-        verbose_name="активно или нет",
+    is_cancelled = models.BooleanField(
+        verbose_name="отменено или нет",
         default=False,
     )
     class Meta:

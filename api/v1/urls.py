@@ -66,7 +66,7 @@ urlpatterns = [
         name="booking",
     ),
     re_path(
-        "customers/(?P<pk>\d+)/profile/$",
+        "customers/(?P<customer_id>\d+)/profile/$",
         CustomerProfileView.as_view(),
         name="customer_profile",
     ),
@@ -81,7 +81,7 @@ urlpatterns = [
         name="customer_history_services",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/profile/services/history/(?P<service_id>\d+)/$",
+        "customers/(?P<customer_id>\d+)/profile/services/history/(?P<price_id>\d+)/$",
         ReviewView.as_view(),
         name="service_review",
     ),

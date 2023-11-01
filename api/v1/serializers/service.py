@@ -154,12 +154,10 @@ class BookingSerializer(serializers.ModelSerializer):
 #
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор отзывов."""
-
+    review = serializers.CharField(source="text")
     class Meta:
         model = Review
         fields = (
-            "text",
-            "rating",
-            "text",
+            "review",
             "rating",
         )

@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from icecream import ic
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import DestroyModelMixin
 
@@ -19,7 +19,7 @@ from api.v1.serializers.users import CustomerProfileSerializer
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
-from core.permissions import IsCustomer, IsAuthor
+from core.permissions import IsCustomer, IsAuthor, IsMyService
 from core.utils import get_customer
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -28,7 +28,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from services.models import Booking, Service, Price
+from services.models import Booking, Service, Price, Review
 from users.models import SupplierProfile, CustomerProfile
 
 
@@ -159,22 +159,61 @@ class SupplierCreateAdvertisement(
         elif self.request.method == "PATCH":
             return ServiceUpdateSerializer
 
-class ReviewView(generics.CreateAPIView):
-    """Представление для создания отзыва."""
-    serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticated, IsCustomer, IsAuthor,]
 
+class ReviewView(generics.CreateAPIView, generics.DestroyAPIView):
+    """Представление для создания отзыва."""
+
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated, IsCustomer, IsAuthor, IsMyService]
 
     def create(self, request, *args, **kwargs):
-
-        service_id = int(kwargs.get("service_id"))
-        request.data["service_id"] = service_id
+        price_id = int(kwargs.get("price_id"))
+        request.data["price_id"] = price_id
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        service = Service.objects.get(id=service_id)
-        service_serializer = SmallServiceSerializer(service)
+        price = Price.objects.get(id=price_id)
+        price_serializer = PriceSerializer(price)
         data = serializer.data
-        data['service'] = service_serializer.data
-        customer = CustomerProfile.objects.get(id=get_customer(request).id)
+        data["price"] = price_serializer.data
+
+        customer = CustomerProfile.objects.get(
+            id=int(kwargs.get("customer_id"))
+        )
         data["customer"] = CustomerProfileSerializer(customer).data
+        data["service_date"] = (
+            Booking.objects.filter(
+                customer=customer,
+                price=price,
+                is_active=False,
+            )
+            .first()
+            .to_date
+        )
         return Response(data)
+
+    def delete(self, request, *args, **kwargs):
+        price_id = int(kwargs.get("price_id"))
+        booking = Booking.objects.filter(
+            price_id=price_id,
+            is_active=True,
+            customer=get_customer(request),
+        )
+        if not booking.exists():
+            raise serializers.ValidationError(
+                "Бронирование уже было отменено или его и не было."
+            )
+        booking.update(
+            is_cancelled=True,
+            is_active=False,
+            is_done=False,
+        )
+        booking = Booking.objects.filter(
+            price_id=price_id,
+            is_active=False,
+            customer=get_customer(request),
+        )
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+            data={"message": f"Бронирование {booking.first()} отменено"},
+        )

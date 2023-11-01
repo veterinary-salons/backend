@@ -1,11 +1,13 @@
-from django.http import HttpRequest
+from datetime import timedelta
 
-from core.models import Schedule
-from services.models import Price
+from django.http import HttpRequest
+from django.utils import timezone
+
 from users.models import CustomerProfile, SupplierProfile
 
 
 def update_schedules(schedules, schedules_data):
+    from core.models import Schedule
     for schedule in schedules:
         schedule_data = next(
             (
@@ -38,6 +40,7 @@ def update_schedules(schedules, schedules_data):
 
 
 def create_schedules(instance, schedules_data):
+    from core.models import Schedule
     existing_schedule_names = {
         schedule.weekday for schedule in instance.schedules.all()
     }
@@ -55,6 +58,7 @@ def create_schedules(instance, schedules_data):
 
 
 def delete_schedules(instance, schedules, schedules_data):
+    from core.models import Schedule
     existing_schedule_names = {schedule.weekday for schedule in schedules}
     given_schedule_names = {
         schedule_data.get("weekday") for schedule_data in schedules_data
@@ -70,6 +74,7 @@ def delete_schedules(instance, schedules, schedules_data):
 
 
 def update_prices(prices, prices_data):
+    from services.models import Price
     price_update = []
     for price in prices:
         price_data = next(
@@ -92,6 +97,7 @@ def update_prices(prices, prices_data):
 
 
 def create_prices(instance, prices_data):
+    from services.models import Price
     existing_price_names = {
         price.service_name for price in instance.prices.all()
     }
@@ -133,3 +139,12 @@ def get_supplier(request: HttpRequest):
         return SupplierProfile.objects.get(related_user=request.user).id
     except SupplierProfile.DoesNotExist:
         return None
+
+def default_booking_time():
+    """
+        Возвращает текущее время плюс один день.
+
+        Returns:
+            Объект `datetime`, представляющий текущее время плюс один день.
+    """
+    return timezone.now() + timedelta(days=1)

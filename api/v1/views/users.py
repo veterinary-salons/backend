@@ -1,6 +1,5 @@
 from icecream import ic
-from rest_framework import viewsets, generics, serializers
-from rest_framework.decorators import action
+from rest_framework import viewsets, generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -10,19 +9,41 @@ from api.v1.serializers.users import (
     SupplierProfileSerializer,
     BookingListSerializer,
 )
+from core.permissions import IsCustomer, IsAuthor
 from core.utils import get_customer
 from services.models import Booking
 from users.models import CustomerProfile, SupplierProfile
 
 
-class CustomerProfileView(generics.RetrieveAPIView, generics.UpdateAPIView):
+class CustomerProfileView(
+    generics.RetrieveAPIView,
+    generics.UpdateAPIView,
+    generics.DestroyAPIView,
+):
     queryset = CustomerProfile.objects.prefetch_related("related_user")
-
+    permission_classes = [IsAuthenticated, IsCustomer, IsAuthor]
+    lookup_field = "customer_id"
     def get_serializer_class(self):
         if self.request.method == "GET":
             return CustomerSerializer
         elif self.request.method == "PATCH":
             return CustomerPatchSerializer
+
+    def delete(self, request, *args, **kwargs):
+        customer_id = self.kwargs["customer_id"]
+    
+        try:
+            obj = self.get_queryset().get(id=customer_id)
+            obj.delete()
+            return Response(
+                status=status.HTTP_204_NO_CONTENT,
+                data={"message": f"Пользователь {obj} удален"},
+            )
+        except CustomerProfile.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={"message": "Пользователь не найден"},
+            )
 
 
 class SupplierProfileViewSet(viewsets.ModelViewSet):
@@ -41,7 +62,9 @@ class BaseCustomerBookingListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if get_customer(self.request).id == int(self.kwargs.get("customer_id")):
+        if get_customer(self.request).id == int(
+            self.kwargs.get("customer_id")
+        ):
             return self.get_bookings()
         else:
             raise serializers.ValidationError(
@@ -51,20 +74,18 @@ class BaseCustomerBookingListView(generics.ListAPIView):
     def get_bookings(self):
         pass  # будет переопределено в дочерних классах
 
-class CustomerBookingList(BaseCustomerBookingListView):
 
+class CustomerBookingList(BaseCustomerBookingListView):
     def get_bookings(self):
         return Booking.objects.filter(
-           customer=get_customer(self.request).id,
-           is_active=True
+            customer=get_customer(self.request).id, is_active=True
         )
 
 
 class CustomerBookingHistoryList(BaseCustomerBookingListView):
-
     def get_bookings(self):
         return Booking.objects.filter(
-           customer=get_customer(self.request).id,
-           is_done=True,
-           is_active=False
+            customer=get_customer(self.request).id,
+            is_done=True,
+            is_active=False,
         )
