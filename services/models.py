@@ -1,4 +1,4 @@
-from django.db.models import CheckConstraint, Q, F, JSONField
+from django.db.models import CheckConstraint, Q, F, JSONField, UniqueConstraint
 from icecream import ic
 from rest_framework import serializers
 
@@ -112,6 +112,7 @@ class Service(models.Model):
 
 class Price(models.Model):
     """Стоимость услуги."""
+
     customer = models.ManyToManyField(
         CustomerProfile,
         related_name="prices",
@@ -176,6 +177,7 @@ class Booking(models.Model):
 
     Связываются `service`, `customer` и `supplier`.
     """
+
     description = models.TextField(
         max_length=Limits.MAX_LEN_DESCRIPTION,
     )
@@ -215,13 +217,14 @@ class Booking(models.Model):
         verbose_name="отменено или нет",
         default=False,
     )
+
     class Meta:
         verbose_name = "бронь услуги"
         verbose_name_plural = "брони услуг"
 
-
     def __str__(self):
         return f"{self.price} - {self.date}"
+
 
 class Review(models.Model):
     text = models.TextField(max_length=Limits.MAX_LEN_REVIEW)
@@ -239,6 +242,72 @@ class Review(models.Model):
         related_name="services",
     )
     date = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         verbose_name = "отзыв"
         verbose_name_plural = "отзывы"
+
+    def __str__(self):
+        return f"Отзыв {self.text[:20]} - {self.rating} - {self.date} на {self.service}"
+
+
+class Favorite(models.Model):
+    """Избранные услуги.
+
+    Модель связывает `Price` и  `Customer`.
+    """
+
+    service = models.ForeignKey(
+        Service,
+        verbose_name="понравившиеся услуги",
+        related_name="in_favorites",
+        on_delete=models.CASCADE,
+    )
+    customer = models.ForeignKey(
+        CustomerProfile,
+        verbose_name="заказчик",
+        related_name="in_favorites",
+        on_delete=models.CASCADE,
+    )
+    date_added = models.DateTimeField(
+        verbose_name="дата добавления",
+        auto_now_add=True,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = "избранная услуга"
+        verbose_name_plural = "избранные услуги"
+        constraints = (
+            # UniqueConstraint(
+            #     fields=(
+            #         "service",
+            #         "customer",
+            #     ),
+            #     name="%(app_label)s_%(class)s услуга уже в избранном",
+            # ),
+        )
+
+    def __str__(self) -> str:
+        return f"{self.customer} -> {self.service}"
+
+
+class FavoriteArticles(models.Model):
+    """Избранные статьи."""
+
+    article_id = models.PositiveIntegerField(
+        validators=[RangeValueValidator(1, Limits.MAX_ARTICLE_ID_NUMBER)]
+    )
+    customer = models.ForeignKey(
+        CustomerProfile,
+        on_delete=models.CASCADE,
+        related_name="favorite_articles",
+    )
+    date_added = models.DateTimeField(
+        verbose_name="дата добавления",
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = "избранные статьи"
+        verbose_name_plural = "избранные статьи"

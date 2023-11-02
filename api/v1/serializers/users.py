@@ -35,8 +35,11 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             "photo",
             "phone_number",
             "contact_email",
+            "last_name",
+            "first_name",
             "user",
         ]
+
 
     def create(self, validated_data):
         user_data = validated_data.pop("user")
@@ -55,6 +58,12 @@ class CustomerProfileSerializer(BaseProfileSerializer):
             "first_name",
         )
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user_representation = representation.pop("user")
+        for key in user_representation:
+            representation[key] = user_representation[key]
+        return representation
 
 class SupplierProfileSerializer(BaseProfileSerializer):
     def to_representation(self, instance):

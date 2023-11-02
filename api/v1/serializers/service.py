@@ -19,7 +19,7 @@ from core.utils import (
     delete_prices,
 )
 
-from services.models import Booking, Price, Review
+from services.models import Booking, Price, Review, Favorite, FavoriteArticles
 
 from rest_framework import serializers
 from services.models import Service
@@ -31,8 +31,11 @@ class SmallServiceSerializer(serializers.ModelSerializer):
         model = Service
         fields = (
             "id",
+            "ad_title",
             "category",
+            "description",
         )
+
 
 class BaseServiceSerializer(serializers.ModelSerializer):
     """Сериализация базовой модели услуг."""
@@ -151,13 +154,40 @@ class BookingSerializer(serializers.ModelSerializer):
             "is_done",
         ]
 
-#
+
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор отзывов."""
+
     review = serializers.CharField(source="text")
+
     class Meta:
         model = Review
         fields = (
             "review",
             "rating",
         )
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    service = PrimaryKeyRelatedField(
+        queryset=Service.objects.all(),
+    )
+    """Сериализатор избранного."""
+
+    class Meta:
+        model = Favorite
+        fields = [
+            "id",
+            "service",
+            "date_added",
+        ]
+
+class FavoriteArticlesSerializer(serializers.ModelSerializer):
+    """Сериализатор избранного."""
+
+    class Meta:
+        model = FavoriteArticles
+        fields = [
+            "article_id",
+            "date_added",
+        ]

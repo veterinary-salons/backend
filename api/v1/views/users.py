@@ -33,17 +33,22 @@ class CustomerProfileView(
         customer_id = self.kwargs["customer_id"]
     
         try:
-            obj = self.get_queryset().get(id=customer_id)
-            obj.delete()
+            customer = self.get_queryset().get(id=customer_id)
+            customer.delete()
             return Response(
                 status=status.HTTP_204_NO_CONTENT,
-                data={"message": f"Пользователь {obj} удален"},
+                data={"message": f"Пользователь {customer} удален"},
             )
         except CustomerProfile.DoesNotExist:
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={"message": "Пользователь не найден"},
             )
+    def get(self, request, *args, **kwargs):
+        customer_id = kwargs.get("customer_id")
+        customer = self.get_queryset().get(id=customer_id)
+        serializer = self.get_serializer(customer)
+        return Response(serializer.data)
 
 
 class SupplierProfileViewSet(viewsets.ModelViewSet):

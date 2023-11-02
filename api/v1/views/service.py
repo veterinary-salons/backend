@@ -1,8 +1,8 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.views import View
 from icecream import ic
 from rest_framework import generics, status, serializers
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import DestroyModelMixin
 
 from api.v1.serializers.core import PriceSerializer
@@ -13,9 +13,14 @@ from api.v1.serializers.service import (
     ServiceUpdateSerializer,
     BaseServiceSerializer,
     ReviewSerializer,
+    FavoriteSerializer,
     SmallServiceSerializer,
+    FavoriteArticlesSerializer,
 )
-from api.v1.serializers.users import CustomerProfileSerializer
+from api.v1.serializers.users import (
+    CustomerProfileSerializer,
+    SupplierProfileSerializer,
+)
 from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
@@ -28,7 +33,14 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from services.models import Booking, Service, Price, Review
+from services.models import (
+    Booking,
+    Service,
+    Price,
+    Favorite,
+    Review,
+    FavoriteArticles,
+)
 from users.models import SupplierProfile, CustomerProfile
 
 
@@ -160,7 +172,17 @@ class SupplierCreateAdvertisement(
             return ServiceUpdateSerializer
 
 
-class ReviewView(generics.CreateAPIView, generics.DestroyAPIView):
+class BookingReviewCreateOrDelete(View):
+    def get(self, request, *args, **kwargs):
+        view = ReviewCreateView.as_view()
+        return view(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        view = BookingCancelView.as_view()
+        return view(request, *args, **kwargs)
+
+
+class ReviewCreateView(generics.CreateAPIView):
     """Представление для создания отзыва."""
 
     serializer_class = ReviewSerializer
@@ -191,6 +213,11 @@ class ReviewView(generics.CreateAPIView, generics.DestroyAPIView):
         )
         return Response(data)
 
+
+class BookingCancelView(generics.DestroyAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated, IsCustomer, IsAuthor, IsMyService]
+
     def delete(self, request, *args, **kwargs):
         price_id = int(kwargs.get("price_id"))
         booking = Booking.objects.filter(
@@ -216,4 +243,98 @@ class ReviewView(generics.CreateAPIView, generics.DestroyAPIView):
         return Response(
             status=status.HTTP_204_NO_CONTENT,
             data={"message": f"Бронирование {booking.first()} отменено"},
+        )
+
+
+class FavoriteServiceView(
+    generics.ListAPIView, generics.CreateAPIView, generics.DestroyAPIView
+):
+    """Представление для добавления в избранное."""
+
+    serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated, IsCustomer]
+    lookup_field = "customer_id"
+
+    def get_queryset(self):
+        return Favorite.objects.filter(customer=get_customer(self.request))
+
+    def perform_create(self, serializer):
+        customer = get_customer(self.request)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(customer=customer)
+        return serializer
+
+    def get(self, request, *args, **kwargs):
+        customer = get_customer(self.request)
+        services = Service.objects.filter(
+            in_favorites__customer=customer,
+        )
+        serialized_data = []
+        for service in services:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid()
+            data = serializer
+            supplier = SupplierProfile.objects.get(
+                id=service.supplier.id,
+            )
+            review = Review.objects.filter(service=service)
+            price = Price.objects.filter(
+                service=service,
+            )
+            data["service"] = SmallServiceSerializer(service).data
+            data["price"] = PriceSerializer(price, many=True).data
+            data["supplier"] = SupplierProfileSerializer(supplier).data
+
+            if review.exists():
+                data["review"] = ReviewSerializer(
+                    review.data,
+                    many=True,
+                )
+            else:
+                data["review"] = "Отзывов пока нет."
+            serialized_data.append(data)
+
+        return Response(serialized_data)
+
+
+class FavoriteArticlesView(
+    generics.ListAPIView, generics.CreateAPIView, generics.DestroyAPIView
+):
+    """Представление для добавления статей в избранное."""
+
+    serializer_class = FavoriteArticlesSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsCustomer,
+        IsAuthor,
+    ]
+    lookup_field = "customer_id"
+
+    def get_queryset(self):
+        return FavoriteArticles.objects.filter(
+            customer=get_customer(self.request)
+        )
+
+    def perform_create(self, serializer):
+        customer = get_customer(self.request)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(customer=customer)
+        return serializer
+
+    def delete(self, request, *args, **kwargs):
+        customer = get_customer(self.request)
+        article_id = int(request.data.get("article_id"))
+        articles = FavoriteArticles.objects.filter(
+            customer=customer,
+            article_id=article_id,
+        )
+        if articles.exists():
+            articles.delete()
+        else:
+            raise serializers.ValidationError(
+                f"Статья {article_id} уже была удалена из избранного или ее там и не было."
+            )
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+            data={"message": f"Статья {article_id} удалена"},
         )

@@ -15,7 +15,9 @@ from api.v1.views.service import (
     BookingServiceAPIView,
     SupplierServiceProfileView,
     SupplierCreateAdvertisement,
-    ReviewView,
+    BookingReviewCreateOrDelete,
+    FavoriteServiceView,
+    FavoriteArticlesView,
 )
 from api.v1.views.users import (
     CustomerProfileView,
@@ -82,8 +84,18 @@ urlpatterns = [
     ),
     re_path(
         "customers/(?P<customer_id>\d+)/profile/services/history/(?P<price_id>\d+)/$",
-        ReviewView.as_view(),
+        BookingReviewCreateOrDelete.as_view(),
         name="service_review",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/favorites/services/$",
+        FavoriteServiceView.as_view(),
+        name="favorite_services",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/favorites/articles/$",
+        FavoriteArticlesView.as_view(),
+        name="favorite_articles",
     ),
     re_path(
         "suppliers/(?P<supplier_id>\d+)/profile",
