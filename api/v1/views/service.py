@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views import View
@@ -33,6 +35,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from pets.models import Pet
 from services.models import (
     Booking,
     Service,
@@ -116,13 +119,17 @@ class BookingServiceAPIView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         prices = request.data.pop("price", [])
         pet_data = request.data.pop("pet", None)
-        pet_serializer = PetSerializer(data=pet_data)
-        pet_serializer.is_valid(raise_exception=True)
-        customer_profile = get_customer(self.request).id
-        pet_serializer.save(owner=customer_profile)
-        customer_profile = CustomerProfile.objects.get(
-            related_user=self.request.user,
-        )
+        _pet_data = deepcopy(pet_data)
+        _pet_data.pop("age", None)
+        customer_profile = get_customer(self.request)
+        try:
+            pet = Pet.objects.get(**_pet_data, owner=get_customer(self.request))
+            pet_serializer = PetSerializer(pet)
+            # создаем питомца, но если уже есть питомцы, то фигня какая то, подумать и поправить.
+        except Pet.DoesNotExist:
+            pet_serializer = PetSerializer(data=pet_data)
+            pet_serializer.is_valid(raise_exception=True)
+            pet_serializer.save(owner=customer_profile,)
         bookings = []
         for price in prices:
             booking = Booking.objects.create(
@@ -146,7 +153,7 @@ class BookingServiceAPIView(generics.CreateAPIView):
 
 
 class SupplierCreateAdvertisement(
-    generics.RetrieveUpdateDestroyAPIView, generics.CreateAPIView
+    generics.DestroyAPIView, generics.CreateAPIView, generics.UpdateAPIView
 ):
     """Представление для создания объявления."""
 

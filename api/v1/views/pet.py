@@ -46,9 +46,7 @@ class PetViewSet(ModelViewSet):
             Response(status=status.HTTP_403_FORBIDDEN): Если питомец создается
             у другого пользователя.
         """
-        if CustomerProfile.objects.get(
-            related_user=self.request.user
-        ).id != int(kwargs["customer_id"]):
+        if get_customer(self.request).id != int(kwargs["customer_id"]):
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={

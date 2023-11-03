@@ -117,13 +117,13 @@ def create_prices(instance, prices_data):
 
 
 def delete_prices(instance, prices, prices_data):
+    from services.models import Price
     existing_price_names = {price.service_name for price in prices}
     given_price_names = {
         price_data.get("service_name") for price_data in prices_data
     }
 
     to_delete_price_names = existing_price_names.difference(given_price_names)
-
     Price.objects.filter(
         service_name__in=to_delete_price_names, service=instance
     ).delete()

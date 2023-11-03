@@ -1,4 +1,6 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from api.v1.serializers.core import (
     Base64ImageField,
@@ -10,6 +12,14 @@ from users.models import CustomerProfile, SupplierProfile, User
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+
+    def validate_password(self, value):
+        try:
+            validate_password(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+        return value
+
     class Meta:
         model = User
         fields = (
