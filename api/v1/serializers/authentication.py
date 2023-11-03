@@ -1,5 +1,3 @@
-from hashlib import md5 as md5_hash
-
 from django.contrib.auth import get_user_model
 from icecream import ic
 from rest_framework import serializers
@@ -32,7 +30,6 @@ class SignUpProfileSerializer(serializers.Serializer):
 
 
     def create(self, validated_data):
-        ic(validated_data)
         user_data = {
             field: validated_data.pop(field) for field in {"email", "password"}
         }
@@ -42,6 +39,7 @@ class SignUpProfileSerializer(serializers.Serializer):
         if profile_type == "customer":
             profile = CustomerProfile.objects.create(**validated_data)
             User.objects.create_user(**user_data, profile=profile)
+
 
 
 class RecoveryEmailSerializer(serializers.Serializer):
@@ -121,6 +119,7 @@ class SignInSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         token_data = super().validate(attrs)
         profile = self.user.profile
+        ic(profile)
         if not profile:
             raise serializers.ValidationError("this profile does not exist")
         if isinstance(profile, SupplierProfile):
@@ -133,8 +132,8 @@ class SignInSerializer(TokenObtainPairSerializer):
             "profile_type": profile_type,
             "id": self.user.id,
             "email": self.user.email,
-            "first_name": self.user.first_name,
-            "last_name": self.user.last_name,
+            "first_name": profile.first_name,
+            "last_name": profile.last_name,
             "phone_number": profile.phone_number,
             "image": image,
         }

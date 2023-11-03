@@ -1,5 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.password_validation import validate_password, \
+    CommonPasswordValidator
 from django.contrib.contenttypes.fields import (
     GenericForeignKey,
     GenericRelation,
@@ -7,12 +9,11 @@ from django.contrib.contenttypes.fields import (
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MinLengthValidator
 from django.db import models
-from rest_framework import serializers
+from icecream import ic
 
 from core.constants import Limits, Default
 from core.validators import (
     PhoneNumberValidator,
-    validate_letters,
     validate_alphanumeric,
 )
 from users.validators import phone_number_validator

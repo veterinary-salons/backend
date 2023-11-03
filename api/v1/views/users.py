@@ -31,7 +31,6 @@ class CustomerProfileView(
 
     def delete(self, request, *args, **kwargs):
         customer_id = self.kwargs["customer_id"]
-    
         try:
             customer = self.get_queryset().get(id=customer_id)
             customer.delete()
@@ -44,10 +43,22 @@ class CustomerProfileView(
                 status=status.HTTP_404_NOT_FOUND,
                 data={"message": "Пользователь не найден"},
             )
+
     def get(self, request, *args, **kwargs):
         customer_id = kwargs.get("customer_id")
         customer = self.get_queryset().get(id=customer_id)
         serializer = self.get_serializer(customer)
+        return Response(serializer.data)
+
+    def patch(self, request, *args, **kwargs):
+        customer_id = kwargs.get("customer_id")
+        customer = self.get_queryset().get(id=customer_id)
+        ic(customer)
+        serializer = self.get_serializer(customer, data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        ic(serializer.validated_data)
+        serializer.save()
         return Response(serializer.data)
 
 

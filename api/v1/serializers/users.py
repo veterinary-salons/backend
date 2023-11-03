@@ -1,9 +1,7 @@
-from icecream import ic
 from rest_framework import serializers
 
 from api.v1.serializers.core import (
     Base64ImageField,
-    ScheduleSerializer,
     PriceSerializer,
 )
 from api.v1.serializers.pets import PetSerializer
@@ -32,14 +30,25 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         model = CustomerProfile
         fields = [
             "id",
-            "photo",
             "phone_number",
-            "contact_email",
             "last_name",
             "first_name",
             "user",
         ]
-
+    # def to_internal_value(self, data):
+    #     password = data.pop("password", None)
+    #     email = data.pop("email", None)
+    #     data["user"] = {
+    #         "email": email,
+    #         "password": password,
+    #     }
+    #     return data
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user_representation = representation.pop("user")
+        for key in user_representation:
+            representation[key] = user_representation[key]
+        return representation
 
     def create(self, validated_data):
         user_data = validated_data.pop("user")
@@ -49,66 +58,33 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
 
 class CustomerProfileSerializer(BaseProfileSerializer):
-    class Meta:
-        model = CustomerProfile
-        fields = (
-            "id",
-            "photo",
-            "last_name",
-            "first_name",
-        )
+    pass
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        user_representation = representation.pop("user")
-        for key in user_representation:
-            representation[key] = user_representation[key]
-        return representation
 
 class SupplierProfileSerializer(BaseProfileSerializer):
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        user_representation = representation.pop("user")
-        for key in user_representation:
-            representation[key] = user_representation[key]
-        return representation
 
     class Meta:
         model = SupplierProfile
-        fields = (
+        fields = BaseProfileSerializer.Meta.fields + [
             "photo",
-            "phone_number",
-            "contact_email",
-            "user",
-        )
+        ]
 
 
-class CustomerPatchSerializer(BaseProfileSerializer):
-    # def to_representation(self, instance):
-    #     representation = super().to_representation(instance)
-    #     user_representation = representation.pop("user")
-    #     for key in user_representation:
-    #         representation[key] = user_representation[key]
-    #     return representation
-    # def to_internal_value(self, data):
-    #     password = data.pop("password", None)
-    #     email = data.pop("email", None)
-    #     data["user"] = {
-    #         "email": email,
-    #         "password": password,
-    #     }
-    #     data = super().to_internal_value(data)
-    #     return data
-
-    def get_field_names(self, declared_fields, info):
-        fields = super().get_field_names(declared_fields, info)
-        if "user" in fields:
-            fields.remove("user")
-        fields.extend(["first_name", "last_name"])
-        return fields
-
+class CustomerPatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerProfile
+        fields = [
+        "id",
+        "phone_number",
+        "last_name",
+        "first_name",
+        "photo",
+    ]
 
 class CustomerSerializer(CustomerPatchSerializer):
+    def to_internal_value(self, data):
+        return super().to_internal_value(data)
+
     pet = PetSerializer(
         many=True,
         read_only=True,
@@ -116,7 +92,7 @@ class CustomerSerializer(CustomerPatchSerializer):
 
     class Meta(CustomerPatchSerializer.Meta):
         fields = CustomerPatchSerializer.Meta.fields + [
-            "pet",
+            "pet", "photo",
         ]
 
 

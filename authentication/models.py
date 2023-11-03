@@ -7,7 +7,6 @@ from django.db import models
 from django.utils.timezone import now as timezone_now
 
 from core.constants import Limits
-from core.validators import RangeValueValidator
 
 
 User = get_user_model()

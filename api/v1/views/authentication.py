@@ -13,7 +13,6 @@ from api.v1.serializers.authentication import (
     RecoveryPasswordSerializer,
 )
 from api.v1.serializers.users import (
-    BaseProfileSerializer,
     SupplierProfileSerializer,
     CustomerProfileSerializer,
 )
@@ -37,15 +36,11 @@ class SignUpViewSet(viewsets.GenericViewSet):
     def create(self, request):
         full_serializer = self.get_serializer(data=request.data)
         full_serializer.is_valid(raise_exception=True)
-        ic(request.data)
         profile_type = full_serializer.validated_data.pop("profile_type")
         if profile_type == "customer":
             serializer = CustomerProfileSerializer(
                 data=full_serializer.validated_data
             )
-            serializer.is_valid()
-            ic(full_serializer.validated_data)
-            ic(serializer.validated_data)
         elif profile_type == "supplier":
             serializer = SupplierProfileSerializer(
                 data=full_serializer.validated_data
@@ -85,7 +80,6 @@ class SignUpViewSet(viewsets.GenericViewSet):
         )
         """
 
-
 class SignInViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)
     allowed_methods = ("POST",)
@@ -115,9 +109,7 @@ class SignInViewSet(viewsets.GenericViewSet):
     def recovery(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         email = serializer.validated_data.get("email")
-
         recovery_code = get_recovery_code(email)
         message = RECOVERY_CODE_MESSAGE.format(code=recovery_code.code)
         send_email_message(
