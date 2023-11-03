@@ -1,5 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.password_validation import validate_password, \
+    CommonPasswordValidator
 from django.contrib.contenttypes.fields import (
     GenericForeignKey,
     GenericRelation,
@@ -7,13 +9,12 @@ from django.contrib.contenttypes.fields import (
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MinLengthValidator
 from django.db import models
+from icecream import ic
 
 from core.constants import Limits, Default
-from core.models import OutDoor
 from core.validators import (
-    RangeValueValidator,
     PhoneNumberValidator,
-    validate_letters,
+    validate_alphanumeric,
 )
 from users.validators import phone_number_validator
 
@@ -31,6 +32,7 @@ class CustomUserManager(BaseUserManager):
     def _create_user(self, email, password, **extra_fields):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
+        validate_password(password)
         user.set_password(password)
         user.save()
         return user
@@ -81,7 +83,6 @@ class User(AbstractUser):
             ),
         ]
 
-
 class BaseProfile(models.Model):
     related_user = GenericRelation(
         User,
@@ -89,19 +90,19 @@ class BaseProfile(models.Model):
         object_id_field="profile_id",
     )
     first_name = models.CharField(
-        max_length=15,
+        max_length=Limits.MAX_LEN_CUSTOMER_NAME,
         validators=[
             MinLengthValidator(2),
         ],
     )
     last_name = models.CharField(
-        max_length=15,
+        max_length=Limits.MAX_LEN_CUSTOMER_NAME,
         validators=[
             MinLengthValidator(2),
         ],
     )
     phone_number = models.CharField(
-        max_length=12,
+        max_length=Limits.MAX_LEN_PHONE_NUMBER,
         validators=[
             PhoneNumberValidator(
                 Limits.MIN_LEN_PHONE_NUMBER, Limits.MAX_LEN_PHONE_NUMBER
@@ -127,27 +128,25 @@ class BaseProfile(models.Model):
         abstract = True
 
 
-class CustomerProfile(BaseProfile):
-    def __str__(self):
-        return f"{self.phone_number}"
-
-
 class SupplierProfile(BaseProfile):
-    specialist_type = models.CharField(
-        verbose_name="тип услуги",
-        max_length=Limits.MAX_LEN_SERVICE_TYPE,
-        choices=Default.SERVICES,
-        validators=(validate_letters,),
-        blank=False,
-        null=False,
-    )
-    outdoor = models.ForeignKey(
-        OutDoor,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        default=None,
-    )
 
+    pet_type = models.CharField(
+        verbose_name="тип животного",
+        max_length=Limits.MAX_LEN_ANIMAL_TYPE,
+        choices=Default.PET_TYPE,
+    )
+    about = models.TextField(
+        max_length=Limits.MAX_LEN_ABOUT,
+        verbose_name="О себе",
+        blank=True,
+        null=True,
+        validators=(validate_alphanumeric,),
+    )
     def __str__(self):
         return f"{self.user.email}"
+
+
+class CustomerProfile(BaseProfile):
+
+    def __str__(self):
+        return f"{self.last_name} {self.first_name}"

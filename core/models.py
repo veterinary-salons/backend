@@ -1,46 +1,56 @@
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from core.constants import Default
-from core.validators import RangeValueValidator
-
-
-class OutDoor(models.Model):
-    """Модель для выездов."""
-
-    out = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = "выезд"
-        verbose_name_plural = "выезды"
+from services.models import Service
+from users.models import SupplierProfile, CustomerProfile
 
 
 class Schedule(models.Model):
-    """Расписание специалиста."""
+    """Расписание услуги."""
 
-    hours = {}
-    for day, label in Default.DAYS_OF_WEEK:
-        hours[label.lower()] = ArrayField(
-            models.PositiveSmallIntegerField(
-                validators=[RangeValueValidator(0, 24)]
-            ),
-            null=True,
-            size=2,
-        )
-    breakTime = ArrayField(
-        models.PositiveSmallIntegerField(
-            validators=[RangeValueValidator(0, 24)]
-        ),
-        null=True,
-        size=2,
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name="schedules",
+        null=False,
+        blank=False,
     )
-    monday_hours = hours[Default.DAYS_OF_WEEK[0][1].lower()]
-    tuesday_hours = hours[Default.DAYS_OF_WEEK[1][1].lower()]
-    wednesday_hours = hours[Default.DAYS_OF_WEEK[2][1].lower()]
-    thursday_hours = hours[Default.DAYS_OF_WEEK[3][1].lower()]
-    friday_hours = hours[Default.DAYS_OF_WEEK[4][1].lower()]
-    saturday_hours = hours[Default.DAYS_OF_WEEK[5][1].lower()]
-    sunday_hours = hours[Default.DAYS_OF_WEEK[6][1].lower()]
-
+    weekday = models.CharField(
+        choices=Default.DAYS_OF_WEEK,
+        verbose_name="День недели",
+        null=False,
+        blank=False,
+    )
+    is_working_day = models.BooleanField(
+        default=True, verbose_name="Рабочий день"
+    )
+    start_work_time = models.TimeField(
+        verbose_name="Время начала работы", default="09:00:00"
+    )
+    end_work_time = models.TimeField(
+        verbose_name="Время окончания работы", default="19:00:00"
+    )
+    break_start_time = models.TimeField(
+        verbose_name="Время начала перерыва",
+        null=True,
+        blank=True,
+        default="13:00:00",
+    )
+    break_end_time = models.TimeField(
+        verbose_name="Время окончания перерыва",
+        null=True,
+        blank=True,
+        default="14:00:00",
+    )
+    time_per_visit = models.DecimalField(
+        decimal_places=1,
+        max_digits=3,
+        default=Default.TIME_PER_VISIT_CHOICES[0][0],
+        choices=Default.TIME_PER_VISIT_CHOICES,
+    )
+    arround_clock = models.BooleanField(
+        default=False,
+    )
     class Meta:
         verbose_name = "расписание специалиста"
+

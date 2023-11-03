@@ -1,80 +1,106 @@
-from copy import deepcopy
+from rest_framework.relations import PrimaryKeyRelatedField
 
-from rest_framework.exceptions import ValidationError
-
-from api.v1.serializers.core import ScheduleSerializer
-from api.v1.serializers.pets import BasePetSerializer
-from api.v1.serializers.users import SupplierSerializer, \
-    SupplierProfileSerializer
+from api.v1.serializers.core import (
+    ScheduleSerializer,
+    PriceSerializer,
+    Base64ImageField,
+)
+from api.v1.serializers.users import (
+    SupplierProfileSerializer,
+)
 from core.constants import Limits, Default
+from core.models import Schedule
+from core.utils import (
+    update_schedules,
+    create_schedules,
+    delete_schedules,
+    update_prices,
+    create_prices,
+    delete_prices,
+)
 
-
-from pets.models import Pet, Age
-from services.models import Booking
-from users.models import SupplierProfile, CustomerProfile
+from services.models import Booking, Price, Review, Favorite, FavoriteArticles
 
 from rest_framework import serializers
 from services.models import Service
 
 
-class BaseServiceSerializer(serializers.ModelSerializer):
-    """Сериализатор услуг для бронирования."""
+class SmallServiceSerializer(serializers.ModelSerializer):
+    """Сериализация услуг с минимальными данными."""
+    class Meta:
+        model = Service
+        fields = (
+            "id",
+            "ad_title",
+            "category",
+            "description",
+        )
 
-    schedule = ScheduleSerializer(read_only=True)
-    booking = serializers.PrimaryKeyRelatedField(
-        required=False,
-        default=False,
-        read_only=True,
-    )
+
+class BaseServiceSerializer(serializers.ModelSerializer):
+    """Сериализация базовой модели услуг."""
+
+    schedules = ScheduleSerializer(many=True)
+    price = PriceSerializer(many=True, source="prices")
+    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Service
         fields = (
             "id",
-            "name",
-            "pet_type",
-            "price",
+            "category",
+            "ad_title",
             "description",
-            "schedule",
-            "booking",
+            "price",
+            "image",
+            "extra_fields",
+            "customer_place",
+            "supplier_place",
+            "schedules",
         )
 
 
-class ServiceSerializer(BaseServiceSerializer):
+class ServiceCreateSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
 
-    supplier = SupplierSerializer(read_only=True)
+    def create(self, validated_data):
+        schedules_data = validated_data.pop("schedules", [])
+        prices_data = validated_data.pop("prices", [])
+        service = super().create(validated_data)
+        schedules = []
+        prices = []
+        for schedule_data in schedules_data:
+            schedule = Schedule(service=service, **schedule_data)
+            schedule.clean()
+            schedules.append(schedule)
+        for price_data in prices_data:
+            price = Price(service=service, **price_data)
+            price.clean()
+            prices.append(price)
+        Schedule.objects.bulk_create(schedules)
+        Price.objects.bulk_create(prices)
+        return service
 
-    class Meta(BaseServiceSerializer.Meta):
-        fields = BaseServiceSerializer.Meta.fields + (
-            "published",
-            "supplier",
-        )
 
-    @staticmethod
-    def validate_price(data):
-        """Проверка на валидность стоимости."""
+class ServiceUpdateSerializer(BaseServiceSerializer):
+    """Сериализация всех услуг."""
 
-        if data[0] < Limits.MIN_PRICE or data[0] > Limits.MAX_PRICE:
-            raise ValidationError(
-                f"Стоимость услуги должна быть от {Limits.MIN_PRICE} до "
-                f"{Limits.MAX_PRICE} р."
-            )
+    def update(self, instance, validated_data):
+        schedules_data = validated_data.pop("schedules", [])
+        prices_data = validated_data.pop("prices", [])
+        instance = super().update(instance, validated_data)
+        schedules = instance.schedules.all()
+        prices = instance.prices.all()
 
-    def validate(self, data):
-        """Проверяем уникальность услуги и тип пользователя."""
-        name = data.get("name")
-        user = self.context.get("request").user
-        if Service.objects.filter(
-            name=name,
-            supplier=user.profile_id,
-        ).exists():
-            raise serializers.ValidationError("Такая услуга уже существует!")
-        if not SupplierProfile.objects.filter(related_user=user).exists():
-            raise serializers.ValidationError(
-                "Услуги создает только специалист!"
-            )
-        return data
+        update_schedules(schedules, schedules_data)
+        create_schedules(instance, schedules_data)
+        delete_schedules(instance, schedules, schedules_data)
+
+        update_prices(prices, prices_data)
+        create_prices(instance, prices_data)
+        delete_prices(instance, prices, prices_data)
+
+        return instance
 
 
 class FilterServicesSerializer(serializers.Serializer):
@@ -111,101 +137,57 @@ class BaseBookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = (
             "to_date",
-            "customer_place",
-            "supplier_place",
             "pet",
         )
 
 
-class BookingSerializer(BaseBookingSerializer):
+class BookingSerializer(serializers.ModelSerializer):
     """Сериализатор бронирования."""
 
-    booking_services = BaseServiceSerializer(
-        many=True,
+    class Meta:
+        model = Booking
+        fields = [
+            "description",
+            "price",
+            "to_date",
+            "is_confirmed",
+            "is_done",
+        ]
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор отзывов."""
+
+    review = serializers.CharField(source="text")
+
+    class Meta:
+        model = Review
+        fields = (
+            "review",
+            "rating",
+        )
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    service = PrimaryKeyRelatedField(
+        queryset=Service.objects.all(),
     )
-    pet = BasePetSerializer()
+    """Сериализатор избранного."""
 
-    def create(self, validated_data, **kwargs):
-        """Создание бронирования.
-
-        Обрабатываем вложенные поля `service` и `pet` и вложенное
-        в `pet` `age`.
-
-        """
-        booking_services_data = validated_data.pop("booking_services")
-        pet_data = validated_data.pop("pet")
-        age = Age.objects.get_or_create(**pet_data.pop("age"))
-        pet_data.update(
-            {
-                "age": age[0],
-                "owner": CustomerProfile.objects.get(
-                    related_user=self.context.get("request").user
-                ),
-            }
-        )
-        pet, _ = Pet.objects.get_or_create(**pet_data)
-        validated_data.update({"pet_id": pet.id})
-        booking_service = Booking.objects.create(**validated_data)
-        supplier = SupplierProfile.objects.get(
-            id=self.context["view"].kwargs.get("supplier_id")
-        )
-        for service_data in booking_services_data:
-            service = Service.objects.filter(
-                supplier=supplier,
-                **dict(service_data),
-            ).first()
-            try:
-                specialist_type = service.specialist_type
-                service_data.update(
-                    {
-                        "supplier_id": self.context["view"].kwargs.get(
-                            "supplier_id"
-                        ),
-                        "specialist_type": specialist_type,
-                    }
-                )
-                Service.objects.filter(**service_data).update(
-                    booking=booking_service
-                )
-            except AttributeError:
-                raise serializers.ValidationError(
-                    {"error": "У специалиста нет такой услуги!"}
-                )
-        return booking_service
-
-    def validate(self, data):
-        _data = deepcopy(data)
-        service = _data.get("booking_services")
-        for service_data in service:
-            pet_data = _data.pop("pet")
-            age = Age.objects.get_or_create(**pet_data.pop("age"))
-            pet_data.update(
-                {
-                    "age": age[0],
-                    "owner": CustomerProfile.objects.get(
-                        related_user=self.context.get("request").user
-                    ),
-                }
-            )
-            if Pet.objects.filter(**pet_data).exists():
-                pet_id = Pet.objects.filter(**pet_data).first().id
-            else:
-                pet_id = None
-            if Booking.objects.filter(
-                booking_services__name=service_data.get("name"),
-                booking_services__price=service_data.get("price"),
-                booking_services__pet_type=service_data.get("pet_type"),
-                customer=self.context.get("request").user.profile_id,
-                supplier=self.context.get("view").kwargs.get("supplier_id"),
-                pet=pet_id,
-            ).exists():
-                raise serializers.ValidationError(
-                    "Такая бронь уже существует!"
-                )
-        return data
-
-    class Meta(BaseBookingSerializer.Meta):
-        fields = BaseBookingSerializer.Meta.fields + (
+    class Meta:
+        model = Favorite
+        fields = [
             "id",
-            "booking_services",
-        )
+            "service",
+            "date_added",
+        ]
+
+class FavoriteArticlesSerializer(serializers.ModelSerializer):
+    """Сериализатор избранного."""
+
+    class Meta:
+        model = FavoriteArticles
+        fields = [
+            "article_id",
+            "date_added",
+        ]

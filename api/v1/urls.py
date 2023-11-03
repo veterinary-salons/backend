@@ -1,4 +1,3 @@
-from django.template.defaulttags import url
 from django.urls import include, path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -10,20 +9,29 @@ from rest_framework_simplejwt.views import (
 )
 
 from api.v1.views.authentication import SignUpViewSet, SignInViewSet
+from api.v1.views.pet import PetViewSet
 from api.v1.views.service import (
-    PetViewSet,
     BaseServiceViewSet,
     BookingServiceAPIView,
-    ServiceAPIView,
+    SupplierServiceProfileView,
+    SupplierCreateAdvertisement,
+    BookingReviewCreateOrDelete,
+    FavoriteServiceView,
+    FavoriteArticlesView,
 )
-from api.v1.views.users import CustomerProfileViewSet, SupplierProfileViewSet
-from backend import settings
+from api.v1.views.users import (
+    CustomerProfileView,
+    SupplierProfileViewSet,
+    CustomerBookingList,
+    CustomerBookingHistoryList,
+)
+
 
 app_name = "api"
 
 router = DefaultRouter()
 router.register(
-    "customers/(?P<customer_id>\d+)/pet",
+    "customers/(?P<customer_id>\d+)/profile/pet",
     PetViewSet,
     basename="petviewset",
 )
@@ -31,9 +39,8 @@ router.register(
     "services/${serviceType}",
     BaseServiceViewSet,
 )
-router.register("customers", CustomerProfileViewSet)
+# router.register("customers", CustomerProfileViewSet)
 router.register("suppliers", SupplierProfileViewSet)
-
 router.register("auth/signup", SignUpViewSet, basename="signup")
 router.register("auth/signin", SignInViewSet, basename="signin")
 
@@ -56,16 +63,55 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)$",
+        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)",
         BookingServiceAPIView.as_view(),
         name="booking",
     ),
     re_path(
+        "customers/(?P<customer_id>\d+)/profile/$",
+        CustomerProfileView.as_view(),
+        name="customer_profile",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/profile/services/$",
+        CustomerBookingList.as_view(),
+        name="customer_services",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/profile/services/history/$",
+        CustomerBookingHistoryList.as_view(),
+        name="customer_history_services",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/profile/services/history/(?P<price_id>\d+)/$",
+        BookingReviewCreateOrDelete.as_view(),
+        name="service_review",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/favorites/services/$",
+        FavoriteServiceView.as_view(),
+        name="favorite_services",
+    ),
+    re_path(
+        "customers/(?P<customer_id>\d+)/favorites/articles/$",
+        FavoriteArticlesView.as_view(),
+        name="favorite_articles",
+    ),
+    re_path(
         "suppliers/(?P<supplier_id>\d+)/profile",
-        ServiceAPIView.as_view(),
-        name="service",
+        SupplierServiceProfileView.as_view(),
+        name="service_get",
+    ),
+    re_path(
+        "booking/suppliers/(?P<supplier_id>\d+)/(?P<pk>\d+)",
+        SupplierCreateAdvertisement.as_view(),
+        name="service_patch",
+    ),
+    re_path(
+        "booking/suppliers/(?P<supplier_id>\d+)",
+        SupplierCreateAdvertisement.as_view(),
+        name="service_post",
     ),
     path("auth/token", TokenObtainPairView.as_view()),
     path("auth/refresh-token", TokenRefreshView.as_view()),
 ]
-

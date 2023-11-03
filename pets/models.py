@@ -22,6 +22,7 @@ class AnimalAbstract(models.Model):
     class Meta:
         abstract = True
 
+
 class Animal(AnimalAbstract):
     """Характеристика животного."""
 
@@ -29,23 +30,25 @@ class Animal(AnimalAbstract):
         verbose_name = "характеристика животного"
         verbose_name_plural = "характеристики животных"
 
+
 class Age(models.Model):
     """Возраст митомца.
 
     Задается в годах и месяцах.
 
     """
+
     year = models.PositiveIntegerField(
         validators=[MaxValueValidator(Limits.MAX_AGE_PET)],
     )
     month = models.PositiveSmallIntegerField(
-        validators=[
-            MaxValueValidator(Limits.MAX_MONTH_QUANTITY)
-        ],
+        validators=[MaxValueValidator(Limits.MAX_MONTH_QUANTITY)],
     )
+
     class Meta:
         verbose_name = "возраст питомца"
         verbose_name_plural = "возрасты питомцев"
+
 
 class Pet(AnimalAbstract):
     """Характеристика питомца.
@@ -63,9 +66,9 @@ class Pet(AnimalAbstract):
             Возраст питомца. Задается в `year` и `month`.
         weight (str):
             Категория веса питомца.
-        is_sterilized (bool):
+        is_sterilized (str):
             Указывает, стерилизовано ли животное.
-        is_vaccinated (bool):
+        is_vaccinated (str):
             Указывает, привито ли животное.
         owner (CustomerProfile):
             Владелец питомца.
@@ -85,16 +88,26 @@ class Pet(AnimalAbstract):
     age = models.ForeignKey(
         Age, on_delete=models.SET_NULL, null=True, blank=True
     )
-
-    weight = models.CharField(max_length=10, choices=Default.WEIGHT_CHOICES)
-    is_sterilized = models.BooleanField(default=False)
-    is_vaccinated = models.BooleanField(default=False)
+    weight = models.CharField(
+        max_length=Limits.MAX_CHOICE_LENGTH, choices=Default.WEIGHT_CHOICES
+    )
+    is_sterilized = models.CharField(
+        max_length=Limits.MAX_CHOICE_LENGTH,
+        choices=Default.STERILIZED_CHOICES,
+        default=Default.STERILIZED_CHOICES[0][0],
+    )
+    is_vaccinated = models.CharField(
+        max_length=Limits.MAX_CHOICE_LENGTH,
+        choices=Default.VACCINATED_CHOICES,
+        default=Default.VACCINATED_CHOICES[0][0],
+    )
     owner = models.ForeignKey(
         CustomerProfile,
         verbose_name="владелец питомца",
         related_name="pet",
         on_delete=models.CASCADE,
     )
+    photo = models.ImageField(blank=True, null=True)
     class Meta:
         verbose_name = "питомец"
         verbose_name_plural = "питомцы"

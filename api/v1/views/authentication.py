@@ -1,4 +1,5 @@
-from rest_framework import viewsets
+from icecream import ic
+from rest_framework import viewsets, serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,10 +12,14 @@ from api.v1.serializers.authentication import (
     RecoveryCodeSerializer,
     RecoveryPasswordSerializer,
 )
-from api.v1.serializers.users import CustomerProfileSerializer, \
-    SupplierProfileSerializer
+from api.v1.serializers.users import (
+    SupplierProfileSerializer,
+    CustomerProfileSerializer,
+)
 from authentication.email_messages import (
-    FROM_EMAIL, RECOVERY_CODE_SUBJECT, RECOVERY_CODE_MESSAGE,
+    FROM_EMAIL,
+    RECOVERY_CODE_SUBJECT,
+    RECOVERY_CODE_MESSAGE,
 )
 from authentication.permissions import EmailCodeConfirmed
 from authentication.utils import get_recovery_code, send_email_message
@@ -40,10 +45,15 @@ class SignUpViewSet(viewsets.GenericViewSet):
             serializer = SupplierProfileSerializer(
                 data=full_serializer.validated_data
             )
+        else:
+            raise serializers.ValidationError(
+                "Неправильный тип профиля, только `customer` или `supplier`"
+            )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
-            data=serializer.validated_data, status=HTTP_201_CREATED
+            data=serializer.to_representation(serializer.validated_data),
+            status=HTTP_201_CREATED,
         )
 
     """
@@ -69,6 +79,7 @@ class SignUpViewSet(viewsets.GenericViewSet):
             status=HTTP_200_OK
         )
         """
+
 class SignInViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)
     allowed_methods = ("POST",)
@@ -98,14 +109,12 @@ class SignInViewSet(viewsets.GenericViewSet):
     def recovery(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         email = serializer.validated_data.get("email")
-
         recovery_code = get_recovery_code(email)
         message = RECOVERY_CODE_MESSAGE.format(code=recovery_code.code)
         send_email_message(
-            subject=RECOVERY_CODE_SUBJECT, 
-            message=message, 
+            subject=RECOVERY_CODE_SUBJECT,
+            message=message,
             sender=FROM_EMAIL,
             recipients=[email],
         )

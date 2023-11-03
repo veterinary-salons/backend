@@ -1,6 +1,5 @@
-from hashlib import md5 as md5_hash
-
 from django.contrib.auth import get_user_model
+from icecream import ic
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -15,29 +14,32 @@ User = get_user_model()
 
 
 class SignUpProfileSerializer(serializers.Serializer):
-    profile_type = serializers.ChoiceField(
-        choices=("customer", "supplier")
-    )
+    profile_type = serializers.ChoiceField(choices=("customer", "supplier"))
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     phone_number = serializers.CharField()
     email = serializers.EmailField(max_length=Limits.MAX_LEN_EMAIL)
     password = serializers.CharField(write_only=True)
 
-    def validate(self, attrs):
-        user_data = {
-            field: attrs.pop(field)
-            for field in {"first_name", "last_name", "email", "password"}
+    def to_internal_value(self, data):
+        data["user"] = {
+            "email": data.get("email"),
+            "password": data.get("password"),
         }
-        attrs["user"] = user_data
-        return attrs
+        return data
+
 
     def create(self, validated_data):
+        user_data = {
+            field: validated_data.pop(field) for field in {"email", "password"}
+        }
+        validated_data["user"] = user_data
         profile_type = validated_data.pop("profile_type")
         user_data = validated_data.pop("user")
         if profile_type == "customer":
             profile = CustomerProfile.objects.create(**validated_data)
-            user = User.objects.create_user(**user_data, profile=profile)
+            User.objects.create_user(**user_data, profile=profile)
+
 
 
 class RecoveryEmailSerializer(serializers.Serializer):
@@ -65,9 +67,10 @@ class RecoveryEmailSerializer(serializers.Serializer):
         attrs["code"] = code.code
         return attrs
 
+
 class RecoveryCodeSerializer(serializers.Serializer):
     code = serializers.CharField(
-        min_length=Limits.CONFIRMATION_CODE_LENGTH, 
+        min_length=Limits.CONFIRMATION_CODE_LENGTH,
         max_length=Limits.CONFIRMATION_CODE_LENGTH,
         write_only=True,
     )
@@ -83,6 +86,7 @@ class RecoveryCodeSerializer(serializers.Serializer):
         recovery_code.confirm()
         return value
 
+
 class RecoveryPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
@@ -93,10 +97,9 @@ class RecoveryPasswordSerializer(serializers.Serializer):
         user.save()
         return user
 
+
 class BasicProfileInfoSerializer(serializers.Serializer):
-    profile_type = serializers.ChoiceField(
-        choices=("customer", "supplier")
-    )
+    profile_type = serializers.ChoiceField(choices=("customer", "supplier"))
     id = serializers.IntegerField()
     email = serializers.EmailField(
         max_length=Limits.MAX_LEN_EMAIL,
@@ -105,7 +108,8 @@ class BasicProfileInfoSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     phone_number = serializers.CharField()
     image = Base64ImageField(
-        required=False, allow_null=True,
+        required=False,
+        allow_null=True,
     )
 
 
@@ -115,11 +119,12 @@ class SignInSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         token_data = super().validate(attrs)
         profile = self.user.profile
+        ic(profile)
         if not profile:
             raise serializers.ValidationError("this profile does not exist")
         if isinstance(profile, SupplierProfile):
             profile_type = "supplier"
-            image = profile.image
+            image = profile.photo
         else:
             profile_type = "customer"
             image = None
@@ -127,15 +132,15 @@ class SignInSerializer(TokenObtainPairSerializer):
             "profile_type": profile_type,
             "id": self.user.id,
             "email": self.user.email,
-            "first_name": self.user.first_name,
-            "last_name": self.user.last_name,
+            "first_name": profile.first_name,
+            "last_name": profile.last_name,
             "phone_number": profile.phone_number,
-            "image": image
+            "image": image,
         }
         profile_serializer = self.profile_data_serializer_class(
-            instance=profile_data
+            instance=profile_fields
         )
-        profile_data = serializer.data
+        profile_data = profile_serializer.data
         return {
             "token_data": token_data,
             "profile_data": profile_data,

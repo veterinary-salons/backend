@@ -168,3 +168,4 @@ cython_debug/
 
 # static files
 /static
+/.idea/

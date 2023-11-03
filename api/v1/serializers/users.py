@@ -1,11 +1,25 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
-from api.v1.serializers.core import Base64ImageField
+from api.v1.serializers.core import (
+    Base64ImageField,
+    PriceSerializer,
+)
 from api.v1.serializers.pets import PetSerializer
+from services.models import Booking
 from users.models import CustomerProfile, SupplierProfile, User
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+
+    def validate_password(self, value):
+        try:
+            validate_password(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+        return value
+
     class Meta:
         model = User
         fields = (
@@ -22,6 +36,30 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         required=False,
     )
 
+    class Meta:
+        model = CustomerProfile
+        fields = [
+            "id",
+            "phone_number",
+            "last_name",
+            "first_name",
+            "user",
+        ]
+    # def to_internal_value(self, data):
+    #     password = data.pop("password", None)
+    #     email = data.pop("email", None)
+    #     data["user"] = {
+    #         "email": email,
+    #         "password": password,
+    #     }
+    #     return data
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user_representation = representation.pop("user")
+        for key in user_representation:
+            representation[key] = user_representation[key]
+        return representation
+
     def create(self, validated_data):
         user_data = validated_data.pop("user")
         profile = self.Meta.model.objects.create(**validated_data)
@@ -30,64 +68,59 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
 
 class CustomerProfileSerializer(BaseProfileSerializer):
-    class Meta:
-        model = CustomerProfile
-        fields = (
-            "id",
-            "photo",
-            "phone_number",
-            "contact_email",
-            "user",
-        )
+    pass
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        user_representation = representation.pop("user")
-        for key in user_representation:
-            representation[key] = user_representation[key]
-        return representation
 
     class Meta:
         model = SupplierProfile
-        fields = (
+        fields = BaseProfileSerializer.Meta.fields + [
             "photo",
-            "phone_number",
-            "contact_email",
-            "user",
-        )
+        ]
 
 
-class SupplierSerializer(BaseProfileSerializer):
+class CustomerPatchSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SupplierProfile
-        verbose_name = "специалист"
-        verbose_name_plural = "специалисты"
-        fields = (
-            "phone_number",
-            "contact_email",
-            "address",
-            "photo",
-        )
+        model = CustomerProfile
+        fields = [
+        "id",
+        "phone_number",
+        "last_name",
+        "first_name",
+        "photo",
+    ]
 
-class CustomerPatchSerializer(BaseProfileSerializer):
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        user_representation = representation.pop("user")
-        for key in user_representation:
-            representation[key] = user_representation[key]
-        return representation
-
-    class Meta(CustomerProfileSerializer.Meta):
-        fields = CustomerProfileSerializer.Meta.fields + (
-            "first_name",
-            "last_name",
-        )
 class CustomerSerializer(CustomerPatchSerializer):
+    def to_internal_value(self, data):
+        return super().to_internal_value(data)
+
     pet = PetSerializer(
-        many=True, read_only=True,
+        many=True,
+        read_only=True,
     )
+
     class Meta(CustomerPatchSerializer.Meta):
-        fields = CustomerPatchSerializer.Meta.fields + ("pet",)
+        fields = CustomerPatchSerializer.Meta.fields + [
+            "pet", "photo",
+        ]
+
+
+class BookingListSerializer(serializers.ModelSerializer):
+    price = PriceSerializer(read_only=True)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["supplier"] = SupplierProfileSerializer(
+            instance.price.service.supplier
+        ).data
+        return representation
+
+    class Meta:
+        model = Booking
+        fields = [
+            "description",
+            "price",
+            "to_date",
+            "is_done",
+        ]

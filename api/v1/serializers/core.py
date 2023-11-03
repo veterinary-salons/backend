@@ -3,8 +3,11 @@ from uuid import uuid4
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import serializers
+from rest_framework.relations import PrimaryKeyRelatedField
 
 from core.models import Schedule
+from core.validators import validate_price, validate_schedule
+from services.models import Price
 
 
 class Base64ImageField(serializers.ImageField):
@@ -21,24 +24,37 @@ class Base64ImageField(serializers.ImageField):
         )
 
 class ScheduleSerializer(serializers.ModelSerializer):
-    def to_representation(self, instance):
-        representation = dict(super().to_representation(instance))
-        for key in representation:
-            if representation[key]:
-                representation[key] = {"available": representation[key]}
-            else:
-                representation[key] = {"unavailable": representation[key]}
-        return representation
+    service = PrimaryKeyRelatedField(
+        read_only=True,
+    )
 
     class Meta:
         model = Schedule
         fields = (
-            "monday_hours",
-            "tuesday_hours",
-            "wednesday_hours",
-            "thursday_hours",
-            "friday_hours",
-            "saturday_hours",
-            "sunday_hours",
-            "breakTime",
+            "id",
+            "weekday",
+            "is_working_day",
+            "start_work_time",
+            "end_work_time",
+            "break_start_time",
+            "break_end_time",
+            "time_per_visit",
+            "service",
+        )
+    def validate(self, attrs):
+        validate_schedule(attrs)
+        return attrs
+
+
+class PriceSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        validate_price(attrs)
+        return attrs
+
+    class Meta:
+        model = Price
+        fields = (
+            "service_name",
+            "cost_from",
+            "cost_to",
         )
