@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import (
 from api.v1.views.authentication import SignUpViewSet, SignInViewSet
 from api.v1.views.pet import PetViewSet
 from api.v1.views.service import (
-    BaseServiceViewSet,
+    # BaseServiceViewSet,
     BookingServiceAPIView,
     SupplierServiceProfileView,
     SupplierCreateAdvertisement,
@@ -35,10 +35,10 @@ router.register(
     PetViewSet,
     basename="petviewset",
 )
-router.register(
-    "services/${serviceType}",
-    BaseServiceViewSet,
-)
+# router.register(
+#     "services/${serviceType}",
+#     BaseServiceViewSet,
+# )
 # router.register("customers", CustomerProfileViewSet)
 router.register("suppliers", SupplierProfileViewSet)
 router.register("auth/signup", SignUpViewSet, basename="signup")
@@ -112,6 +112,11 @@ urlpatterns = [
         SupplierCreateAdvertisement.as_view(),
         name="service_post",
     ),
+    re_path(
+    "services/(?P<service_slug>\d+)/filters/$",
+    SupplierCreateAdvertisement.as_view(),
+    name="service_filter",
+),
     path("auth/token", TokenObtainPairView.as_view()),
     path("auth/refresh-token", TokenRefreshView.as_view()),
 ]

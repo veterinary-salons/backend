@@ -117,6 +117,19 @@ def create_prices(instance, prices_data):
 
 
 def delete_prices(instance, prices, prices_data):
+    """Удаление объекта `Price` из базы данных.
+
+    Используется в случае, если в отредактированном списке объектов `Price`
+    не оказалось объекта, который там был ранее. Этот объект будет удален.
+
+    Args:
+        instance: `Service` объект
+        prices: список `Price`
+        prices_data:
+
+    Returns:
+
+    """
     from services.models import Price
     existing_price_names = {price.service_name for price in prices}
     given_price_names = {
@@ -128,17 +141,36 @@ def delete_prices(instance, prices, prices_data):
         service_name__in=to_delete_price_names, service=instance
     ).delete()
 
-def get_customer(request: HttpRequest):
-    try:
-        return CustomerProfile.objects.get(related_user=request.user)
-    except CustomerProfile.DoesNotExist:
-        return None
 
-def get_supplier(request: HttpRequest):
-    try:
-        return SupplierProfile.objects.get(related_user=request.user).id
-    except SupplierProfile.DoesNotExist:
-        return None
+def get_customer(request):
+    """Возвращает профиль заказчика для текущего пользователя.
+
+    Если профиль не найден, возвращает 404 ошибку.
+
+    Args:
+        request: `HttpRequest` объект запроса
+
+    Returns:
+        `CustomerProfile` объект профиля поставщика
+    """
+    return get_object_or_404(CustomerProfile, related_user=request.user)
+
+
+from django.shortcuts import get_object_or_404
+
+def get_supplier(request):
+    """Возвращает профиль исполнителя для текущего пользователя.
+
+    Если профиль не найден, возвращает 404 ошибку.
+
+    Args:
+        request: `HttpRequest` объект запроса
+
+    Returns:
+        `SupplierProfile` объект профиля поставщика
+
+    """
+    return get_object_or_404(SupplierProfile, related_user=request.user)
 
 def default_booking_time():
     """

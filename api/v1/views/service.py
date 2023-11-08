@@ -50,23 +50,26 @@ from users.models import SupplierProfile, CustomerProfile
 User = get_user_model()
 
 
-class BaseServiceViewSet(ModelViewSet):
+# class BaseServiceViewSet(ModelViewSet):
+#     queryset = Service.objects.select_related("supplier")
+#     serializer_class = ServiceCreateSerializer
+#     permission_classes = [
+#         # IsAuthenticated,
+#     ]
+#
+#     @action(
+#         methods=["POST"],
+#         detail=False,
+#         filter_backends=(ServiceFilterBackend,),
+#     )
+#     def filter(self, request):
+#         queryset = self.filter_queryset(self.get_queryset())
+#         serializer = self.get_serializer(queryset, many=True)
+#         return Response(data=serializer.data)
+
+class ServiceFilterView(generics.ListAPIView):
     queryset = Service.objects.select_related("supplier")
     serializer_class = ServiceCreateSerializer
-    permission_classes = [
-        # IsAuthenticated,
-    ]
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        filter_backends=(ServiceFilterBackend,),
-    )
-    def filter(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(data=serializer.data)
-
 
 class SupplierServiceProfileView(
     generics.ListCreateAPIView,
@@ -76,15 +79,6 @@ class SupplierServiceProfileView(
 
     queryset = Service.objects.prefetch_related("supplier")
     serializer_class = BaseServiceSerializer
-
-    # def perform_create(self, serializer):
-    #     """Добавляем пользователя в вывод сериализатора."""
-    #     ic(self.kwargs)
-    #     serializer.is_valid(raise_exception=True)
-    #     supplier_profile = SupplierProfile.objects.get(
-    #         related_user=User.objects.get(id=self.kwargs.get("pk"))
-    #     )
-    #     serializer.save(supplier=supplier_profile)
 
     def get(self, request, *args, **kwargs):
         """Выводим услуги конкретного специалиста."""

@@ -41,5 +41,12 @@ class IsMyService(BasePermission):
             .filter(bookings__price__id=price_id)
             .first()
         )
-
         return get_customer(request) == customer
+
+class IsSupplier(BasePermission):
+    def has_permission(
+        self,
+        request,
+        view,
+    ):
+        return bool(get_supplier(request))
