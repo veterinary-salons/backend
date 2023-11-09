@@ -1,4 +1,5 @@
 from icecream import ic
+from hashlib import md5 as md5_hash
 from rest_framework import viewsets, serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -23,6 +24,8 @@ from authentication.email_messages import (
 )
 from authentication.permissions import EmailCodeConfirmed
 from authentication.utils import get_recovery_code, send_email_message
+from core.constants import Limits
+from core.exceptions import InvalidRequestData
 
 
 class SignUpViewSet(viewsets.GenericViewSet):
@@ -56,7 +59,7 @@ class SignUpViewSet(viewsets.GenericViewSet):
             status=HTTP_201_CREATED,
         )
 
-    """
+    
     @action(
         methods=["POST"],
         detail=False,
@@ -78,7 +81,7 @@ class SignUpViewSet(viewsets.GenericViewSet):
             data={"message": "email confirmed"}, 
             status=HTTP_200_OK
         )
-        """
+        
 
 class SignInViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)

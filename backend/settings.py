@@ -1,3 +1,5 @@
+import os
+
 from datetime import timedelta
 from os import getenv
 from pathlib import Path
@@ -14,9 +16,9 @@ SECRET_KEY = (
     "django-insecure-bh0#76rg!k_%*z3dq@6_#930pfm$zip*c$_yo&uan8r^9!v15m"
 )
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # CORS settings
@@ -136,7 +138,10 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATIC_ROOT = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
