@@ -164,14 +164,14 @@ class SupplierCreateAdvertisement(
     generics.DestroyAPIView, generics.CreateAPIView, generics.UpdateAPIView
 ):
     """Представление для создания объявления."""
-
+    serializer_class = ServiceCreateSerializer
     queryset = Service.objects.prefetch_related("supplier")
     permission_classes = [
         IsAuthenticated,
     ]
 
     def perform_create(
-        self, serializer: ServiceCreateSerializer | ServiceUpdateSerializer
+        self, serializer: ServiceCreateSerializer
     ):
         """Сохраняем расписание."""
         supplier_profile = SupplierProfile.objects.get(
@@ -180,11 +180,11 @@ class SupplierCreateAdvertisement(
         serializer.is_valid(raise_exception=True)
         serializer.save(supplier=supplier_profile)
 
-    def get_serializer_class(self):
-        if self.request.method == "POST":
-            return ServiceCreateSerializer
-        elif self.request.method == "PATCH":
-            return ServiceUpdateSerializer
+    # def get_serializer_class(self):
+    #     if self.request.method == "POST":
+    #         return ServiceCreateSerializer
+    #     elif self.request.method == "PATCH":
+    #         return ServiceUpdateSerializer
 
 
 class BookingReviewCreateOrDelete(View):
