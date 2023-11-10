@@ -18,6 +18,7 @@ from api.v1.views.service import (
     BookingReviewCreateOrDelete,
     FavoriteServiceView,
     FavoriteArticlesView,
+    ServiceFilterView,
 )
 from api.v1.views.users import (
     CustomerProfileView,
@@ -113,10 +114,10 @@ urlpatterns = [
         name="service_post",
     ),
     re_path(
-    "services/(?P<service_slug>\d+)/filters/$",
-    SupplierCreateAdvertisement.as_view(),
-    name="service_filter",
-),
+        "services/$",
+        ServiceFilterView.as_view(),
+        name="service_filter",
+    ),
     path("auth/token", TokenObtainPairView.as_view()),
     path("auth/refresh-token", TokenRefreshView.as_view()),
 ]

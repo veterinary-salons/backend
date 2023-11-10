@@ -20,12 +20,6 @@ from users.validators import phone_number_validator
 
 
 class CustomUserManager(BaseUserManager):
-    """
-    The implementation here is almost the same as in
-    django.contrib.auth.models.UserManager because we only need to customize
-    creation of users with email as username and keep the good practice
-    of using the _create_user method.
-    """
 
     use_in_migrations = True
 

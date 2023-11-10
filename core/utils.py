@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.http import HttpRequest
 from django.utils import timezone
+from rest_framework import serializers
 
 from users.models import CustomerProfile, SupplierProfile
 
@@ -180,3 +181,21 @@ def default_booking_time():
             Объект `datetime`, представляющий текущее время плюс один день.
     """
     return timezone.now() + timedelta(days=1)
+
+def string_to_boolean(value:str) -> bool:
+    """
+        Преобразует строковое значение в булевое.
+    Args:
+        value: строка с булевым значением.
+
+    Returns:
+        Булевое значение.
+    """
+    if value is None:
+        result = None
+    elif value.lower() in ('true', "false"):
+        result = value.lower() == "true"
+    else:
+        raise serializers.ValidationError('Value must be `true` or `false`')
+    return result
+
