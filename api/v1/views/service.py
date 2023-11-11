@@ -3,6 +3,7 @@ from copy import deepcopy
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views import View
+from django_filters.rest_framework import DjangoFilterBackend
 from icecream import ic
 from rest_framework import generics, status, serializers
 from rest_framework.mixins import DestroyModelMixin
@@ -67,9 +68,18 @@ User = get_user_model()
 #         serializer = self.get_serializer(queryset, many=True)
 #         return Response(data=serializer.data)
 
+
 class ServiceFilterView(generics.ListAPIView):
     queryset = Service.objects.select_related("supplier")
-    serializer_class = ServiceCreateSerializer
+    serializer_class = BaseServiceSerializer
+    filter_backends = (ServiceFilterBackend,)
+    filterset_fields = (
+        "category",
+        "customer_place",
+        "supplier_place",
+        "extra_fields",
+    )
+
 
 class SupplierServiceProfileView(
     generics.ListCreateAPIView,
@@ -117,13 +127,17 @@ class BookingServiceAPIView(generics.CreateAPIView):
         _pet_data.pop("age", None)
         customer_profile = get_customer(self.request)
         try:
-            pet = Pet.objects.get(**_pet_data, owner=get_customer(self.request))
+            pet = Pet.objects.get(
+                **_pet_data, owner=get_customer(self.request)
+            )
             pet_serializer = PetSerializer(pet)
             # создаем питомца, но если уже есть питомцы, то фигня какая то, подумать и поправить.
         except Pet.DoesNotExist:
             pet_serializer = PetSerializer(data=pet_data)
             pet_serializer.is_valid(raise_exception=True)
-            pet_serializer.save(owner=customer_profile,)
+            pet_serializer.save(
+                owner=customer_profile,
+            )
         bookings = []
         for price in prices:
             booking = Booking.objects.create(
@@ -150,14 +164,14 @@ class SupplierCreateAdvertisement(
     generics.DestroyAPIView, generics.CreateAPIView, generics.UpdateAPIView
 ):
     """Представление для создания объявления."""
-
+    serializer_class = ServiceCreateSerializer
     queryset = Service.objects.prefetch_related("supplier")
     permission_classes = [
         IsAuthenticated,
     ]
 
     def perform_create(
-        self, serializer: ServiceCreateSerializer | ServiceUpdateSerializer
+        self, serializer: ServiceCreateSerializer
     ):
         """Сохраняем расписание."""
         supplier_profile = SupplierProfile.objects.get(
@@ -166,11 +180,11 @@ class SupplierCreateAdvertisement(
         serializer.is_valid(raise_exception=True)
         serializer.save(supplier=supplier_profile)
 
-    def get_serializer_class(self):
-        if self.request.method == "POST":
-            return ServiceCreateSerializer
-        elif self.request.method == "PATCH":
-            return ServiceUpdateSerializer
+    # def get_serializer_class(self):
+    #     if self.request.method == "POST":
+    #         return ServiceCreateSerializer
+    #     elif self.request.method == "PATCH":
+    #         return ServiceUpdateSerializer
 
 
 class BookingReviewCreateOrDelete(View):

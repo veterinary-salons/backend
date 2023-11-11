@@ -8,6 +8,7 @@ from api.v1.serializers.users import (
     CustomerPatchSerializer,
     SupplierProfileSerializer,
     BookingListSerializer,
+    CustomerProfileSerializer,
 )
 from core.permissions import IsCustomer, IsAuthor
 from core.utils import get_customer
@@ -20,14 +21,10 @@ class CustomerProfileView(
     generics.UpdateAPIView,
     generics.DestroyAPIView,
 ):
+    serializer_class = CustomerProfileSerializer
     queryset = CustomerProfile.objects.prefetch_related("related_user")
     permission_classes = [IsAuthenticated, IsCustomer, IsAuthor]
     lookup_field = "customer_id"
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return CustomerSerializer
-        elif self.request.method == "PATCH":
-            return CustomerPatchSerializer
 
     def delete(self, request, *args, **kwargs):
         customer_id = self.kwargs["customer_id"]
@@ -47,14 +44,14 @@ class CustomerProfileView(
     def get(self, request, *args, **kwargs):
         customer_id = kwargs.get("customer_id")
         customer = self.get_queryset().get(id=customer_id)
-        serializer = self.get_serializer(customer)
+        serializer = CustomerSerializer(customer)
         return Response(serializer.data)
 
     def patch(self, request, *args, **kwargs):
         customer_id = kwargs.get("customer_id")
         customer = self.get_queryset().get(id=customer_id)
         ic(customer)
-        serializer = self.get_serializer(customer, data=request.data)
+        serializer = CustomerPatchSerializer(customer, data=request.data)
 
         serializer.is_valid(raise_exception=True)
         ic(serializer.validated_data)

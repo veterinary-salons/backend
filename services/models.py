@@ -93,11 +93,11 @@ class Service(models.Model):
             validate_vet_service(service_name)
             validate_vet_fields(self)
         elif specialist_type == Default.SERVICES[2][0]:
-            validate_grooming_service(service_name)
-            validate_grooming_fields(self)
-        elif specialist_type == Default.SERVICES[3][0]:
             validate_shelter_service(service_name)
             validate_shelter_fields(self)
+        elif specialist_type == Default.SERVICES[3][0]:
+            validate_grooming_service(service_name)
+            validate_grooming_fields(self)
         validate_pet_type(self)
 
         super().clean()

@@ -135,7 +135,7 @@ def validate_grooming_service(service_name: list) -> None:
 
 
 def validate_grooming_fields(model):
-    grooming_type = model.extra_fields.get("grooming_type")
+    grooming_type = model.extra_fields.get("service_name")
     if not grooming_type:
         raise serializers.ValidationError(Messages.GROOMING_FIELDS_ERROR)
 

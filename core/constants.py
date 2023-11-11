@@ -48,28 +48,42 @@ class Messages:
     CORRECT_AGE_MESSAGE = "Введите корректный возраст!"
     CORRECT_PRICE_MESSAGE = "Введите корректную цену."
     CORRECT_DURATION_MESSAGE = "Некорректная продолжительность."
-    CYN_SERVICE_ERROR = ("У кинолога нет такой услуги: {service_name}. "
-                         "Выбор из услуг: {cynology_services}")
-    VET_SERVICE_ERROR = ("У ветеринара нет такой услуги: {service_name}. "
-                         "Выбор из услуг: {vet_services}")
-    GROOMING_SERVICE_ERROR = ("У грумера нет такой услуги: {service_name}. "
-                              "Выбор из услуг: {grooming_type}")
-    SHELTER_SERVICE_ERROR = ("У зооняни нет такой услуги: {service_name}. "
-                             "Зооняня не предлает других услуг, кроме "
-                             "{shelter_service}.")
+    CYN_SERVICE_ERROR = (
+        "У кинолога нет такой услуги: {service_name}. "
+        "Выбор из услуг: {cynology_services}"
+    )
+    VET_SERVICE_ERROR = (
+        "У ветеринара нет такой услуги: {service_name}. "
+        "Выбор из услуг: {vet_services}"
+    )
+    GROOMING_SERVICE_ERROR = (
+        "У грумера нет такой услуги: {service_name}. "
+        "Выбор из услуг: {grooming_type}"
+    )
+    SHELTER_SERVICE_ERROR = (
+        "У зооняни нет такой услуги: {service_name}. "
+        "Зооняня не предлает других услуг, кроме "
+        "{shelter_service}."
+    )
     CYNOLOGY_FIELDS_ERROR = "Поля service_name и format необходимо заполнить."
     VET_FIELDS_ERROR = "Поле service_name необходимо заполнить."
     GROOMING_FIELDS_ERROR = "Поле grooming_type необходимо заполнить."
     GROOMER_FIELDS_ERROR = "Поле grooming_type только для Грумера."
     CLEANUP_FIELDS_ERROR = "Поля service_name и formats только для Кинолога."
-    SERVICE_NAME_ERROR = ("Поле service_name должно быть из списка услуг: "
-                          "{cynology_services}")
+    SERVICE_NAME_ERROR = (
+        "Поле service_name должно быть из списка услуг: " "{cynology_services}"
+    )
     FORMAT_ERROR = "Поле format должно быть из списка услуг: {cynology_format}"
     PET_TYPE_ERROR = "Кинолог работает только с собаками"
     PET_TYPE_LIST_LENGTH_ERROR = "Длина списка питомцев должна быть равна 1."
+
+
 class Default:
     def __setattr__(self, name: str, value: tuple) -> None:
-        raise AttributeError(f"can't reassign constant '{name}'")
+        raise AttributeError(
+            f" Нельзя переопределить название константы '{name}'"
+        )
+
     COST_FROM = 500
     COST_TO = 1000
     PET_AGE = 1
@@ -100,14 +114,14 @@ class Default:
         "sleeping",
         "another",
     )
-    
+
     SERVICES = (
-        ("cynology", "Кинолог" ),
-        ("veterenary", "Ветеринар" ),
-        ("shelter", "Зооняня" ),
+        ("cynology", "Кинолог"),
+        ("veterenary", "Ветеринар"),
+        ("shelter", "Зооняня"),
         ("grooming", "Грумер"),
     )
-    
+
     CYNOLOGY_SERVICES = (
         "Коррекция проблемного поведения",
         "Воспитательная дрессировка щенка",
@@ -119,7 +133,7 @@ class Default:
         "Консультация",
         "Другое",
     )
-    
+
     CYNOLOGY_FORMAT = (
         "individual",
         "minigroup",
@@ -127,7 +141,7 @@ class Default:
         "training",
         "another",
     )
-    
+
     GROOMING_TYPE = (
         "Hygienic",
         "Exhibition",
@@ -155,12 +169,12 @@ class Default:
         ("vetaptheca", "Ветаптека"),
     )
     AGE_CHOICES = (
-        ('any', 'For any age'),
-        ('0-11', '0-1'),
-        ('1-3', '1-3'),
-        ('4-10', '4-10'),
-        ('11-20', '11-20'),
-        ('21-30', '21-30'),
+        ("any", "For any age"),
+        ("0-11", "0-1"),
+        ("1-3", "1-3"),
+        ("4-10", "4-10"),
+        ("11-20", "11-20"),
+        ("21-30", "21-30"),
     )
 
     DAYS_OF_WEEK = (
@@ -174,4 +188,3 @@ class Default:
     )
     TIME_PER_VISIT_CHOICES = ((0.5, 0.5), (1.0, 1.0), (1.5, 1.5), (2.0, 2.0))
     GOODS_IMAGE_SIZE = 500, 300
-
