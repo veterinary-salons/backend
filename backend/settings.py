@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "api",
     "pets",
     "services",
-    "goods",
+    # "goods",
     "core",
     "drf_yasg",
 ]
