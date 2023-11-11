@@ -126,7 +126,7 @@ class Cart(models.Model):
         related_name='shopping_cart',
         on_delete=models.CASCADE,
     )
-    date_added = models.DateTimeField(
+    date = models.DateTimeField(
         verbose_name='Дата добавления',
         auto_now_add=True,
         editable=False,

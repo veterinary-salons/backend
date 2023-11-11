@@ -34,7 +34,7 @@ class Schedule(models.Model):
         verbose_name="Время начала перерыва",
         null=True,
         blank=True,
-        default="13:00:00",
+        default="14:00:00",
     )
     break_end_time = models.TimeField(
         verbose_name="Время окончания перерыва",
@@ -48,7 +48,7 @@ class Schedule(models.Model):
         default=Default.TIME_PER_VISIT_CHOICES[0][0],
         choices=Default.TIME_PER_VISIT_CHOICES,
     )
-    arround_clock = models.BooleanField(
+    arround_clocks = models.BooleanField(
         default=False,
     )
     class Meta:
