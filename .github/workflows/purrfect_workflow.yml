@@ -62,6 +62,5 @@ jobs:
             echo EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }} >> .env
             echo EMAIL_USE_SSL=${{ secrets.EMAIL_USE_SSL }} >> .env
             sudo docker-compose up -d
-            
             sudo docker-compose exec -T backend python manage.py collectstatic --no-input
             sudo docker-compose exec -T backend python manage.py migrate
