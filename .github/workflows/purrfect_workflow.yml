@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build_and_push_to_docker_hub:
     name: Push Docker image to Docker Hub
-    if: ${{ github.ref == 'refs/heads/develop' }}
+    if: ${{ github.ref == 'refs/heads/nomigrations' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -34,7 +34,7 @@ jobs:
     needs: build_and_push_to_docker_hub
     steps:
       - name: executing remote ssh commands to deploy
-        if: ${{ github.ref == 'refs/heads/develop' }}
+        if: ${{ github.ref == 'refs/heads/nomigrations' }}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -65,4 +65,5 @@ jobs:
             sudo docker-compose up -d
             
             sudo docker-compose exec -T backend python manage.py collectstatic --no-input
+            sudo docker-compose exec -T backend python manage.py makemigrations
             sudo docker-compose exec -T backend python manage.py migrate
