@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                         max_digits=3,
                     ),
                 ),
-                ("arround_clocks", models.BooleanField(default=False)),
+                ("arround_clock", models.BooleanField(default=False)),
                 (
                     "service",
                     models.ForeignKey(

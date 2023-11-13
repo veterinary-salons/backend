@@ -42,15 +42,17 @@ class Schedule(models.Model):
         blank=True,
         default="14:00:00",
     )
-    time_per_visit = models.DecimalField(
-        decimal_places=1,
-        max_digits=3,
+    time_per_visit = models.IntegerField(
         default=Default.TIME_PER_VISIT_CHOICES[0][0],
         choices=Default.TIME_PER_VISIT_CHOICES,
     )
-    arround_clocks = models.BooleanField(
+    arround_clock = models.BooleanField(
         default=False,
+        null=True,
+        blank=True,
     )
     class Meta:
         verbose_name = "расписание специалиста"
 
+    def __str__(self):
+        return f"{self.service} {self.weekday}"

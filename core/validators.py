@@ -74,12 +74,12 @@ def validate_cynology_service(service_name: list) -> None:
 
 def validate_cynology_fields(model):
     service_name = model.extra_fields.get("service_name")
-    formats = model.extra_fields.get("formats")
+    format = model.extra_fields.get("format")
     pet_type = model.extra_fields.get("pet_type")
-    if not service_name or not formats:
+    if not service_name or not format:
         raise serializers.ValidationError(Messages.CYNOLOGY_FIELDS_ERROR)
 
-    if not set(formats).issubset(set(Default.CYNOLOGY_FORMAT)):
+    if not set(format).issubset(set(Default.CYNOLOGY_FORMAT)):
         raise serializers.ValidationError(
             Messages.FORMAT_ERROR.format(
                 cynology_format=Default.CYNOLOGY_FORMAT

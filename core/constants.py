@@ -1,4 +1,7 @@
+from decimal import Decimal
 from datetime import timedelta
+
+from dateutil.relativedelta import relativedelta
 
 
 class Limits:
@@ -186,5 +189,10 @@ class Default:
         ("Сб.", "Суббота"),
         ("Вс.", "Воскресенье"),
     )
-    TIME_PER_VISIT_CHOICES = ((0.5, 0.5), (1.0, 1.0), (1.5, 1.5), (2.0, 2.0))
+    TIME_PER_VISIT_CHOICES = (
+        (30, "0.5 часа"),
+        (60, "1 час"),
+        (90, "1.5 часа"),
+        (120, "2 часа"),
+    )
     GOODS_IMAGE_SIZE = 500, 300

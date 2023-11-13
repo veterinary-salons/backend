@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build_and_push_to_docker_hub:
     name: Push Docker image to Docker Hub
-    if: ${{ github.ref == 'refs/heads/nomigrations' }}
+    if: ${{ github.ref == 'refs/heads/develop' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -34,7 +34,7 @@ jobs:
     needs: build_and_push_to_docker_hub
     steps:
       - name: executing remote ssh commands to deploy
-        if: ${{ github.ref == 'refs/heads/nomigrations' }}
+        if: ${{ github.ref == 'refs/heads/develop' }}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}

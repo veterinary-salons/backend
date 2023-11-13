@@ -174,11 +174,15 @@ class SupplierCreateAdvertisement(
         self, serializer: ServiceCreateSerializer
     ):
         """Сохраняем расписание."""
+        ic()
         supplier_profile = SupplierProfile.objects.get(
             related_user=self.request.user
         )
+        ic(supplier_profile.id)
         serializer.is_valid(raise_exception=True)
+        ic()
         serializer.save(supplier=supplier_profile)
+        ic(supplier_profile.id)
 
     # def get_serializer_class(self):
     #     if self.request.method == "POST":

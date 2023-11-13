@@ -93,7 +93,7 @@ DATABASES = {
         ),
         "NAME": getenv(
             "POSTGRES_DB",
-            default="groom4",
+            default="groom2",
         ),
         "USER": getenv(
             "POSTGRES_USER",

@@ -154,7 +154,6 @@ class Price(models.Model):
         super().clean()
 
     def save(self, *args, **kwargs):
-        ic()
         self.full_clean()
         return super(Price, self).save(*args, **kwargs)
 

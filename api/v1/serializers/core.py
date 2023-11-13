@@ -1,9 +1,13 @@
 import base64
+from datetime import timedelta
 from uuid import uuid4
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.backends.utils import format_number
+from icecream import ic
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
+from decimal import Decimal
 
 from core.models import Schedule
 from core.validators import validate_price, validate_schedule
@@ -28,6 +32,12 @@ class ScheduleSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    def to_internal_value(self, data):
+        time_per_visit = data.pop("time_per_visit", None)
+        if time_per_visit:
+            data["time_per_visit"] = int(float(time_per_visit) * 60)
+        return super().to_internal_value(data)
+
     class Meta:
         model = Schedule
         fields = (
@@ -44,6 +54,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         validate_schedule(attrs)
         return attrs
+
 
 
 class PriceSerializer(serializers.ModelSerializer):
