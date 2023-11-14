@@ -23,7 +23,11 @@ class CustomerProfileView(
 ):
     serializer_class = CustomerProfileSerializer
     queryset = CustomerProfile.objects.prefetch_related("related_user")
-    permission_classes = [IsAuthenticated, IsCustomer, IsAuthor]
+    permission_classes = [
+        IsAuthenticated,
+        IsCustomer,
+        IsAuthor,
+    ]
     lookup_field = "customer_id"
 
     def delete(self, request, *args, **kwargs):

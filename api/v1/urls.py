@@ -64,17 +64,17 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)/$",
+        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)/",
         BookingServiceAPIView.as_view(),
         name="booking",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/profile/$",
+        "customers/(?P<customer_id>\d+)/profile/",
         CustomerProfileView.as_view(),
         name="customer_profile",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/profile/services/$",
+        "customers/(?P<customer_id>\d+)/profile/services/",
         CustomerBookingList.as_view(),
         name="customer_services",
     ),

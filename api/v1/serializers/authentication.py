@@ -119,7 +119,6 @@ class SignInSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         token_data = super().validate(attrs)
         profile = self.user.profile
-        ic(profile)
         if not profile:
             raise serializers.ValidationError("this profile does not exist")
         if isinstance(profile, SupplierProfile):
@@ -130,7 +129,7 @@ class SignInSerializer(TokenObtainPairSerializer):
             image = None
         profile_fields = {
             "profile_type": profile_type,
-            "id": self.user.id,
+            "id": profile.id,
             "email": self.user.email,
             "first_name": profile.first_name,
             "last_name": profile.last_name,
