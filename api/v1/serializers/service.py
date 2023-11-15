@@ -65,29 +65,22 @@ class ServiceCreateSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
 
     def create(self, validated_data):
-        ic(validated_data)
+        ic()
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
-        ic()
+        ic(validated_data)
         service = super().create(validated_data)
-        ic(service.id)
         schedules = []
         prices = []
         for schedule_data in schedules_data:
             schedule = Schedule(service_id=service.id, **schedule_data)
-            ic(schedule)
             schedule.clean()
-            ic()
             schedules.append(schedule)
         for price_data in prices_data:
             price = Price(service=service, **price_data)
             price.clean()
             prices.append(price)
-        ic(schedules)
-        sch = Schedule.objects.create(service=service, weekday="Пн.")
-        ic(sch)
         Schedule.objects.bulk_create(schedules)
-        ic()
         Price.objects.bulk_create(prices)
         return service
 

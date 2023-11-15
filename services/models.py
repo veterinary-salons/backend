@@ -1,4 +1,4 @@
-from django.db.models import CheckConstraint, Q, F, JSONField, UniqueConstraint
+from django.db.models import CheckConstraint, Q, F, JSONField
 from icecream import ic
 from rest_framework import serializers
 
@@ -10,16 +10,12 @@ from core.utils import default_booking_time
 from core.validators import (
     validate_alphanumeric,
     validate_current_and_future_month,
-    validate_cynology_service,
     validate_cynology_fields,
-    validate_vet_service,
     validate_vet_fields,
     validate_grooming_service,
     validate_grooming_fields,
-    validate_shelter_service,
     validate_shelter_fields,
     validate_letters,
-    validate_pet_type,
     RangeValueValidator,
 )
 from pets.models import Pet
@@ -65,7 +61,7 @@ class Service(models.Model):
         default=True,
     )
     image = models.ImageField(
-        upload_to="images",
+        upload_to="images/",
         blank=True,
         null=True,
     )
@@ -81,30 +77,26 @@ class Service(models.Model):
             # )
         )
 
-    def clean(self):
-        """Проверяем соответствие типа специалиста и типа питомца."""
-        specialist_type = self.category
-        service_name = self.extra_fields.get("service_name")
+    # def clean(self):
+    #     """Проверяем соответствие типа специалиста и услуг."""
+    #     category = self.category
+    #     service_name = self.extra_fields.get("service_name")
+    #
+    #     if category == Default.SERVICES[0][0]:
+    #         validate_cynology_fields(self)
+    #     elif category == Default.SERVICES[1][0]:
+    #         validate_vet_fields(self)
+    #     elif category == Default.SERVICES[2][0]:
+    #         validate_shelter_fields(self)
+    #     elif category == Default.SERVICES[3][0]:
+    #         validate_grooming_service(service_name)
+    #         validate_grooming_fields(self)
+    #
+    #     super().clean()
 
-        if specialist_type == Default.SERVICES[0][0]:
-            validate_cynology_service(service_name)
-            validate_cynology_fields(self)
-        elif specialist_type == Default.SERVICES[1][0]:
-            validate_vet_service(service_name)
-            validate_vet_fields(self)
-        elif specialist_type == Default.SERVICES[2][0]:
-            validate_shelter_service(service_name)
-            validate_shelter_fields(self)
-        elif specialist_type == Default.SERVICES[3][0]:
-            validate_grooming_service(service_name)
-            validate_grooming_fields(self)
-        validate_pet_type(self)
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super(Service, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     self.full_clean()
+    #     return super(Service, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.extra_fields.get('service_name')} - {self.ad_title}"

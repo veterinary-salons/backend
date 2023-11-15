@@ -1,3 +1,4 @@
+import base64
 import datetime
 import re
 
@@ -48,43 +49,12 @@ def validate_alphanumeric(value: str) -> None:
         )
 
 
-def validate_cynology_service(service_name: list) -> None:
-    """
-    Проверяем услуги кинолога на соответствие списку его услуг.
-
-    Args:
-        service_name: Имя проверяемой услуги.
-
-    Raises:
-        serializers.ValidationError: Если имя_службы отсутствует в списке
-        услуг кинолога.
-
-    Returns:
-        None.
-
-    """
-    if not set(service_name).issubset(set(Default.CYNOLOGY_SERVICES)):
-        raise serializers.ValidationError(
-            Messages.CYN_SERVICE_ERROR.format(
-                service_name=service_name,
-                cynology_services=Default.CYNOLOGY_SERVICES,
-            )
-        )
-
-
 def validate_cynology_fields(model):
     service_name = model.extra_fields.get("service_name")
-    format = model.extra_fields.get("format")
+    study_format = model.extra_fields.get("study_format")
     pet_type = model.extra_fields.get("pet_type")
-    if not service_name or not format:
+    if not all((service_name, study_format, pet_type)):
         raise serializers.ValidationError(Messages.CYNOLOGY_FIELDS_ERROR)
-
-    if not set(format).issubset(set(Default.CYNOLOGY_FORMAT)):
-        raise serializers.ValidationError(
-            Messages.FORMAT_ERROR.format(
-                cynology_format=Default.CYNOLOGY_FORMAT
-            )
-        )
     if pet_type[0] != Default.PET_TYPE[0][0]:
         raise serializers.ValidationError(
             Messages.PET_TYPE_ERROR,
@@ -93,22 +63,16 @@ def validate_cynology_fields(model):
         raise serializers.ValidationError(
             Messages.PET_TYPE_LIST_LENGTH_ERROR,
         )
-
-
-def validate_vet_service(service_name):
-    if not set(service_name).issubset(set(Default.VET_SERVICES)):
-        raise serializers.ValidationError(
-            Messages.VET_SERVICE_ERROR.format(
-                service_name=service_name, vet_services=Default.VET_SERVICES
-            )
-        )
-
+    if len(model.extra_fields) != 3:
+        raise serializers.ValidationError(Messages.CYNOLOGY_NUM_FIELDS_ERROR)
 
 def validate_vet_fields(model):
-    vet_services = model.extra_fields.get("service_name")
-    if not vet_services:
+    service_name = model.extra_fields.get("service_name")
+    pet_type = model.extra_fields.get("pet_type")
+    if not all((service_name, pet_type)):
         raise serializers.ValidationError(Messages.VET_FIELDS_ERROR)
-
+    if len(model.extra_fields) != 2:
+        raise serializers.ValidationError(Messages.VET_NUM_FIELDS_ERROR)
 
 def validate_grooming_service(service_name: list) -> None:
     """
@@ -135,38 +99,30 @@ def validate_grooming_service(service_name: list) -> None:
 
 
 def validate_grooming_fields(model):
-    grooming_type = model.extra_fields.get("service_name")
-    if not grooming_type:
+    service_name = model.extra_fields.get("service_name")
+    pet_type = model.extra_fields.get("pet_type")
+    if len(model.extra_fields) > 2:
+        raise serializers.ValidationError(Messages.GROOMING_FIELDS_ERROR)
+    if not all((service_name, pet_type)):
         raise serializers.ValidationError(Messages.GROOMING_FIELDS_ERROR)
 
 
-def validate_shelter_service(service_name):
-    if not set(service_name).issubset(set(Default.SHELTER_SERVICE)):
-        raise serializers.ValidationError(
-            Messages.SHELTER_SERVICE_ERROR.format(
-                service_name=service_name,
-                shelter_service=Default.SHELTER_SERVICE,
-            )
-        )
-
-
 def validate_shelter_fields(model):
-    grooming_type = model.extra_fields.get("grooming_type")
-    if grooming_type:
-        raise serializers.ValidationError(Messages.GROOMER_FIELDS_ERROR)
+    pet_type = model.extra_fields.get("pet_type")
+    if len(model.extra_fields) != 1:
+        raise serializers.ValidationError(Messages.SHELTER_NUM_FIELDS_ERROR)
+    if not pet_type:
+        raise serializers.ValidationError(Messages.NO_PET_TYE_ERROR)
 
-
-def validate_pet_type(model: models.Model) -> None:
-    allowed_pet_types = set(pet[0] for pet in Default.PET_TYPE)
-    pet_type = model.extra_fields["pet_type"]
-    if not set(pet_type).issubset(allowed_pet_types):
-        raise serializers.ValidationError(
-            {
-                "pet_type": f"Тип питомца должен быть одним из: "
-                f"{', '.join(allowed_pet_types)}",
-            }
-        )
-
+#
+# def validate_shelter_service(service_name):
+#     if not set(service_name).issubset(set(Default.SHELTER_SERVICE)):
+#         raise serializers.ValidationError(
+#             Messages.SHELTER_SERVICE_ERROR.format(
+#                 service_name=service_name,
+#                 shelter_service=Default.SHELTER_SERVICE,
+#             )
+#         )
 
 class RangeValueValidator(BaseValidator):
     def __init__(self, value_from, value_to):
@@ -251,3 +207,10 @@ def validate_schedule(attrs):
         )
 
     return attrs
+
+def base64_validator(value):
+    try:
+        base64.b64decode(value)
+    except Exception:
+        raise serializers.ValidationError("Неправильный формат base64 картинки.")
+    return value

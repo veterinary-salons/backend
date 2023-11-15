@@ -9,7 +9,7 @@ from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 from decimal import Decimal
 
-from core.models import Schedule
+from core.models import Schedule, Slot
 from core.validators import validate_price, validate_schedule
 from services.models import Price
 
@@ -32,11 +32,12 @@ class ScheduleSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-    def to_internal_value(self, data):
-        time_per_visit = data.pop("time_per_visit", None)
-        if time_per_visit:
-            data["time_per_visit"] = int(float(time_per_visit) * 60)
-        return super().to_internal_value(data)
+    # def to_internal_value(self, data):
+    #     time_per_visit = data.pop("time_per_visit", None)
+    #     if time_per_visit:
+    #         data["time_per_visit"] = int(float(time_per_visit) * 60)
+    #     ic(data)
+    #     return super().to_internal_value(data)
 
     class Meta:
         model = Schedule
@@ -68,4 +69,13 @@ class PriceSerializer(serializers.ModelSerializer):
             "service_name",
             "cost_from",
             "cost_to",
+        )
+
+class SlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Slot
+        fields = (
+            "id",
+            "date",
+            "time",
         )

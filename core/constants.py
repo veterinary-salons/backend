@@ -1,7 +1,4 @@
-from decimal import Decimal
 from datetime import timedelta
-
-from dateutil.relativedelta import relativedelta
 
 
 class Limits:
@@ -15,6 +12,7 @@ class Limits:
     MIN_LEN_PHONE_NUMBER = 10
 
     MAX_ARTICLE_ID_NUMBER = 6
+    MAX_LEN_ADDRESS = 300
     MAX_LEN_CUSTOMER_NAME = 20
     MAX_LEN_TITLE_NAME = 50
     MAX_LEN_SERVICE_NAME = 50
@@ -34,7 +32,6 @@ class Limits:
     MAX_PRICE = 100000
     MAX_LEN_PHONE_NUMBER = 12
     MAX_LEN_EMAIL = 50
-    MAX_LEN_ADDRESS = 100
     MAX_MONTH_QUANTITY = 11
     MAX_CHOICE_LENGTH = 10
     MAX_RATING = 5
@@ -68,16 +65,28 @@ class Messages:
         "Зооняня не предлает других услуг, кроме "
         "{shelter_service}."
     )
-    CYNOLOGY_FIELDS_ERROR = "Поля service_name и format необходимо заполнить."
-    VET_FIELDS_ERROR = "Поле service_name необходимо заполнить."
+    CYNOLOGY_FIELDS_ERROR = (
+        "Поля service_name, format и pet_type необходимо заполнить."
+    )
+    VET_FIELDS_ERROR = "Поля `service_name` и `pet_type` необходимо заполнить."
     GROOMING_FIELDS_ERROR = "Поле grooming_type необходимо заполнить."
-    GROOMER_FIELDS_ERROR = "Поле grooming_type только для Грумера."
+    CYNOLOGY_NUM_FIELDS_ERROR = "У кинолога должно быть 3 поля `service_name`, `pet_type`, `study_format`"
+    GROOMER_NUM_FIELDS_ERROR = (
+        "У грумера должно быть 2 поля `service_name`, `pet_type`"
+    )
+    VET_NUM_FIELDS_ERROR = (
+        "У ветеринара должно быть 2 поля `service_name`, `pet_type`"
+    )
+    SHELTER_NUM_FIELDS_ERROR = (
+        "У зооняни должно быть только 1 поле `service_name`"
+    )
     CLEANUP_FIELDS_ERROR = "Поля service_name и formats только для Кинолога."
     SERVICE_NAME_ERROR = (
         "Поле service_name должно быть из списка услуг: " "{cynology_services}"
     )
     FORMAT_ERROR = "Поле format должно быть из списка услуг: {cynology_format}"
     PET_TYPE_ERROR = "Кинолог работает только с собаками"
+    NO_PET_TYE_ERROR = "Поле `pet_type` необходимо заполнить."
     PET_TYPE_LIST_LENGTH_ERROR = "Длина списка питомцев должна быть равна 1."
 
 
@@ -138,30 +147,35 @@ class Default:
     )
 
     CYNOLOGY_FORMAT = (
-        "individual",
-        "minigroup",
-        "group",
-        "training",
-        "another",
+        "Индивидуальный",
+        "Минигруппы",
+        "Групповой",
+        "Тренировочный",
+        "Другой",
     )
 
     GROOMING_TYPE = (
-        "Hygienic",
-        "Exhibition",
-        "Decorative",
-        "ych",
+        "Гигиенический",
+        "Выставочный",
+        "Гигиенический",
     )
-    SHELTER_SERVICE = ["shelter"]
+    SHELTER_SERVICE = [
+        "shelter",
+    ]
     SERVICER_PRICE = [1000, 2000]
-    PET_TYPE = (
-        ("dog", "Собака"),
-        ("cat", "Кошка"),
-        ("pig", "Морская свинка"),
-        ("hom", "Хомяк"),
-        ("hor", "Хорек"),
-        ("rab", "Кролик"),
-        ("ano", "Другое"),
-    )
+
+    PET_TYPE = [
+        (pet, pet)
+        for pet in (
+            "Собака",
+            "Кошка",
+            "Морская свинка",
+            "Хомяк",
+            "Хорек",
+            "Кролик",
+            "Другое",
+        )
+    ]
 
     GOODS_CATEGORIES = (
         ("food", "Корм и лакомства"),
@@ -181,13 +195,13 @@ class Default:
     )
 
     DAYS_OF_WEEK = (
-        ("Пн.", "Понедельник"),
-        ("Вт.", "Вторник"),
-        ("Ср.", "Среда"),
-        ("Чт.", "Четверг"),
-        ("Пт.", "Пятница"),
-        ("Сб.", "Суббота"),
-        ("Вс.", "Воскресенье"),
+        ("Пн", "Понедельник"),
+        ("Вт", "Вторник"),
+        ("Ср", "Среда"),
+        ("Чт", "Четверг"),
+        ("Пт", "Пятница"),
+        ("Сб", "Суббота"),
+        ("Вс", "Воскресенье"),
     )
     TIME_PER_VISIT_CHOICES = (
         (30, "0.5 часа"),

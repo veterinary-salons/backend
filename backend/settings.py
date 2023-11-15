@@ -22,7 +22,6 @@ ALLOWED_HOSTS = ['*']
 
 
 # CORS settings
-
 CORS_ALLOW_ALL_ORIGINS = True
 
 
@@ -109,7 +108,7 @@ DATABASES = {
         ),
         "PORT": getenv(
             "DB_PORT",
-            default="5432",
+            default="5433",
         ),
     },
 }

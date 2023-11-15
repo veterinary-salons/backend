@@ -1,7 +1,8 @@
-from icecream import ic
 from rest_framework import serializers
 
+from api.v1.serializers.core import Base64ImageField
 from core.constants import Limits
+from core.validators import base64_validator
 from pets.models import Age, Pet
 
 
@@ -36,7 +37,11 @@ class AgeSerializer(serializers.ModelSerializer):
 
 class BasePetSerializer(serializers.ModelSerializer):
     """Сериализация питомцев."""
-
+    image = Base64ImageField(
+        allow_null=True,
+        required=False,
+        validators = (base64_validator,)
+    )
     weight = serializers.DecimalField(
         max_digits=4,
         decimal_places=1,

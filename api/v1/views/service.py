@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
@@ -28,13 +29,11 @@ from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
 from core.permissions import IsCustomer, IsAuthor, IsMyService
-from core.utils import get_customer
-from rest_framework.decorators import action
+from core.utils import get_customer, get_supplier
 from rest_framework.permissions import (
     IsAuthenticated,
 )
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
 
 from pets.models import Pet
 from services.models import (
@@ -121,6 +120,14 @@ class BookingServiceAPIView(generics.CreateAPIView):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        # to_date = request.data.get("to_date")
+        # is_slot_free = Slot.objects.filter(
+        #     Q(date__date=to_date.date())
+        #     & Q(date__time__gte=to_date.time())
+        #     & Q(date__time__lte=to_date.time())
+        # ).exists()
+        # if is_slot_free:
+        #     Slot.objects.create(date=to_date)
         prices = request.data.pop("price", [])
         pet_data = request.data.pop("pet", None)
         _pet_data = deepcopy(pet_data)
@@ -164,25 +171,19 @@ class SupplierCreateAdvertisement(
     generics.DestroyAPIView, generics.CreateAPIView, generics.UpdateAPIView
 ):
     """Представление для создания объявления."""
+
     serializer_class = ServiceCreateSerializer
     queryset = Service.objects.prefetch_related("supplier")
     permission_classes = [
         IsAuthenticated,
     ]
 
-    def perform_create(
-        self, serializer: ServiceCreateSerializer
-    ):
+    def perform_create(self, serializer: ServiceCreateSerializer):
         """Сохраняем расписание."""
-        ic()
-        supplier_profile = SupplierProfile.objects.get(
-            related_user=self.request.user
-        )
-        ic(supplier_profile.id)
+        supplier_profile = get_supplier(self.request)
+
         serializer.is_valid(raise_exception=True)
-        ic()
         serializer.save(supplier=supplier_profile)
-        ic(supplier_profile.id)
 
     # def get_serializer_class(self):
     #     if self.request.method == "POST":

@@ -2,7 +2,7 @@ from django.db import models
 
 from core.constants import Default
 from services.models import Service
-from users.models import SupplierProfile, CustomerProfile
+from users.models import SupplierProfile
 
 
 class Schedule(models.Model):
@@ -30,18 +30,6 @@ class Schedule(models.Model):
     end_work_time = models.TimeField(
         verbose_name="Время окончания работы", default="19:00:00"
     )
-    break_start_time = models.TimeField(
-        verbose_name="Время начала перерыва",
-        null=True,
-        blank=True,
-        default="14:00:00",
-    )
-    break_end_time = models.TimeField(
-        verbose_name="Время окончания перерыва",
-        null=True,
-        blank=True,
-        default="14:00:00",
-    )
     time_per_visit = models.IntegerField(
         default=Default.TIME_PER_VISIT_CHOICES[0][0],
         choices=Default.TIME_PER_VISIT_CHOICES,
@@ -51,8 +39,30 @@ class Schedule(models.Model):
         null=True,
         blank=True,
     )
+
     class Meta:
         verbose_name = "расписание специалиста"
 
     def __str__(self):
         return f"{self.service} {self.weekday}"
+
+
+class Slot(models.Model):
+    """Слот для бронирования."""
+
+    date = models.DateField(null=False, blank=False)
+    time_from = models.TimeField(null=False, blank=False)
+    time_to = models.TimeField(null=False, blank=False)
+    supplier = models.ForeignKey(
+        SupplierProfile,
+        on_delete=models.CASCADE,
+        related_name="slots",
+    )
+
+    class Meta:
+        verbose_name = "слот бронирования"
+
+    def __str__(self):
+        return (
+            f"Забронированно на {self.date} {self.time_from} - {self.time_to}"
+        )

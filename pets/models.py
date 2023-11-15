@@ -32,7 +32,7 @@ class Animal(AnimalAbstract):
 
 
 class Age(models.Model):
-    """Возраст митомца.
+    """Возраст питомца.
 
     Задается в годах и месяцах.
 
@@ -66,9 +66,9 @@ class Pet(AnimalAbstract):
             Возраст питомца. Задается в `year` и `month`.
         weight (str):
             Категория веса питомца.
-        is_sterilized (str):
+        is_sterilized (bool):
             Указывает, стерилизовано ли животное.
-        is_vaccinated (str):
+        is_vaccinated (bool):
             Указывает, привито ли животное.
         owner (CustomerProfile):
             Владелец питомца.
@@ -91,23 +91,15 @@ class Pet(AnimalAbstract):
     weight = models.CharField(
         max_length=Limits.MAX_CHOICE_LENGTH, choices=Default.WEIGHT_CHOICES
     )
-    is_sterilized = models.CharField(
-        max_length=Limits.MAX_CHOICE_LENGTH,
-        choices=Default.STERILIZED_CHOICES,
-        default=Default.STERILIZED_CHOICES[0][0],
-    )
-    is_vaccinated = models.CharField(
-        max_length=Limits.MAX_CHOICE_LENGTH,
-        choices=Default.VACCINATED_CHOICES,
-        default=Default.VACCINATED_CHOICES[0][0],
-    )
+    is_sterilized = models.BooleanField(null=True, blank=True, default=False,)
+    is_vaccinated = models.BooleanField(null=True, blank=True, default=False,)
     owner = models.ForeignKey(
         CustomerProfile,
         verbose_name="владелец питомца",
         related_name="pet",
         on_delete=models.CASCADE,
     )
-    photo = models.ImageField(blank=True, null=True)
+    image = models.ImageField(blank=True, null=True)
     class Meta:
         verbose_name = "питомец"
         verbose_name_plural = "питомцы"

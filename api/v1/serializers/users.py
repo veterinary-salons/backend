@@ -7,13 +7,19 @@ from api.v1.serializers.core import (
     PriceSerializer,
 )
 from api.v1.serializers.pets import PetSerializer
+from core.validators import base64_validator
 from services.models import Booking
 from users.models import CustomerProfile, SupplierProfile, User
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-
-    def validate_password(self, value):
+    image = Base64ImageField(
+        allow_null=True,
+        required=False,
+        validators=[base64_validator,],
+    )
+    @staticmethod
+    def validate_password(value):
         try:
             validate_password(value)
         except ValidationError as e:
@@ -31,11 +37,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class BaseProfileSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
-    photo = Base64ImageField(
+    image = Base64ImageField(
         allow_null=True,
         required=False,
+        validators = (base64_validator,)
     )
-
     class Meta:
         model = CustomerProfile
         fields = [
@@ -44,15 +50,8 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             "last_name",
             "first_name",
             "user",
+            "image",
         ]
-    # def to_internal_value(self, data):
-    #     password = data.pop("password", None)
-    #     email = data.pop("email", None)
-    #     data["user"] = {
-    #         "email": email,
-    #         "password": password,
-    #     }
-    #     return data
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         user_representation = representation.pop("user")
@@ -76,7 +75,8 @@ class SupplierProfileSerializer(BaseProfileSerializer):
     class Meta:
         model = SupplierProfile
         fields = BaseProfileSerializer.Meta.fields + [
-            "photo",
+            "image",
+            "address",
         ]
 
 
@@ -88,7 +88,7 @@ class CustomerPatchSerializer(serializers.ModelSerializer):
         "phone_number",
         "last_name",
         "first_name",
-        "photo",
+        "image",
     ]
 
 class CustomerSerializer(CustomerPatchSerializer):

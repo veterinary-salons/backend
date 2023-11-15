@@ -109,7 +109,7 @@ class BaseProfile(models.Model):
         blank=True,
         null=True,
     )
-    photo = models.ImageField(blank=True, null=True)
+    image = models.ImageField(blank=True, null=True)
     contact_email = models.EmailField(
         max_length=Limits.MAX_LEN_EMAIL, null=True, blank=True
     )
@@ -127,7 +127,6 @@ class SupplierProfile(BaseProfile):
     pet_type = models.CharField(
         verbose_name="тип животного",
         max_length=Limits.MAX_LEN_ANIMAL_TYPE,
-        choices=Default.PET_TYPE,
     )
     about = models.TextField(
         max_length=Limits.MAX_LEN_ABOUT,
