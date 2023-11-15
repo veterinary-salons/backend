@@ -16,7 +16,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     image = Base64ImageField(
         allow_null=True,
         required=False,
-        validators=[base64_validator,],
+        # validators=[base64_validator,],
     )
     @staticmethod
     def validate_password(value):
@@ -40,7 +40,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     image = Base64ImageField(
         allow_null=True,
         required=False,
-        validators = (base64_validator,)
+        # validators = (base64_validator,)
     )
     class Meta:
         model = CustomerProfile
@@ -102,7 +102,7 @@ class CustomerSerializer(CustomerPatchSerializer):
 
     class Meta(CustomerPatchSerializer.Meta):
         fields = CustomerPatchSerializer.Meta.fields + [
-            "pet", "photo",
+            "pet", "image",
         ]
 
 
