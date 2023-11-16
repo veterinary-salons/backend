@@ -100,6 +100,7 @@ class Pet(AnimalAbstract):
         on_delete=models.CASCADE,
     )
     image = models.ImageField(blank=True, null=True)
+
     class Meta:
         verbose_name = "питомец"
         verbose_name_plural = "питомцы"

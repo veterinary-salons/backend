@@ -95,7 +95,7 @@ class Default:
         raise AttributeError(
             f" Нельзя переопределить название константы '{name}'"
         )
-
+    PROTOCOL = "http://"
     COST_FROM = 500
     COST_TO = 1000
     PET_AGE = 1
@@ -210,3 +210,5 @@ class Default:
         (120, "2 часа"),
     )
     GOODS_IMAGE_SIZE = 500, 300
+    PATH_TO_AVATAR_CUSTOMER = "users/customers/"
+    PATH_TO_AVATAR_SUPPLIER = "users/suppliers/"

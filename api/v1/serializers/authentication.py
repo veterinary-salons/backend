@@ -3,7 +3,7 @@ from icecream import ic
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from api.v1.serializers.core import Base64ImageField
+from drf_extra_fields.fields import Base64ImageField
 from authentication.tokens import RecoveryAccessToken
 from authentication.utils import get_recovery_code
 from core.constants import Limits
@@ -20,6 +20,7 @@ class SignUpProfileSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     email = serializers.EmailField(max_length=Limits.MAX_LEN_EMAIL)
     password = serializers.CharField(write_only=True)
+    image = Base64ImageField(allow_empty_file=True, required=False)
 
     def to_internal_value(self, data):
         data["user"] = {
@@ -108,8 +109,8 @@ class BasicProfileInfoSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     phone_number = serializers.CharField()
     image = Base64ImageField(
+        allow_empty_file=True,
         required=False,
-        allow_null=True,
     )
 
 
@@ -123,7 +124,7 @@ class SignInSerializer(TokenObtainPairSerializer):
             raise serializers.ValidationError("this profile does not exist")
         if isinstance(profile, SupplierProfile):
             profile_type = "supplier"
-            image = profile.photo
+            image = profile.image
         else:
             profile_type = "customer"
             image = None

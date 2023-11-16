@@ -109,7 +109,6 @@ class BaseProfile(models.Model):
         blank=True,
         null=True,
     )
-    image = models.ImageField(blank=True, null=True)
     contact_email = models.EmailField(
         max_length=Limits.MAX_LEN_EMAIL, null=True, blank=True
     )
@@ -135,11 +134,13 @@ class SupplierProfile(BaseProfile):
         null=True,
         validators=(validate_alphanumeric,),
     )
+    image = models.ImageField(blank=True, null=True, upload_to=Default.PATH_TO_AVATAR_SUPPLIER)
     def __str__(self):
         return f"{self.user.email}"
 
 
 class CustomerProfile(BaseProfile):
 
+    image = models.ImageField(blank=True, null=True, upload_to=Default.PATH_TO_AVATAR_CUSTOMER)
     def __str__(self):
         return f"{self.last_name} {self.first_name}"

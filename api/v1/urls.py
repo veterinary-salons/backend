@@ -36,12 +36,8 @@ router.register(
     PetViewSet,
     basename="petviewset",
 )
-# router.register(
-#     "services/${serviceType}",
-#     BaseServiceViewSet,
-# )
-# router.register("customers", CustomerProfileViewSet)
-router.register("suppliers", SupplierProfileViewSet)
+
+router.register("suppliers", SupplierProfileViewSet, basename="supplier")
 router.register("auth/signup", SignUpViewSet, basename="signup")
 router.register("auth/signin", SignInViewSet, basename="signin")
 
@@ -69,7 +65,7 @@ urlpatterns = [
         name="booking",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/profile/",
+        "customers/(?P<customer_id>\d+)/profile/$",
         CustomerProfileView.as_view(),
         name="customer_profile",
     ),

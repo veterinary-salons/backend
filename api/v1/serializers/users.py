@@ -1,23 +1,19 @@
 from django.contrib.auth.password_validation import validate_password
+from icecream import ic
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-
 from api.v1.serializers.core import (
-    Base64ImageField,
     PriceSerializer,
+    Base64ImageFieldPath,
 )
 from api.v1.serializers.pets import PetSerializer
-from core.validators import base64_validator
+from core.constants import Default
 from services.models import Booking
 from users.models import CustomerProfile, SupplierProfile, User
 
-
 class CustomUserSerializer(serializers.ModelSerializer):
-    image = Base64ImageField(
-        allow_null=True,
-        required=False,
-        validators=[base64_validator,],
-    )
+
     @staticmethod
     def validate_password(value):
         try:
@@ -37,11 +33,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class BaseProfileSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
-    image = Base64ImageField(
-        allow_null=True,
-        required=False,
-        validators = (base64_validator,)
-    )
+    image = Base64ImageFieldPath(allow_empty_file=True, required=False, )
     class Meta:
         model = CustomerProfile
         fields = [
@@ -53,7 +45,9 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             "image",
         ]
     def to_representation(self, instance):
+        ic(instance)
         representation = super().to_representation(instance)
+
         user_representation = representation.pop("user")
         for key in user_representation:
             representation[key] = user_representation[key]
@@ -92,8 +86,12 @@ class CustomerPatchSerializer(serializers.ModelSerializer):
     ]
 
 class CustomerSerializer(CustomerPatchSerializer):
-    def to_internal_value(self, data):
-        return super().to_internal_value(data)
+    def to_representation(self, instance):
+        request = self.context.get("request")
+        domain = request.META.get("HTTP_HOST")
+        representation = super().to_representation(instance)
+        representation["image"] = Default.PROTOCOL + domain + instance.image.url
+        return representation
 
     pet = PetSerializer(
         many=True,
@@ -102,7 +100,8 @@ class CustomerSerializer(CustomerPatchSerializer):
 
     class Meta(CustomerPatchSerializer.Meta):
         fields = CustomerPatchSerializer.Meta.fields + [
-            "pet", "photo",
+            "pet",
+            "image",
         ]
 
 

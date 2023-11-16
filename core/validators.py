@@ -208,9 +208,12 @@ def validate_schedule(attrs):
 
     return attrs
 
-def base64_validator(value):
-    try:
-        base64.b64decode(value)
-    except Exception:
-        raise serializers.ValidationError("Неправильный формат base64 картинки.")
-    return value
+# def base64_validator(value):
+#     try:
+#         decode_base64(value.read())
+#     except Exception:
+#         raise serializers.ValidationError(
+#             "Неправильный формат base64 картинки."
+#         )
+#
+#     return value

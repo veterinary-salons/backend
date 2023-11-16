@@ -1,43 +1,55 @@
-import base64
-from datetime import timedelta
-from uuid import uuid4
-
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db.backends.utils import format_number
+from django.urls import reverse
+from drf_extra_fields.fields import Base64ImageField
 from icecream import ic
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
-from decimal import Decimal
 
+from backend.settings import MEDIA_URL
+from core.constants import Default
 from core.models import Schedule, Slot
 from core.validators import validate_price, validate_schedule
 from services.models import Price
 
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        header, encoded_data = data.split(";base64,")
-        decoded_data = base64.b64decode(encoded_data)
-        image_extension = header.split("/")[1]
-        file_name = f"{uuid4()}.{image_extension}"
-        return super().to_internal_value(
-            SimpleUploadedFile(
-                name=file_name,
-                content=decoded_data,
-            ),
+class Base64ImageFieldPath(Base64ImageField):
+    def get_path(self, file) -> str:
+        request = self.context.get("request")
+        domain = request.META.get("HTTP_HOST")
+        profile_type = self.context.get("request").data.get("profile_type")
+
+        if profile_type == "customer":
+            path = Default.PATH_TO_AVATAR_CUSTOMER
+        elif profile_type == "supplier":
+            path = Default.PATH_TO_AVATAR_SUPPLIER
+        else:
+            raise serializers.ValidationError(
+                "Неправильный тип профиля, только `customer` или `supplier`"
+            )
+        url = (
+            f"{Default.PROTOCOL}{domain}"
+            + MEDIA_URL
+            + path
+            + file.name
         )
+        return url
+
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        return self.get_path(value)
+
 
 class ScheduleSerializer(serializers.ModelSerializer):
     service = PrimaryKeyRelatedField(
         read_only=True,
     )
 
-    # def to_internal_value(self, data):
-    #     time_per_visit = data.pop("time_per_visit", None)
-    #     if time_per_visit:
-    #         data["time_per_visit"] = int(float(time_per_visit) * 60)
-    #     ic(data)
-    #     return super().to_internal_value(data)
+    def to_internal_value(self, data):
+        time_per_visit = data.pop("time_per_visit", None)
+        if time_per_visit:
+            data["time_per_visit"] = int(float(time_per_visit) * 60)
+        return super().to_internal_value(data)
 
     class Meta:
         model = Schedule
@@ -52,10 +64,10 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "time_per_visit",
             "service",
         )
+
     def validate(self, attrs):
         validate_schedule(attrs)
         return attrs
-
 
 
 class PriceSerializer(serializers.ModelSerializer):
@@ -70,6 +82,7 @@ class PriceSerializer(serializers.ModelSerializer):
             "cost_from",
             "cost_to",
         )
+
 
 class SlotSerializer(serializers.ModelSerializer):
     class Meta:

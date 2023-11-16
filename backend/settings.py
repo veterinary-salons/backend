@@ -16,8 +16,7 @@ SECRET_KEY = (
     "django-insecure-bh0#76rg!k_%*z3dq@6_#930pfm$zip*c$_yo&uan8r^9!v15m"
 )
 
-DEBUG = os.getenv('DEBUG') == 'True'
-
+DEBUG = 'True'
 ALLOWED_HOSTS = ['*']
 
 
@@ -92,7 +91,7 @@ DATABASES = {
         ),
         "NAME": getenv(
             "POSTGRES_DB",
-            default="groom2",
+            default="groom3",
         ),
         "USER": getenv(
             "POSTGRES_USER",

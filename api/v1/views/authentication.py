@@ -39,14 +39,16 @@ class SignUpViewSet(viewsets.GenericViewSet):
     def create(self, request):
         full_serializer = self.get_serializer(data=request.data)
         full_serializer.is_valid(raise_exception=True)
-        profile_type = full_serializer.validated_data.pop("profile_type")
+        profile_type = full_serializer.validated_data.get("profile_type")
         if profile_type == "customer":
             serializer = CustomerProfileSerializer(
-                data=full_serializer.validated_data
+                data=full_serializer.validated_data,
+                context = {"request": request}
             )
         elif profile_type == "supplier":
             serializer = SupplierProfileSerializer(
-                data=full_serializer.validated_data
+                data=full_serializer.validated_data,
+                context = {"request": request}
             )
         else:
             raise serializers.ValidationError(
