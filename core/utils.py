@@ -159,7 +159,7 @@ def get_customer(request, customer_profile):
     Returns:
         `CustomerProfile` объект профиля поставщика
     """
-    if isinstance(request.user, customer_profile):
+    if not isinstance(request.user, customer_profile):
         raise serializers.ValidationError(
             "Пользователь должен быть `customer`"
         )
@@ -182,7 +182,8 @@ def get_supplier(request, supplier_profile):
         `SupplierProfile` объект профиля поставщика
 
     """
-    if isinstance(request.user, supplier_profile):
+    ic()
+    if not isinstance(request.user.profile, supplier_profile):
         raise serializers.ValidationError(
             "Пользователь должен быть `supplier`"
         )

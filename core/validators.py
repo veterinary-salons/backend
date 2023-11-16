@@ -101,10 +101,8 @@ def validate_grooming_service(service_name: list) -> None:
 def validate_grooming_fields(model):
     service_name = model.extra_fields.get("service_name")
     pet_type = model.extra_fields.get("pet_type")
-    if len(model.extra_fields) > 2:
-        raise serializers.ValidationError(Messages.GROOMING_FIELDS_ERROR)
-    if not all((service_name, pet_type)):
-        raise serializers.ValidationError(Messages.GROOMING_FIELDS_ERROR)
+    if len(model.extra_fields) > 2 or not all((service_name, pet_type)):
+        raise serializers.ValidationError(Messages.GROOMER_FIELDS_ERROR)
 
 
 def validate_shelter_fields(model):
@@ -186,34 +184,11 @@ def validate_price(attrs):
 def validate_schedule(attrs):
     start_work_time = attrs.get("start_work_time")
     end_work_time = attrs.get("end_work_time")
-    break_start_time = attrs.get("break_start_time")
-    break_end_time = attrs.get("break_end_time")
 
     if start_work_time > end_work_time:
         raise serializers.ValidationError(
             "`start_work_time` не может быть больше `end_work_time`"
         )
-    if break_start_time > break_end_time:
-        raise serializers.ValidationError(
-            "`break_start_time` не может быть больше `break_end_time`"
-        )
-    if start_work_time > break_start_time:
-        raise serializers.ValidationError(
-            "`start_work_time` не может быть больше `break_start_time`"
-        )
-    if break_end_time > end_work_time:
-        raise serializers.ValidationError(
-            "`break_end_time` не может быть больше `end_work_time`"
-        )
+
 
     return attrs
-
-# def base64_validator(value):
-#     try:
-#         decode_base64(value.read())
-#     except Exception:
-#         raise serializers.ValidationError(
-#             "Неправильный формат base64 картинки."
-#         )
-#
-#     return value

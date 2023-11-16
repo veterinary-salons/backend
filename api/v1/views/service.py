@@ -177,19 +177,21 @@ class SupplierCreateAdvertisement(
     permission_classes = [
         IsAuthenticated,
     ]
+    lookup_field = "supplier_id"
 
     def perform_create(self, serializer: ServiceCreateSerializer):
         """Сохраняем расписание."""
+        ic()
         supplier_profile = get_supplier(self.request, SupplierProfile)
-
+        ic()
         serializer.is_valid(raise_exception=True)
-        serializer.save(supplier=supplier_profile)
+        serializer.save(supplier=supplier_profile, )
 
-    # def get_serializer_class(self):
-    #     if self.request.method == "POST":
-    #         return ServiceCreateSerializer
-    #     elif self.request.method == "PATCH":
-    #         return ServiceUpdateSerializer
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return ServiceCreateSerializer
+        elif self.request.method == "PATCH":
+            return ServiceUpdateSerializer
 
 
 class BookingReviewCreateOrDelete(View):

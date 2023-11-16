@@ -7,11 +7,11 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from backend.settings import MEDIA_URL
 from core.constants import Default
 from core.models import Schedule, Slot
-from core.validators import validate_price, validate_schedule
+from core.validators import validate_price
 from services.models import Price
 
 
-class Base64ImageFieldPath(Base64ImageField):
+class Base64ImageFieldUser(Base64ImageField):
     def get_path(self, file) -> str:
         request = self.context.get("request")
         domain = request.META.get("HTTP_HOST")
@@ -36,8 +36,20 @@ class Base64ImageFieldPath(Base64ImageField):
     def to_representation(self, value):
         if not value:
             return None
-
         return self.get_path(value)
+
+class Base64ImageFieldService(Base64ImageFieldUser):
+    def get_path(self, file) -> str:
+        request = self.context.get("request")
+        ic(request.data)
+        domain = request.META.get("HTTP_HOST")
+        url = (
+            f"{Default.PROTOCOL}{domain}"
+            + MEDIA_URL
+            + Default.PATH_TO_AVATAR_ADVERTISEMENT
+            + file.name
+        )
+        return url
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -65,9 +77,9 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "service",
         )
 
-    def validate(self, attrs):
-        validate_schedule(attrs)
-        return attrs
+    # def validate(self, attrs):
+    #     validate_schedule(attrs)
+    #     return attrs
 
 
 class PriceSerializer(serializers.ModelSerializer):

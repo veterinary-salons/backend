@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from api.v1.serializers.core import (
     PriceSerializer,
-    Base64ImageFieldPath,
+    Base64ImageFieldUser,
 )
 from api.v1.serializers.pets import PetSerializer
 from core.constants import Default
@@ -33,7 +33,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class BaseProfileSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
-    image = Base64ImageFieldPath(allow_empty_file=True, required=False, )
+    image = Base64ImageFieldUser(allow_empty_file=True, required=False, )
     class Meta:
         model = CustomerProfile
         fields = [
@@ -45,9 +45,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             "image",
         ]
     def to_representation(self, instance):
-        ic(instance)
         representation = super().to_representation(instance)
-
         user_representation = representation.pop("user")
         for key in user_representation:
             representation[key] = user_representation[key]
