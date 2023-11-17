@@ -97,6 +97,7 @@ class Default:
     PATH_TO_AVATAR_ADVERTISEMENT = "users/suppliers/advertisement/"
     PATH_TO_AVATAR_CUSTOMER = "users/customers/avatar/"
     PATH_TO_AVATAR_SUPPLIER = "users/suppliers/avatar/"
+    PATH_TO_AVATAR_PET = "pets/avatar/"
     PROTOCOL = "http://"
     COST_FROM = 500
     COST_TO = 1000

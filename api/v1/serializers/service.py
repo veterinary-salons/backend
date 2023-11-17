@@ -45,10 +45,6 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 
     schedules = ScheduleSerializer(many=True)
     price = PriceSerializer(many=True, source="prices")
-    image = Base64ImageFieldUser(
-        allow_empty_file=True,
-        required=False,
-    )
 
     class Meta:
         model = Service
@@ -92,8 +88,11 @@ class ServiceCreateSerializer(BaseServiceSerializer):
 
 
 class ServiceUpdateSerializer(BaseServiceSerializer):
-    """Сериализация всех услуг."""
-
+    """Сериализация обновления всех услуг."""
+    image = Base64ImageFieldService(
+        allow_empty_file=True,
+        required=False,
+    )
     def update(self, instance, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])

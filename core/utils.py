@@ -23,8 +23,8 @@ def update_schedules(schedules, schedules_data):
             schedule.weekday = schedule_data["weekday"]
             schedule.start_work_time = schedule_data["start_work_time"]
             schedule.end_work_time = schedule_data["end_work_time"]
-            schedule.break_start_time = schedule_data["break_start_time"]
-            schedule.break_end_time = schedule_data["break_end_time"]
+            # schedule.break_start_time = schedule_data["break_start_time"]
+            # schedule.break_end_time = schedule_data["break_end_time"]
             schedule.clean()
             schedule_update.append(schedule)
         Schedule.objects.bulk_update(
@@ -34,8 +34,8 @@ def update_schedules(schedules, schedules_data):
                 "weekday",
                 "start_work_time",
                 "end_work_time",
-                "break_start_time",
-                "break_end_time",
+                # "break_start_time",
+                # "break_end_time",
             ],
         )
 
@@ -159,7 +159,7 @@ def get_customer(request, customer_profile):
     Returns:
         `CustomerProfile` объект профиля поставщика
     """
-    if not isinstance(request.user, customer_profile):
+    if not isinstance(request.user.profile, customer_profile):
         raise serializers.ValidationError(
             "Пользователь должен быть `customer`"
         )
@@ -182,7 +182,6 @@ def get_supplier(request, supplier_profile):
         `SupplierProfile` объект профиля поставщика
 
     """
-    ic()
     if not isinstance(request.user.profile, supplier_profile):
         raise serializers.ValidationError(
             "Пользователь должен быть `supplier`"

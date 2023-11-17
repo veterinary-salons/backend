@@ -32,6 +32,7 @@ from core.permissions import IsCustomer, IsAuthor, IsMyService
 from core.utils import get_customer, get_supplier
 from rest_framework.permissions import (
     IsAuthenticated,
+    AllowAny,
 )
 from rest_framework.response import Response
 
@@ -88,14 +89,26 @@ class SupplierServiceProfileView(
 
     queryset = Service.objects.prefetch_related("supplier")
     serializer_class = BaseServiceSerializer
+    permission_classes = [
+        AllowAny,
+    ]
 
     def get(self, request, *args, **kwargs):
         """Выводим услуги конкретного специалиста."""
         supplier_id = int(self.kwargs.get("supplier_id"))
         serializer = self.get_serializer(
-            self.queryset.filter(supplier=supplier_id), many=True
+            self.queryset.filter(supplier=supplier_id),
+            many=True,
         )
-        return Response(data=serializer.data)
+        service_data = serializer.data
+        supplier_data =  [{
+                "supplier": SupplierProfileSerializer(
+                    get_object_or_404(SupplierProfile, id=supplier_id),
+                    context={"request": request},
+                ).data
+            }]
+
+        return Response(data=supplier_data + service_data)
 
     def delete(self, request, *args, **kwargs):
         """Удаляем специалиста и, заодно, все услуги."""
@@ -118,7 +131,7 @@ class BookingServiceAPIView(generics.CreateAPIView):
         IsAuthenticated,
     ]
 
-    @transaction.atomic
+    # @transaction.atomic
     def create(self, request, *args, **kwargs):
         # to_date = request.data.get("to_date")
         # is_slot_free = Slot.objects.filter(
@@ -131,17 +144,22 @@ class BookingServiceAPIView(generics.CreateAPIView):
         prices = request.data.pop("price", [])
         pet_data = request.data.pop("pet", None)
         _pet_data = deepcopy(pet_data)
-        _pet_data.pop("age", None)
+        if _pet_data:
+            _pet_data.pop("age", None)
         customer_profile = get_customer(self.request, CustomerProfile)
         try:
             pet = Pet.objects.get(
-                **_pet_data, owner=get_customer(self.request, CustomerProfile)
+                **_pet_data, owner=customer_profile,
             )
-            pet_serializer = PetSerializer(pet)
+            pet_serializer = PetSerializer(pet, context={"request": request})
             # создаем питомца, но если уже есть питомцы, то фигня какая то, подумать и поправить.
         except Pet.DoesNotExist:
-            pet_serializer = PetSerializer(data=pet_data)
+            ic()
+            pet_data.update({"owner": customer_profile.id})
+            pet_serializer = PetSerializer(data=pet_data, context={"request": request})
+            ic(pet_data)
             pet_serializer.is_valid(raise_exception=True)
+            ic()
             pet_serializer.save(
                 owner=customer_profile,
             )
@@ -159,11 +177,13 @@ class BookingServiceAPIView(generics.CreateAPIView):
             serializer = BookingSerializer(booking)
             booking_data = serializer.data
             booking_data["customer"] = CustomerProfileSerializer(
-                booking.customer
+                booking.customer, context={"request": request}
             ).data
+            ic()
             booking_data["price"] = PriceSerializer(booking.price).data
             serialized_data.append(booking_data)
         serialized_data.append({"pet": pet_serializer.data})
+        ic()
         return Response(serialized_data)
 
 
@@ -177,15 +197,15 @@ class SupplierCreateAdvertisement(
     permission_classes = [
         IsAuthenticated,
     ]
-    lookup_field = "supplier_id"
+    # lookup_field = "supplier_id"
 
     def perform_create(self, serializer: ServiceCreateSerializer):
         """Сохраняем расписание."""
-        ic()
         supplier_profile = get_supplier(self.request, SupplierProfile)
-        ic()
         serializer.is_valid(raise_exception=True)
-        serializer.save(supplier=supplier_profile, )
+        serializer.save(
+            supplier=supplier_profile,
+        )
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -278,7 +298,9 @@ class FavoriteServiceView(
     lookup_field = "customer_id"
 
     def get_queryset(self):
-        return Favorite.objects.filter(customer=get_customer(self.request, CustomerProfile))
+        return Favorite.objects.filter(
+            customer=get_customer(self.request, CustomerProfile)
+        )
 
     def perform_create(self, serializer):
         customer = get_customer(self.request, CustomerProfile)

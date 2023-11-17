@@ -17,6 +17,7 @@ from core.validators import (
     validate_shelter_fields,
     validate_letters,
     RangeValueValidator,
+    validate_shelter_service,
 )
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
@@ -88,6 +89,7 @@ class Service(models.Model):
             validate_vet_fields(self)
         elif category == Default.SERVICES[2][0]:
             validate_shelter_fields(self)
+            validate_shelter_service(service_name)
         elif category == Default.SERVICES[3][0]:
             validate_grooming_service(service_name)
             validate_grooming_fields(self)

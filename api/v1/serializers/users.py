@@ -67,7 +67,6 @@ class SupplierProfileSerializer(BaseProfileSerializer):
     class Meta:
         model = SupplierProfile
         fields = BaseProfileSerializer.Meta.fields + [
-            "image",
             "address",
         ]
 

@@ -55,7 +55,6 @@ class CustomerProfileView(
         customer_id = kwargs.get("customer_id")
         customer = self.get_queryset().get(id=customer_id)
         serializer = CustomerPatchSerializer(customer, data=request.data)
-
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)

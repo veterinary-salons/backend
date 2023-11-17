@@ -60,7 +60,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)/",
+        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)/$",
         BookingServiceAPIView.as_view(),
         name="booking",
     ),

@@ -4,6 +4,8 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from drf_extra_fields.fields import Base64ImageField
+
+from api.v1.serializers.core import Base64ImageFieldUser
 from authentication.tokens import RecoveryAccessToken
 from authentication.utils import get_recovery_code
 from core.constants import Limits
@@ -20,7 +22,7 @@ class SignUpProfileSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     email = serializers.EmailField(max_length=Limits.MAX_LEN_EMAIL)
     password = serializers.CharField(write_only=True)
-    image = Base64ImageField(allow_empty_file=True, required=False)
+    image = Base64ImageFieldUser(allow_empty_file=True, required=False)
 
     def to_internal_value(self, data):
         data["user"] = {
@@ -40,7 +42,6 @@ class SignUpProfileSerializer(serializers.Serializer):
         if profile_type == "customer":
             profile = CustomerProfile.objects.create(**validated_data)
             User.objects.create_user(**user_data, profile=profile)
-
 
 
 class RecoveryEmailSerializer(serializers.Serializer):
