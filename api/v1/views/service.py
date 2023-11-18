@@ -101,12 +101,14 @@ class SupplierServiceProfileView(
             many=True,
         )
         service_data = serializer.data
-        supplier_data =  [{
+        supplier_data = [
+            {
                 "supplier": SupplierProfileSerializer(
                     get_object_or_404(SupplierProfile, id=supplier_id),
                     context={"request": request},
                 ).data
-            }]
+            }
+        ]
 
         return Response(data=supplier_data + service_data)
 
@@ -147,19 +149,21 @@ class BookingServiceAPIView(generics.CreateAPIView):
         if _pet_data:
             _pet_data.pop("age", None)
         customer_profile = get_customer(self.request, CustomerProfile)
-        try:
-            pet = Pet.objects.get(
-                **_pet_data, owner=customer_profile,
+        pet = Pet.objects.filter(
+            name=_pet_data.get("name"),
+            type=_pet_data.get("type"),
+            owner=customer_profile,
+        )
+        if pet.exists():
+            pet = pet.first()
+            pet_serializer = PetSerializer(
+                instance=pet,
             )
-            pet_serializer = PetSerializer(pet, context={"request": request})
-            # создаем питомца, но если уже есть питомцы, то фигня какая то, подумать и поправить.
-        except Pet.DoesNotExist:
-            ic()
-            pet_data.update({"owner": customer_profile.id})
-            pet_serializer = PetSerializer(data=pet_data, context={"request": request})
-            ic(pet_data)
+        else:
+            pet_serializer = PetSerializer(
+                data=pet_data,
+            )
             pet_serializer.is_valid(raise_exception=True)
-            ic()
             pet_serializer.save(
                 owner=customer_profile,
             )
@@ -176,14 +180,12 @@ class BookingServiceAPIView(generics.CreateAPIView):
         for booking in bookings:
             serializer = BookingSerializer(booking)
             booking_data = serializer.data
-            booking_data["customer"] = CustomerProfileSerializer(
-                booking.customer, context={"request": request}
-            ).data
-            ic()
+            booking_data["customer"] = get_customer(
+                self.request, CustomerProfile
+            ).id
             booking_data["price"] = PriceSerializer(booking.price).data
             serialized_data.append(booking_data)
         serialized_data.append({"pet": pet_serializer.data})
-        ic()
         return Response(serialized_data)
 
 
@@ -317,7 +319,7 @@ class FavoriteServiceView(
         for service in services:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid()
-            data = serializer
+            data = serializer.data
             supplier = SupplierProfile.objects.get(
                 id=service.supplier.id,
             )
@@ -327,7 +329,7 @@ class FavoriteServiceView(
             )
             data["service"] = SmallServiceSerializer(service).data
             data["price"] = PriceSerializer(price, many=True).data
-            data["supplier"] = SupplierProfileSerializer(supplier).data
+            data["supplier"] = SupplierProfileSerializer(supplier, context={"request": request}).data
 
             if review.exists():
                 data["review"] = ReviewSerializer(

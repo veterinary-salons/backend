@@ -57,7 +57,7 @@ class PetViewSet(ModelViewSet):
         ic()
         serializer = PetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        customer_profile = get_customer(self.request)
+        customer_profile = get_customer(self.request, CustomerProfile)
         try:
             serializer.save(owner=customer_profile)
         except IntegrityError:

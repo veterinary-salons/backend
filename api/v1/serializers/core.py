@@ -12,26 +12,16 @@ from services.models import Price
 
 class Base64ImageFieldUser(Base64ImageField):
     def get_path(self, file) -> str:
-        request = self.context.get("request")
-        domain = request.META.get("HTTP_HOST")
         profile_type = self.context.get("request").data.get("profile_type")
         if profile_type == "customer":
             path = Default.PATH_TO_AVATAR_CUSTOMER
         elif profile_type == "supplier":
             path = Default.PATH_TO_AVATAR_SUPPLIER
-        if request.get("data").get("description") and request.get("data").get("pet"):
-            path = Default.PATH_TO_AVATAR_PET
         else:
             raise serializers.ValidationError(
                 "Неправильный тип профиля, только `customer` или `supplier`."
             )
-
-        url = (
-            f"{Default.PROTOCOL}{domain}"
-            + MEDIA_URL
-            + path
-            + file.name
-        )
+        url = MEDIA_URL + path + file.name
         return url
 
     def to_representation(self, value):
@@ -39,8 +29,10 @@ class Base64ImageFieldUser(Base64ImageField):
             return None
         request = self.context.get("request")
         if request and getattr(request, "method", "") == "GET":
-            return request.build_absolute_uri(value.url)
+            return value.url
         return self.get_path(value)
+
+
 class Base64ImageFieldService(Base64ImageFieldUser):
     def get_path(self, file) -> str:
         request = self.context.get("request")

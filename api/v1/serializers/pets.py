@@ -1,4 +1,4 @@
-from drf_base64.fields import Base64ImageField
+from drf_extra_fields.fields import Base64ImageField
 from icecream import ic
 from rest_framework import serializers
 
@@ -88,7 +88,7 @@ class PetSerializer(BasePetSerializer):
     """Сериализация питомцев с валидацией."""
 
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
-    image = Base64ImageFieldUser(required=False, allow_empty_file=True)
+    image = Base64ImageField(required=False, allow_empty_file=True)
 
     def to_representation(self, instance: Pet) -> dict[str, str | int]:
         """Выносим год и месяц из возраста в основное поле питомца.

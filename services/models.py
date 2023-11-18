@@ -62,7 +62,6 @@ class Service(models.Model):
         default=True,
     )
     image = models.ImageField(
-        upload_to="images/",
         blank=True,
         null=True,
     )

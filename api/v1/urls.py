@@ -11,7 +11,6 @@ from rest_framework_simplejwt.views import (
 from api.v1.views.authentication import SignUpViewSet, SignInViewSet
 from api.v1.views.pet import PetViewSet
 from api.v1.views.service import (
-    # BaseServiceViewSet,
     BookingServiceAPIView,
     SupplierServiceProfileView,
     SupplierCreateAdvertisement,

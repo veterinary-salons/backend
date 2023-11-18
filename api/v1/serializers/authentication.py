@@ -15,14 +15,14 @@ from users.models import CustomerProfile, SupplierProfile
 User = get_user_model()
 
 
-class SignUpProfileSerializer(serializers.Serializer):
+class SignUpProfileSerializer(serializers.ModelSerializer):
     profile_type = serializers.ChoiceField(choices=("customer", "supplier"))
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    phone_number = serializers.CharField()
+    # first_name = serializers.CharField()
+    # last_name = serializers.CharField()
+    # phone_number = serializers.CharField()
     email = serializers.EmailField(max_length=Limits.MAX_LEN_EMAIL)
     password = serializers.CharField(write_only=True)
-    image = Base64ImageFieldUser(allow_empty_file=True, required=False)
+    image = Base64ImageField(allow_empty_file=True, required=False)
 
     def to_internal_value(self, data):
         data["user"] = {
@@ -42,7 +42,17 @@ class SignUpProfileSerializer(serializers.Serializer):
         if profile_type == "customer":
             profile = CustomerProfile.objects.create(**validated_data)
             User.objects.create_user(**user_data, profile=profile)
-
+    class Meta:
+        model = CustomerProfile
+        fields = (
+            "profile_type",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "email",
+            "password",
+            "image",
+        )
 
 class RecoveryEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(

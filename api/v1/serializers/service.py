@@ -64,7 +64,7 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 
 class ServiceCreateSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
-    image = Base64ImageFieldService(
+    image = Base64ImageField(
         allow_empty_file=True,
         required=False,
     )
@@ -89,7 +89,7 @@ class ServiceCreateSerializer(BaseServiceSerializer):
 
 class ServiceUpdateSerializer(BaseServiceSerializer):
     """Сериализация обновления всех услуг."""
-    image = Base64ImageFieldService(
+    image = Base64ImageField(
         allow_empty_file=True,
         required=False,
     )
