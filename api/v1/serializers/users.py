@@ -1,10 +1,14 @@
 from django.contrib.auth.password_validation import validate_password
+from drf_extra_fields.fields import Base64ImageField
+from icecream import ic
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.v1.serializers.core import (
     Base64ImageField,
     PriceSerializer,
+    Base64ImageFieldUser,
 )
 from api.v1.serializers.pets import PetSerializer
 from services.models import Booking
@@ -12,11 +16,7 @@ from users.models import CustomerProfile, SupplierProfile, User
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    image = Base64ImageField(
-        allow_null=True,
-        required=False,
-        # validators=[base64_validator,],
-    )
+
     @staticmethod
     def validate_password(value):
         try:
@@ -36,11 +36,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class BaseProfileSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
-    image = Base64ImageField(
-        allow_null=True,
-        required=False,
-        # validators = (base64_validator,)
-    )
+
     class Meta:
         model = CustomerProfile
         fields = [
@@ -66,15 +62,15 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
 
 class CustomerProfileSerializer(BaseProfileSerializer):
+    image = Base64ImageFieldUser(allow_empty_file=True, required=False, )
     pass
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
-
+    image = Base64ImageFieldUser(allow_empty_file=True, required=False, )
     class Meta:
         model = SupplierProfile
         fields = BaseProfileSerializer.Meta.fields + [
-            "image",
             "address",
         ]
 
@@ -91,8 +87,12 @@ class CustomerPatchSerializer(serializers.ModelSerializer):
     ]
 
 class CustomerSerializer(CustomerPatchSerializer):
-    def to_internal_value(self, data):
-        return super().to_internal_value(data)
+    def to_representation(self, instance):
+        request = self.context.get("request")
+        # domain = request.META.get("HTTP_HOST")
+        representation = super().to_representation(instance)
+        representation["image"] = instance.image.url
+        return representation
 
     pet = PetSerializer(
         many=True,
@@ -101,7 +101,8 @@ class CustomerSerializer(CustomerPatchSerializer):
 
     class Meta(CustomerPatchSerializer.Meta):
         fields = CustomerPatchSerializer.Meta.fields + [
-            "pet", "image",
+            "pet",
+            "image",
         ]
 
 
