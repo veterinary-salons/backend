@@ -7,7 +7,6 @@ from api.v1.serializers.core import (
     PriceSerializer,
 )
 from api.v1.serializers.pets import PetSerializer
-from core.validators import base64_validator
 from services.models import Booking
 from users.models import CustomerProfile, SupplierProfile, User
 
