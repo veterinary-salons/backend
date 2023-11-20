@@ -1,4 +1,4 @@
-from drf_base64.fields import Base64ImageField
+from drf_extra_fields.fields import Base64ImageField
 from icecream import ic
 from rest_framework.relations import PrimaryKeyRelatedField
 
