@@ -1,10 +1,12 @@
+from drf_base64.fields import Base64ImageField
 from icecream import ic
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.v1.serializers.core import (
     ScheduleSerializer,
     PriceSerializer,
-    Base64ImageField,
+    Base64ImageFieldUser,
+    Base64ImageFieldService,
 )
 from api.v1.serializers.users import (
     SupplierProfileSerializer,
@@ -43,7 +45,6 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 
     schedules = ScheduleSerializer(many=True)
     price = PriceSerializer(many=True, source="prices")
-    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Service
@@ -63,12 +64,13 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 
 class ServiceCreateSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
-
+    image = Base64ImageField(
+        allow_empty_file=True,
+        required=False,
+    )
     def create(self, validated_data):
-        ic()
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
-        ic(validated_data)
         service = super().create(validated_data)
         schedules = []
         prices = []
@@ -86,8 +88,11 @@ class ServiceCreateSerializer(BaseServiceSerializer):
 
 
 class ServiceUpdateSerializer(BaseServiceSerializer):
-    """Сериализация всех услуг."""
-
+    """Сериализация обновления всех услуг."""
+    image = Base64ImageField(
+        allow_empty_file=True,
+        required=False,
+    )
     def update(self, instance, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])

@@ -11,7 +11,6 @@ from rest_framework_simplejwt.views import (
 from api.v1.views.authentication import SignUpViewSet, SignInViewSet
 from api.v1.views.pet import PetViewSet
 from api.v1.views.service import (
-    # BaseServiceViewSet,
     BookingServiceAPIView,
     SupplierServiceProfileView,
     SupplierCreateAdvertisement,
@@ -36,12 +35,8 @@ router.register(
     PetViewSet,
     basename="petviewset",
 )
-# router.register(
-#     "services/${serviceType}",
-#     BaseServiceViewSet,
-# )
-# router.register("customers", CustomerProfileViewSet)
-router.register("suppliers", SupplierProfileViewSet)
+
+router.register("suppliers", SupplierProfileViewSet, basename="supplier")
 router.register("auth/signup", SignUpViewSet, basename="signup")
 router.register("auth/signin", SignInViewSet, basename="signin")
 
@@ -64,12 +59,12 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)/",
+        "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)/$",
         BookingServiceAPIView.as_view(),
         name="booking",
     ),
     re_path(
-        "customers/(?P<customer_id>\d+)/profile/",
+        "customers/(?P<customer_id>\d+)/profile/$",
         CustomerProfileView.as_view(),
         name="customer_profile",
     ),

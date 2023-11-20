@@ -48,17 +48,14 @@ class CustomerProfileView(
     def get(self, request, *args, **kwargs):
         customer_id = kwargs.get("customer_id")
         customer = self.get_queryset().get(id=customer_id)
-        serializer = CustomerSerializer(customer)
+        serializer = CustomerSerializer(customer, context={"request": request})
         return Response(serializer.data)
 
     def patch(self, request, *args, **kwargs):
         customer_id = kwargs.get("customer_id")
         customer = self.get_queryset().get(id=customer_id)
-        ic(customer)
         serializer = CustomerPatchSerializer(customer, data=request.data)
-
         serializer.is_valid(raise_exception=True)
-        ic(serializer.validated_data)
         serializer.save()
         return Response(serializer.data)
 
@@ -79,7 +76,7 @@ class BaseCustomerBookingListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if get_customer(self.request).id == int(
+        if get_customer(self.request, CustomerProfile).id == int(
             self.kwargs.get("customer_id")
         ):
             return self.get_bookings()
@@ -95,14 +92,14 @@ class BaseCustomerBookingListView(generics.ListAPIView):
 class CustomerBookingList(BaseCustomerBookingListView):
     def get_bookings(self):
         return Booking.objects.filter(
-            customer=get_customer(self.request).id, is_active=True
+            customer=get_customer(self.request, CustomerProfile).id, is_active=True
         )
 
 
 class CustomerBookingHistoryList(BaseCustomerBookingListView):
     def get_bookings(self):
         return Booking.objects.filter(
-            customer=get_customer(self.request).id,
+            customer=get_customer(self.request, CustomerProfile).id,
             is_done=True,
             is_active=False,
         )

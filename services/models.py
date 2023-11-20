@@ -17,6 +17,7 @@ from core.validators import (
     validate_shelter_fields,
     validate_letters,
     RangeValueValidator,
+    validate_shelter_service,
 )
 from pets.models import Pet
 from users.models import SupplierProfile, CustomerProfile
@@ -61,7 +62,6 @@ class Service(models.Model):
         default=True,
     )
     image = models.ImageField(
-        upload_to="images/",
         blank=True,
         null=True,
     )
@@ -77,26 +77,27 @@ class Service(models.Model):
             # )
         )
 
-    # def clean(self):
-    #     """Проверяем соответствие типа специалиста и услуг."""
-    #     category = self.category
-    #     service_name = self.extra_fields.get("service_name")
-    #
-    #     if category == Default.SERVICES[0][0]:
-    #         validate_cynology_fields(self)
-    #     elif category == Default.SERVICES[1][0]:
-    #         validate_vet_fields(self)
-    #     elif category == Default.SERVICES[2][0]:
-    #         validate_shelter_fields(self)
-    #     elif category == Default.SERVICES[3][0]:
-    #         validate_grooming_service(service_name)
-    #         validate_grooming_fields(self)
-    #
-    #     super().clean()
+    def clean(self):
+        """Проверяем соответствие типа специалиста и услуг."""
+        category = self.category
+        service_name = self.extra_fields.get("service_name")
 
-    # def save(self, *args, **kwargs):
-    #     self.full_clean()
-    #     return super(Service, self).save(*args, **kwargs)
+        if category == Default.SERVICES[0][0]:
+            validate_cynology_fields(self)
+        elif category == Default.SERVICES[1][0]:
+            validate_vet_fields(self)
+        elif category == Default.SERVICES[2][0]:
+            validate_shelter_fields(self)
+            validate_shelter_service(service_name)
+        elif category == Default.SERVICES[3][0]:
+            validate_grooming_service(service_name)
+            validate_grooming_fields(self)
+
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(Service, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.extra_fields.get('service_name')} - {self.ad_title}"

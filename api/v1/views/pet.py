@@ -46,16 +46,18 @@ class PetViewSet(ModelViewSet):
             Response(status=status.HTTP_403_FORBIDDEN): Если питомец создается
             у другого пользователя.
         """
-        if get_customer(self.request).id != int(kwargs["customer_id"]):
+        ic()
+        if get_customer(self.request, CustomerProfile).id != int(kwargs["customer_id"]):
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
                     "error": "Нельзя создать питомца у другого пользователя!"
                 },
             )
+        ic()
         serializer = PetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        customer_profile = get_customer(self.request)
+        customer_profile = get_customer(self.request, CustomerProfile)
         try:
             serializer.save(owner=customer_profile)
         except IntegrityError:

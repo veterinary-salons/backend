@@ -3,7 +3,9 @@ from icecream import ic
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from api.v1.serializers.core import Base64ImageField
+from drf_extra_fields.fields import Base64ImageField
+
+from api.v1.serializers.core import Base64ImageFieldUser
 from authentication.tokens import RecoveryAccessToken
 from authentication.utils import get_recovery_code
 from core.constants import Limits
@@ -13,13 +15,14 @@ from users.models import CustomerProfile, SupplierProfile
 User = get_user_model()
 
 
-class SignUpProfileSerializer(serializers.Serializer):
+class SignUpProfileSerializer(serializers.ModelSerializer):
     profile_type = serializers.ChoiceField(choices=("customer", "supplier"))
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    phone_number = serializers.CharField()
+    # first_name = serializers.CharField()
+    # last_name = serializers.CharField()
+    # phone_number = serializers.CharField()
     email = serializers.EmailField(max_length=Limits.MAX_LEN_EMAIL)
     password = serializers.CharField(write_only=True)
+    image = Base64ImageField(allow_empty_file=True, required=False)
 
     def to_internal_value(self, data):
         data["user"] = {
@@ -39,8 +42,17 @@ class SignUpProfileSerializer(serializers.Serializer):
         if profile_type == "customer":
             profile = CustomerProfile.objects.create(**validated_data)
             User.objects.create_user(**user_data, profile=profile)
-
-
+    class Meta:
+        model = CustomerProfile
+        fields = (
+            "profile_type",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "email",
+            "password",
+            "image",
+        )
 
 class RecoveryEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(
@@ -108,8 +120,8 @@ class BasicProfileInfoSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     phone_number = serializers.CharField()
     image = Base64ImageField(
+        allow_empty_file=True,
         required=False,
-        allow_null=True,
     )
 
 
@@ -123,7 +135,7 @@ class SignInSerializer(TokenObtainPairSerializer):
             raise serializers.ValidationError("this profile does not exist")
         if isinstance(profile, SupplierProfile):
             profile_type = "supplier"
-            image = profile.photo
+            image = profile.image
         else:
             profile_type = "customer"
             image = None

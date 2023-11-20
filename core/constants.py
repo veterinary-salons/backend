@@ -69,9 +69,8 @@ class Messages:
         "Поля service_name, format и pet_type необходимо заполнить."
     )
     VET_FIELDS_ERROR = "Поля `service_name` и `pet_type` необходимо заполнить."
-    GROOMING_FIELDS_ERROR = "Поле grooming_type необходимо заполнить."
     CYNOLOGY_NUM_FIELDS_ERROR = "У кинолога должно быть 3 поля `service_name`, `pet_type`, `study_format`"
-    GROOMER_NUM_FIELDS_ERROR = (
+    GROOMER_FIELDS_ERROR = (
         "У грумера должно быть 2 поля `service_name`, `pet_type`"
     )
     VET_NUM_FIELDS_ERROR = (
@@ -95,7 +94,11 @@ class Default:
         raise AttributeError(
             f" Нельзя переопределить название константы '{name}'"
         )
-
+    PATH_TO_AVATAR_ADVERTISEMENT = "users/suppliers/advertisement/"
+    PATH_TO_AVATAR_CUSTOMER = "users/customers/avatar/"
+    PATH_TO_AVATAR_SUPPLIER = "users/suppliers/avatar/"
+    PATH_TO_AVATAR_PET = "pets/avatar/"
+    PROTOCOL = "http://"
     COST_FROM = 500
     COST_TO = 1000
     PET_AGE = 1
@@ -157,7 +160,7 @@ class Default:
     GROOMING_TYPE = (
         "Гигиенический",
         "Выставочный",
-        "Гигиенический",
+        "Декоративный",
     )
     SHELTER_SERVICE = [
         "shelter",
@@ -210,3 +213,4 @@ class Default:
         (120, "2 часа"),
     )
     GOODS_IMAGE_SIZE = 500, 300
+

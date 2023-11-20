@@ -21,6 +21,12 @@ class Schedule(models.Model):
         null=False,
         blank=False,
     )
+    break_end_time  = models.TimeField(
+        verbose_name="Время окончания перерыва", default="12:00:00"
+    )
+    break_start_time = models.TimeField(
+        verbose_name="Время начала перерыва", default="11:00:00"
+    )
     is_working_day = models.BooleanField(
         default=True, verbose_name="Рабочий день"
     )

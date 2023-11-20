@@ -1,14 +1,14 @@
+import base64
 from datetime import timedelta
 
-from django.http import HttpRequest
 from django.utils import timezone
+from icecream import ic
 from rest_framework import serializers
-
-from users.models import CustomerProfile, SupplierProfile
 
 
 def update_schedules(schedules, schedules_data):
     from core.models import Schedule
+
     for schedule in schedules:
         schedule_data = next(
             (
@@ -23,8 +23,8 @@ def update_schedules(schedules, schedules_data):
             schedule.weekday = schedule_data["weekday"]
             schedule.start_work_time = schedule_data["start_work_time"]
             schedule.end_work_time = schedule_data["end_work_time"]
-            schedule.break_start_time = schedule_data["break_start_time"]
-            schedule.break_end_time = schedule_data["break_end_time"]
+            # schedule.break_start_time = schedule_data["break_start_time"]
+            # schedule.break_end_time = schedule_data["break_end_time"]
             schedule.clean()
             schedule_update.append(schedule)
         Schedule.objects.bulk_update(
@@ -34,14 +34,15 @@ def update_schedules(schedules, schedules_data):
                 "weekday",
                 "start_work_time",
                 "end_work_time",
-                "break_start_time",
-                "break_end_time",
+                # "break_start_time",
+                # "break_end_time",
             ],
         )
 
 
 def create_schedules(instance, schedules_data):
     from core.models import Schedule
+
     existing_schedule_names = {
         schedule.weekday for schedule in instance.schedules.all()
     }
@@ -60,6 +61,7 @@ def create_schedules(instance, schedules_data):
 
 def delete_schedules(instance, schedules, schedules_data):
     from core.models import Schedule
+
     existing_schedule_names = {schedule.weekday for schedule in schedules}
     given_schedule_names = {
         schedule_data.get("weekday") for schedule_data in schedules_data
@@ -76,6 +78,7 @@ def delete_schedules(instance, schedules, schedules_data):
 
 def update_prices(prices, prices_data):
     from services.models import Price
+
     price_update = []
     for price in prices:
         price_data = next(
@@ -99,6 +102,7 @@ def update_prices(prices, prices_data):
 
 def create_prices(instance, prices_data):
     from services.models import Price
+
     existing_price_names = {
         price.service_name for price in instance.prices.all()
     }
@@ -132,6 +136,7 @@ def delete_prices(instance, prices, prices_data):
 
     """
     from services.models import Price
+
     existing_price_names = {price.service_name for price in prices}
     given_price_names = {
         price_data.get("service_name") for price_data in prices_data
@@ -143,7 +148,7 @@ def delete_prices(instance, prices, prices_data):
     ).delete()
 
 
-def get_customer(request):
+def get_customer(request, customer_profile):
     """Возвращает профиль заказчика для текущего пользователя.
 
     Если профиль не найден, возвращает 404 ошибку.
@@ -154,35 +159,47 @@ def get_customer(request):
     Returns:
         `CustomerProfile` объект профиля поставщика
     """
-    return get_object_or_404(CustomerProfile, related_user=request.user)
+    if not isinstance(request.user.profile, customer_profile):
+        raise serializers.ValidationError(
+            "Пользователь должен быть `customer`"
+        )
+    return get_object_or_404(customer_profile, related_user=request.user)
 
 
 from django.shortcuts import get_object_or_404
 
-def get_supplier(request):
+
+def get_supplier(request, supplier_profile):
     """Возвращает профиль исполнителя для текущего пользователя.
 
     Если профиль не найден, возвращает 404 ошибку.
 
     Args:
+        supplier_profile: профиль исполнителя
         request: `HttpRequest` объект запроса
 
     Returns:
         `SupplierProfile` объект профиля поставщика
 
     """
-    return get_object_or_404(SupplierProfile, related_user=request.user)
+    if not isinstance(request.user.profile, supplier_profile):
+        raise serializers.ValidationError(
+            "Пользователь должен быть `supplier`"
+        )
+    return get_object_or_404(supplier_profile, related_user=request.user)
+
 
 def default_booking_time():
     """
-        Возвращает текущее время плюс один день.
+    Возвращает текущее время плюс один день.
 
-        Returns:
-            Объект `datetime`, представляющий текущее время плюс один день.
+    Returns:
+        Объект `datetime`, представляющий текущее время плюс один день.
     """
     return timezone.now() + timedelta(days=1)
 
-def string_to_boolean(value:str) -> bool:
+
+def string_to_boolean(value: str) -> bool:
     """
         Преобразует строковое значение в булевое.
     Args:
@@ -193,9 +210,8 @@ def string_to_boolean(value:str) -> bool:
     """
     if value is None:
         result = None
-    elif value.lower() in ('true', "false"):
+    elif value.lower() in ("true", "false"):
         result = value.lower() == "true"
     else:
-        raise serializers.ValidationError('Value must be `true` or `false`')
+        raise serializers.ValidationError("Value must be `true` or `false`")
     return result
-

@@ -99,7 +99,8 @@ class Pet(AnimalAbstract):
         related_name="pet",
         on_delete=models.CASCADE,
     )
-    image = models.ImageField(blank=True, null=True)
+    image = models.ImageField(blank=True, null=True, upload_to=Default.PATH_TO_AVATAR_PET)
+
     class Meta:
         verbose_name = "питомец"
         verbose_name_plural = "питомцы"
