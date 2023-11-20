@@ -4,14 +4,16 @@ from icecream import ic
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+
 from api.v1.serializers.core import (
+    Base64ImageField,
     PriceSerializer,
     Base64ImageFieldUser,
 )
 from api.v1.serializers.pets import PetSerializer
-from core.constants import Default
 from services.models import Booking
 from users.models import CustomerProfile, SupplierProfile, User
+
 
 class CustomUserSerializer(serializers.ModelSerializer):
 
@@ -69,6 +71,7 @@ class SupplierProfileSerializer(BaseProfileSerializer):
     class Meta:
         model = SupplierProfile
         fields = BaseProfileSerializer.Meta.fields + [
+            "image",
             "address",
         ]
 
@@ -99,8 +102,7 @@ class CustomerSerializer(CustomerPatchSerializer):
 
     class Meta(CustomerPatchSerializer.Meta):
         fields = CustomerPatchSerializer.Meta.fields + [
-            "pet",
-            "image",
+            "pet", "image",
         ]
 
 

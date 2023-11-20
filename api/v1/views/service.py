@@ -199,7 +199,6 @@ class SupplierCreateAdvertisement(
     permission_classes = [
         IsAuthenticated,
     ]
-    # lookup_field = "supplier_id"
 
     def perform_create(self, serializer: ServiceCreateSerializer):
         """Сохраняем расписание."""

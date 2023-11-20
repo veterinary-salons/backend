@@ -64,6 +64,7 @@ class Service(models.Model):
     image = models.ImageField(
         blank=True,
         null=True,
+        upload_to=Default.PATH_TO_AVATAR_ADVERTISEMENT,
     )
     extra_fields = JSONField()
 
