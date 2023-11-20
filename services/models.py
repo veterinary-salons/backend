@@ -71,12 +71,7 @@ class Service(models.Model):
     class Meta:
         verbose_name = "услуга"
         verbose_name_plural = "услуги"
-        constraints = (
-            # UniqueConstraint(
-            #     fields=["name", "supplier"],
-            #     name="unique_name_for_service",
-            # )
-        )
+
 
     def clean(self):
         """Проверяем соответствие типа специалиста и услуг."""
