@@ -32,29 +32,10 @@ class Base64ImageFieldUser(Base64ImageField):
         return self.get_path(value)
 
 
-class Base64ImageFieldService(Base64ImageFieldUser):
-    def get_path(self, file) -> str:
-        request = self.context.get("request")
-        domain = request.META.get("HTTP_HOST")
-        url = (
-            f"{Default.PROTOCOL}{domain}"
-            + MEDIA_URL
-            + Default.PATH_TO_AVATAR_ADVERTISEMENT
-            + file.name
-        )
-        return url
-
-
 class ScheduleSerializer(serializers.ModelSerializer):
     service = PrimaryKeyRelatedField(
         read_only=True,
     )
-
-    def to_internal_value(self, data):
-        time_per_visit = data.pop("time_per_visit", None)
-        if time_per_visit:
-            data["time_per_visit"] = int(float(time_per_visit) * 60)
-        return super().to_internal_value(data)
 
     class Meta:
         model = Schedule
@@ -66,7 +47,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "end_work_time",
             "break_start_time",
             "break_end_time",
-            "time_per_visit",
             "service",
         )
 
@@ -76,6 +56,13 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 
 class PriceSerializer(serializers.ModelSerializer):
+
+    def to_internal_value(self, data):
+        time_per_visit = data.pop("time_per_visit", None)
+        if time_per_visit:
+            data["time_per_visit"] = int(float(time_per_visit) * 60)
+        return super().to_internal_value(data)
+
     def validate(self, attrs):
         validate_price(attrs)
         return attrs
@@ -84,6 +71,7 @@ class PriceSerializer(serializers.ModelSerializer):
         model = Price
         fields = (
             "service_name",
+            "time_per_visit",
             "cost_from",
             "cost_to",
         )
@@ -94,6 +82,7 @@ class SlotSerializer(serializers.ModelSerializer):
         model = Slot
         fields = (
             "id",
-            "date",
-            "time",
+            "time_from",
+            "time_to",
+            "supplier",
         )

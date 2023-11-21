@@ -1,5 +1,7 @@
 from copy import deepcopy
+from datetime import timedelta, datetime
 
+import pytz
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -25,11 +27,12 @@ from api.v1.serializers.users import (
     CustomerProfileSerializer,
     SupplierProfileSerializer,
 )
-from core.filter_backends import ServiceFilterBackend
 from django.contrib.auth import get_user_model
 
+from core.constants import Default
+from core.models import Slot, Schedule
 from core.permissions import IsCustomer, IsAuthor, IsMyService
-from core.utils import get_customer, get_supplier
+from core.utils import get_customer, get_supplier, string_to_date
 from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny,
@@ -69,16 +72,16 @@ User = get_user_model()
 #         return Response(data=serializer.data)
 
 
-class ServiceFilterView(generics.ListAPIView):
-    queryset = Service.objects.select_related("supplier")
-    serializer_class = BaseServiceSerializer
-    filter_backends = (ServiceFilterBackend,)
-    filterset_fields = (
-        "category",
-        "customer_place",
-        "supplier_place",
-        "extra_fields",
-    )
+# class ServiceFilterView(generics.ListAPIView):
+#     queryset = Service.objects.select_related("supplier")
+#     serializer_class = BaseServiceSerializer
+#     filter_backends = (ServiceFilterBackend,)
+#     filterset_fields = (
+#         "category",
+#         "customer_place",
+#         "supplier_place",
+#         "extra_fields",
+#     )
 
 
 class SupplierServiceProfileView(
@@ -133,17 +136,22 @@ class BookingServiceAPIView(generics.CreateAPIView):
         IsAuthenticated,
     ]
 
-    # @transaction.atomic
+    @staticmethod
+    def get_time_per_visit(price_id):
+        return Price.objects.get(id=price_id).time_per_visit
+
+    def is_slot_free(self, to_date, price_id):
+        return not Slot.objects.filter(
+            Q(time_from__gte=to_date)
+            & Q(
+                time_to__lte=to_date
+                + timedelta(minutes=self.get_time_per_visit(price_id))
+            )
+        ).exists()
+
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
-        # to_date = request.data.get("to_date")
-        # is_slot_free = Slot.objects.filter(
-        #     Q(date__date=to_date.date())
-        #     & Q(date__time__gte=to_date.time())
-        #     & Q(date__time__lte=to_date.time())
-        # ).exists()
-        # if is_slot_free:
-        #     Slot.objects.create(date=to_date)
-        prices = request.data.pop("price", [])
+        price = request.data.pop("price", [])
         pet_data = request.data.pop("pet", None)
         _pet_data = deepcopy(pet_data)
         if _pet_data:
@@ -167,26 +175,37 @@ class BookingServiceAPIView(generics.CreateAPIView):
             pet_serializer.save(
                 owner=customer_profile,
             )
-        bookings = []
-        for price in prices:
-            booking = Booking.objects.create(
-                price_id=price,
-                is_active=True,
-                customer=customer_profile,
-                **request.data,
+        to_date = string_to_date(
+            request.data.get("to_date"),
+        )
+        if self.is_slot_free(to_date, price):
+            Slot.objects.create(
+                time_from=to_date,
+                time_to=to_date
+                + timedelta(minutes=self.get_time_per_visit(price)),
+                supplier_id=kwargs.get("supplier_id"),
             )
-            bookings.append(booking)
-        serialized_data = []
-        for booking in bookings:
-            serializer = BookingSerializer(booking)
-            booking_data = serializer.data
-            booking_data["customer"] = get_customer(
-                self.request, CustomerProfile
-            ).id
-            booking_data["price"] = PriceSerializer(booking.price).data
-            serialized_data.append(booking_data)
-        serialized_data.append({"pet": pet_serializer.data})
-        return Response(serialized_data)
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"error": "Это время занято или специалист отдыхвает!"},
+            )
+        request.data["to_date"] = to_date
+        data = {
+            "price": price,
+            "is_active": True,
+            "customer": customer_profile,
+            **request.data,
+        }
+        booking_serializer = BookingSerializer(data=data)
+        ic(booking_serializer)
+        booking_serializer.is_valid(raise_exception=True)
+        booking = booking_serializer.save(customer=get_customer(self.request, CustomerProfile
+))
+        booking_data = booking_serializer.data
+        booking_data["price"] = PriceSerializer(booking.price).data
+        booking_data.update({"pet": pet_serializer.data})
+        return Response(booking_data)
 
 
 class SupplierCreateAdvertisement(
@@ -328,7 +347,9 @@ class FavoriteServiceView(
             )
             data["service"] = SmallServiceSerializer(service).data
             data["price"] = PriceSerializer(price, many=True).data
-            data["supplier"] = SupplierProfileSerializer(supplier, context={"request": request}).data
+            data["supplier"] = SupplierProfileSerializer(
+                supplier, context={"request": request}
+            ).data
 
             if review.exists():
                 data["review"] = ReviewSerializer(

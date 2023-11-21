@@ -1,3 +1,6 @@
+import datetime
+
+from django.db.models import Q
 from drf_extra_fields.fields import Base64ImageField
 from icecream import ic
 from rest_framework.relations import PrimaryKeyRelatedField
@@ -18,6 +21,7 @@ from core.utils import (
     update_prices,
     create_prices,
     delete_prices,
+    string_to_date,
 )
 
 from services.models import Booking, Price, Review, Favorite, FavoriteArticles
@@ -109,46 +113,29 @@ class ServiceUpdateSerializer(BaseServiceSerializer):
         return instance
 
 
-class FilterServicesSerializer(serializers.Serializer):
-    price = serializers.ListField(
-        required=False,
-        child=serializers.IntegerField(
-            min_value=Limits.MIN_PRICE, max_value=Limits.MAX_PRICE
-        ),
-        min_length=2,
-        max_length=2,
-    )
-    service_type = serializers.ListField(
-        required=False,
-        child=serializers.CharField(max_length=Limits.MAX_LEN_SERVICE_TYPE),
-        max_length=4,
-    )
-    pet_type = serializers.ChoiceField(
-        required=False,
-        choices=Default.PET_TYPE,
-    )
-    serve_at_supplier = serializers.BooleanField(required=False)
-    serve_at_customer = serializers.BooleanField(required=False)
-    date = serializers.DateField(
-        required=False, format=None, input_formats=("%d.%m.%Y",)
-    )
-
-
-class BaseBookingSerializer(serializers.ModelSerializer):
-    """Базовый сериализатор бронирования."""
-
-    supplier = SupplierProfileSerializer(read_only=True)
-
-    class Meta:
-        model = Booking
-        fields = (
-            "to_date",
-            "pet",
-        )
-
-
 class BookingSerializer(serializers.ModelSerializer):
     """Сериализатор бронирования."""
+
+    def validate(self, attrs):
+        to_date = attrs.get("to_date")
+        price_id = attrs.get("price")
+        weekday = Default.DAYS_NUMBER.get(to_date.weekday())
+        try:
+            schedule = Schedule.objects.get(
+                Q(service__prices=price_id) & Q(weekday=weekday)
+            )
+        except Schedule.DoesNotExist:
+            raise serializers.ValidationError(
+                "Невозможно забронировать услугу. У исполнителя нет "
+                "расписания на эту дату.."
+            )
+        time_from = schedule.start_work_time
+        time_to = schedule.end_work_time
+        if time_from > to_date.time() or to_date.time() > time_to:
+            raise serializers.ValidationError(
+                "Невозможно забронировать услугу. Это время занято."
+            )
+        return attrs
 
     class Meta:
         model = Booking

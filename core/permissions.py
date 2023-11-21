@@ -18,6 +18,15 @@ class IsAuthor(BasePermission):
         )
 
 
+class IsOwner(BasePermission):
+    """
+    Разрешает доступ только владельцу объекта.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj.owner.id == request.user.id
+
+
 class IsCustomer(BasePermission):
     message = "Только для покупателей!"
     def has_permission(

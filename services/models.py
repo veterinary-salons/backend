@@ -123,6 +123,10 @@ class Price(models.Model):
         default=Default.COST_TO,
         validators=[RangeValueValidator(Limits.MIN_PRICE, Limits.MAX_PRICE)],
     )
+    time_per_visit = models.IntegerField(
+        default=Default.TIME_PER_VISIT_CHOICES[0][0],
+        choices=Default.TIME_PER_VISIT_CHOICES,
+    )
     service = models.ForeignKey(
         Service,
         on_delete=models.CASCADE,
@@ -209,6 +213,7 @@ class Booking(models.Model):
     class Meta:
         verbose_name = "бронь услуги"
         verbose_name_plural = "брони услуг"
+
 
     def __str__(self):
         return f"{self.price} - {self.date}"

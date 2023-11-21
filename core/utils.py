@@ -1,6 +1,8 @@
 import base64
-from datetime import timedelta
+from datetime import timedelta, datetime
 
+import pytz
+from django.http import HttpRequest
 from django.utils import timezone
 from icecream import ic
 from rest_framework import serializers
@@ -215,3 +217,18 @@ def string_to_boolean(value: str) -> bool:
     else:
         raise serializers.ValidationError("Value must be `true` or `false`")
     return result
+
+def string_to_date(value: str) -> datetime:
+    """
+        Преобразует строковое значение в дату.
+    Args:
+        value: строка с датой.
+
+    Returns:
+        Дата.
+    """
+    to_date = datetime.strptime(
+        value,
+        "%Y-%m-%d %H:%M",
+    )
+    return pytz.UTC.localize(to_date)

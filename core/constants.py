@@ -94,6 +94,7 @@ class Default:
         raise AttributeError(
             f" Нельзя переопределить название константы '{name}'"
         )
+
     PATH_TO_AVATAR_ADVERTISEMENT = "users/suppliers/advertisement/"
     PATH_TO_AVATAR_CUSTOMER = "users/customers/avatar/"
     PATH_TO_AVATAR_SUPPLIER = "users/suppliers/avatar/"
@@ -206,6 +207,16 @@ class Default:
         ("Сб", "Суббота"),
         ("Вс", "Воскресенье"),
     )
+    DAYS_NUMBER = {
+        0: "Пн",
+        1: "Вт",
+        2: "Ср",
+        3: "Чт",
+        4: "Пт",
+        5: "Сб",
+        6: "Вс",
+    }
+
     TIME_PER_VISIT_CHOICES = (
         (30, "0.5 часа"),
         (60, "1 час"),
@@ -213,4 +224,3 @@ class Default:
         (120, "2 часа"),
     )
     GOODS_IMAGE_SIZE = 500, 300
-

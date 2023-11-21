@@ -1,8 +1,6 @@
 from drf_extra_fields.fields import Base64ImageField
-from icecream import ic
 from rest_framework import serializers
 
-from api.v1.serializers.core import Base64ImageFieldUser
 from core.constants import Limits
 from pets.models import Age, Pet
 
@@ -49,7 +47,6 @@ class BasePetSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Создание нового питомца."""
-        ic()
         age_data = validated_data.pop("age")
         age_serializer = AgeSerializer(data=age_data)
         age_serializer.is_valid(raise_exception=True)
@@ -58,6 +55,7 @@ class BasePetSerializer(serializers.ModelSerializer):
         else:
             age = Age.objects.create(**age_data)
         return Pet.objects.create(age=age, **validated_data)
+
 
     def update(self, instance, validated_data):
         """Обновление питомца."""
@@ -100,21 +98,7 @@ class PetSerializer(BasePetSerializer):
         representation.update(age)
         return representation
 
-    # def to_internal_value(self, data: dict[str, str | int]):
-    #     """Обрабатываем данные питомца..
-    #
-    #     Необходимо, чтобы принимать данные, не используя вложенного поля `Age`.
-    #     """
-    #     ic(data)
-    #     month = data.pop("month", [])
-    #     year = data.pop("year", [])
-    #     ic(month, year)
-    #     age = AgeSerializer(data={"year": year, "month": month})
-    #     ic(age)
-    #     age.is_valid(raise_exception=True)
-    #     data["age"] = age.validated_data
-    #     ic(data)
-    #     return super().to_internal_value(data)
+
 
     def validate(self, data):
         """Валидируем данные питомца."""

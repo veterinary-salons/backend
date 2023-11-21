@@ -16,11 +16,10 @@ SECRET_KEY = (
     "django-insecure-bh0#76rg!k_%*z3dq@6_#930pfm$zip*c$_yo&uan8r^9!v15m"
 )
 
-DEBUG = 'True'
+DEBUG = 'True' in getenv("DEBUG", "True")
 ALLOWED_HOSTS = ['*']
 
 
-# CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
 
 
@@ -41,7 +40,6 @@ INSTALLED_APPS = [
     "services",
     # "goods",
     "core",
-    "drf_yasg",
 ]
 INTERNAL_IPS = [
     "0.0.0.0",
@@ -90,7 +88,7 @@ DATABASES = {
         ),
         "NAME": getenv(
             "POSTGRES_DB",
-            default="groom3",
+            default="groom6",
         ),
         "USER": getenv(
             "POSTGRES_USER",
@@ -161,16 +159,3 @@ EMAIL_PORT = getenv("EMAIL_PORT")
 EMAIL_HOST_USER = getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_SSL = getenv("EMAIL_USE_SSL")
-
-if DEBUG:
-
-    MIDDLEWARE += (
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
-    )
-    INSTALLED_APPS += (
-        'debug_toolbar',
-    )
-    INTERNAL_IPS = ('127.0.0.1',)
-    DEBUG_TOOLBAR_CONFIG = {
-        'INTERCEPT_REDIRECTS': False,
-    }
