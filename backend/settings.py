@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "services",
     # "goods",
     "core",
+    "drf_yasg",
 ]
 INTERNAL_IPS = [
     "0.0.0.0",
