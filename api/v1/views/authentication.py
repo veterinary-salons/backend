@@ -37,6 +37,15 @@ class SignUpViewSet(viewsets.GenericViewSet):
         return None
 
     def create(self, request):
+        email = request.data.get("email")
+        code = get_recovery_code(email)
+        ic(email)
+        send_email_message(
+            subject="Подтвердите email",
+            message=f"Ваш код: {code}",
+            sender=FROM_EMAIL,
+            recipients=[email],
+        )
         full_serializer = self.get_serializer(data=request.data)
         full_serializer.is_valid(raise_exception=True)
         profile_type = full_serializer.validated_data.get("profile_type")
