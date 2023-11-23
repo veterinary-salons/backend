@@ -139,7 +139,7 @@ class SignInSerializer(TokenObtainPairSerializer):
             image = profile.image
         else:
             profile_type = "customer"
-            image = None
+            image = profile.image
         profile_fields = {
             "profile_type": profile_type,
             "id": profile.id,
