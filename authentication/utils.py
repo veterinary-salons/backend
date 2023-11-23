@@ -1,17 +1,19 @@
 from random import choices as random_choices
 
 from django.core import mail
+from icecream import ic
 
 from authentication.models import EmailCode
 
 
 def get_recovery_code(email):
     code, created = EmailCode.objects.get_or_create(email=email)
-    return code
+    return code.code
 
 def send_email_message(
     subject: str, message: str, sender: str, recipients: list
 ):
+    ic(message)
     with mail.get_connection() as connection:
         message = mail.EmailMessage(
             subject,
@@ -22,4 +24,3 @@ def send_email_message(
         )
         messages_sent = message.send()
     return messages_sent
-            

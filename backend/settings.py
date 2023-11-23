@@ -9,15 +9,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = (
     "django-insecure-bh0#76rg!k_%*z3dq@6_#930pfm$zip*c$_yo&uan8r^9!v15m"
 )
 
-DEBUG = 'True' in getenv("DEBUG", "True")
-ALLOWED_HOSTS = ['*']
+DEBUG = "True" in getenv("DEBUG", "True")
+ALLOWED_HOSTS = ["*"]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -37,6 +36,7 @@ INSTALLED_APPS = [
     "pets",
     "services",
     # "goods",
+    "djoser",
     "core",
     "drf_yasg",
 ]
@@ -87,7 +87,7 @@ DATABASES = {
         ),
         "NAME": getenv(
             "POSTGRES_DB",
-            default="groom6",
+            default="groom3",
         ),
         "USER": getenv(
             "POSTGRES_USER",
@@ -132,10 +132,10 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -158,3 +158,9 @@ EMAIL_PORT = getenv("EMAIL_PORT")
 EMAIL_HOST_USER = getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_SSL = getenv("EMAIL_USE_SSL")
+
+DJOSER = {
+    'SEND_ACTIVATION_EMAIL': True,
+    'ACTIVATION_URL': 'auth/activate/{uid}/{token}'
+    # etc
+}

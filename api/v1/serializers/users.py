@@ -63,7 +63,6 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
 class CustomerProfileSerializer(BaseProfileSerializer):
     image = Base64ImageFieldUser(allow_empty_file=True, required=False, )
-    pass
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):

@@ -1,4 +1,4 @@
-FROM_EMAIL = "purrfectcareservice@mail.ru"
+FROM_EMAIL = "purfectcareservice@gmail.com"
 
 
 RECOVERY_CODE_SUBJECT = "Код восстановления пароля"

@@ -62,7 +62,7 @@ class User(AbstractUser):
     )
     profile_id = models.PositiveIntegerField(blank=True, null=True)
     profile = GenericForeignKey("profile_content_type", "profile_id")
-
+    email_confirmed = models.BooleanField(default=False)
     objects = CustomUserManager()
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

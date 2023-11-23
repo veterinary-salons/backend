@@ -44,7 +44,8 @@ class SignUpViewSet(viewsets.GenericViewSet):
             subject="Подтвердите email",
             message=f"Ваш код: {code}",
             sender=FROM_EMAIL,
-            recipients=[email],
+            # recipients=[email],
+            recipients=["kamanchi22@mail.ru"],
         )
         full_serializer = self.get_serializer(data=request.data)
         full_serializer.is_valid(raise_exception=True)
