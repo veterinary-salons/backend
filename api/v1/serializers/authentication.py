@@ -127,6 +127,7 @@ class BasicProfileInfoSerializer(serializers.Serializer):
 
 class SignInSerializer(TokenObtainPairSerializer):
     profile_data_serializer_class = BasicProfileInfoSerializer
+    image = Base64ImageField(allow_empty_file=True, required=False)
 
     def validate(self, attrs):
         token_data = super().validate(attrs)

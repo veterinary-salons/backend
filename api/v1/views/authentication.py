@@ -1,8 +1,10 @@
+import hashlib
+
 from icecream import ic
 from hashlib import md5 as md5_hash
-from rest_framework import viewsets, serializers
+from rest_framework import viewsets, serializers, generics
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
@@ -12,6 +14,7 @@ from api.v1.serializers.authentication import (
     RecoveryEmailSerializer,
     RecoveryCodeSerializer,
     RecoveryPasswordSerializer,
+    BasicProfileInfoSerializer,
 )
 from api.v1.serializers.users import (
     SupplierProfileSerializer,
@@ -22,24 +25,25 @@ from authentication.email_messages import (
     RECOVERY_CODE_SUBJECT,
     RECOVERY_CODE_MESSAGE,
 )
-from authentication.permissions import EmailCodeConfirmed
+from authentication.models import EmailCode
+from authentication.permissions import IsEmailCodeConfirmed
 from authentication.utils import get_recovery_code, send_email_message
 from core.constants import Limits
 from core.exceptions import InvalidRequestData
 
 
-class SignUpViewSet(viewsets.GenericViewSet):
-    http_method_names = ("post",)
-    allowed_methods = ("POST",)
+class SignUpView(generics.CreateAPIView):
+
     serializer_class = SignUpProfileSerializer
+    permission_classes = [AllowAny, ]
 
     def get_queryset(self):
         return None
 
-    def create(self, request):
+    def create(self, request, *args, **kwargs):
         email = request.data.get("email")
         code = get_recovery_code(email)
-        ic(email)
+        ic(email, code)
         send_email_message(
             subject="Подтвердите email",
             message=f"Ваш код: {code}",
@@ -50,15 +54,17 @@ class SignUpViewSet(viewsets.GenericViewSet):
         full_serializer = self.get_serializer(data=request.data)
         full_serializer.is_valid(raise_exception=True)
         profile_type = full_serializer.validated_data.get("profile_type")
+
         if profile_type == "customer":
+            ic(full_serializer.validated_data.get("user"))
             serializer = CustomerProfileSerializer(
                 data=full_serializer.validated_data,
-                context = {"request": request}
+                context = {"request": request},
             )
         elif profile_type == "supplier":
             serializer = SupplierProfileSerializer(
                 data=full_serializer.validated_data,
-                context = {"request": request}
+                context = {"request": request},
             )
         else:
             raise serializers.ValidationError(
@@ -71,36 +77,36 @@ class SignUpViewSet(viewsets.GenericViewSet):
             status=HTTP_201_CREATED,
         )
 
-    
-    @action(
-        methods=["POST"],
-        detail=False,
-        permission_classes=IsAuthenticated,
-    )
-    def verify_email(self, request):
+class VerifyEmailView(generics.GenericAPIView):
+    serializer_class = BasicProfileInfoSerializer
+    permission_classes=[IsAuthenticated,]
+
+    def post(self, request):
+        ic()
         user = request.user
-        verification_code = str(request.data.get("code", None))
-        email_hash = str(md5_hash(user.email))
-        if (
-            verification_code == "None" or
-            len(verification_code) != Limits.CONFIRMATION_CODE_LENGTH or
-            verification_code != email_hash[:Limits.CONFIRMATION_CODE_LENGTH]
-        ):
-            raise InvalidRequestData("invalid code")
-        user.email_confirmed = True
-        user.save()
-        return Response(
-            data={"message": "email confirmed"}, 
-            status=HTTP_200_OK
-        )
+        ic(request.data)
+        email = request.user.email
+        verification_code = request.data.get("code")
         
+        try:
+            email_code = EmailCode.objects.get(email=email)
+            if email_code.code == verification_code:
+                request.user.email_confirmed = True
+                request.user.save()
+                return Response({"message": "Email verified"}, status=HTTP_200_OK)
+            else:
+                raise serializers.ValidationError("Invalid code")
+        
+        except EmailCode.DoesNotExist:
+            raise serializers.ValidationError("No verification code exists for this email")
+
 
 class SignInViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)
     allowed_methods = ("POST",)
 
     def _perform_data_validation(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, )
         serializer.is_valid(raise_exception=True)
         return Response(data=serializer.validated_data, status=HTTP_200_OK)
 
@@ -146,7 +152,7 @@ class SignInViewSet(viewsets.GenericViewSet):
     @action(
         methods=("POST",),
         detail=False,
-        permission_classes=(IsAuthenticated, EmailCodeConfirmed),
+        permission_classes=(IsAuthenticated, IsEmailCodeConfirmed),
     )
     def recovery_password(self, request):
         serializer = self.get_serializer(data=request.data)

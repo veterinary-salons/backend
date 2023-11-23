@@ -8,7 +8,9 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from api.v1.views.authentication import SignUpViewSet, SignInViewSet
+from api.v1.views.authentication import SignUpView, SignInViewSet, \
+    VerifyEmailView
+
 from api.v1.views.pet import PetViewSet
 from api.v1.views.service import (
     BookingServiceAPIView,
@@ -37,7 +39,7 @@ router.register(
 )
 
 router.register("suppliers", SupplierProfileViewSet, basename="supplier")
-router.register("auth/signup", SignUpViewSet, basename="signup")
+# router.register("auth/signup", SignUpView, basename="signup")
 router.register("auth/signin", SignInViewSet, basename="signin")
 
 schema_view = get_schema_view(
@@ -52,11 +54,20 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("__debug__/", include("debug_toolbar.urls")),
     path(
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
+    ),
+    re_path(
+        "auth/signup/$",
+        SignUpView.as_view(),
+        name="signup",
+    ),
+    re_path(
+        "auth/signup/verify_email/$",
+        VerifyEmailView.as_view(),
+        name="verify_mail",
     ),
     re_path(
         "customers/(?P<customer_id>\d+)/booking/(?P<supplier_id>\d+)/$",
