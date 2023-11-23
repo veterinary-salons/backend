@@ -45,8 +45,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "is_working_day",
             "start_work_time",
             "end_work_time",
-            "break_start_time",
-            "break_end_time",
             "service",
         )
 
