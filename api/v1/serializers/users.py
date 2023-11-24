@@ -75,6 +75,10 @@ class SupplierProfileSerializer(BaseProfileSerializer):
 
 
 class CustomerPatchSerializer(serializers.ModelSerializer):
+    image = Base64ImageField(
+        allow_empty_file=True,
+        required=False,
+    )
     class Meta:
         model = CustomerProfile
         fields = [
