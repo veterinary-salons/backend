@@ -16,7 +16,6 @@ from users.models import CustomerProfile, SupplierProfile, User
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-
     @staticmethod
     def check_password(value):
         try:
@@ -47,6 +46,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             "user",
             "image",
         ]
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         user_representation = representation.pop("user")
@@ -62,11 +62,18 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
 
 class CustomerProfileSerializer(BaseProfileSerializer):
-    image = Base64ImageFieldUser(allow_empty_file=True, required=False, )
+    image = Base64ImageFieldUser(
+        allow_empty_file=True,
+        required=False,
+    )
 
 
 class SupplierProfileSerializer(BaseProfileSerializer):
-    image = Base64ImageFieldUser(allow_empty_file=True, required=False, )
+    image = Base64ImageFieldUser(
+        allow_empty_file=True,
+        required=False,
+    )
+
     class Meta:
         model = SupplierProfile
         fields = BaseProfileSerializer.Meta.fields + [
@@ -79,22 +86,29 @@ class CustomerPatchSerializer(serializers.ModelSerializer):
         allow_empty_file=True,
         required=False,
     )
+
     class Meta:
         model = CustomerProfile
         fields = [
-        "id",
-        "phone_number",
-        "last_name",
-        "first_name",
-        "image",
-    ]
+            "id",
+            "phone_number",
+            "last_name",
+            "first_name",
+            "image",
+            "address",
+        ]
+
 
 class CustomerSerializer(CustomerPatchSerializer):
-    image = Base64ImageField(allow_empty_file=True, required=False, )
+    image = Base64ImageField(
+        allow_empty_file=True,
+        required=False,
+    )
     pet = PetSerializer(
         many=True,
         read_only=True,
     )
+
     class Meta(CustomerPatchSerializer.Meta):
         fields = CustomerPatchSerializer.Meta.fields + [
             "pet",
