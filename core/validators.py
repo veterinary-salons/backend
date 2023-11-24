@@ -1,10 +1,8 @@
-import base64
 import datetime
 import re
 
 from django.core.exceptions import ValidationError
 from django.core.validators import BaseValidator
-from django.db import models
 from rest_framework import serializers
 
 from core.constants import Default, Messages, Limits
@@ -189,6 +187,14 @@ def validate_schedule(attrs):
         raise serializers.ValidationError(
             "`start_work_time` не может быть больше `end_work_time`"
         )
-
-
     return attrs
+
+# def validate_unique_of_service(attrs, customer):
+#     service = attrs.get("service")
+#     ic(attrs)
+#     services = Service.objects.filter(in_favorites__customer=customer)
+#     ic(service)
+#     ic(services)
+#     if service in services:
+#         raise serializers.ValidationError("У вас уже добавлено в избранное.")
+

@@ -29,6 +29,7 @@ from api.v1.serializers.users import (
 )
 from django.contrib.auth import get_user_model
 
+from authentication.permissions import IsEmailConfirmed
 from core.constants import Default
 from core.models import Slot, Schedule
 from core.permissions import IsCustomer, IsAuthor, IsMyService
@@ -314,7 +315,7 @@ class FavoriteServiceView(
     """Представление для добавления в избранное."""
 
     serializer_class = FavoriteSerializer
-    permission_classes = [IsAuthenticated, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomer,]
     lookup_field = "customer_id"
 
     def get_queryset(self):
@@ -398,7 +399,8 @@ class FavoriteArticlesView(
             articles.delete()
         else:
             raise serializers.ValidationError(
-                f"Статья {article_id} уже была удалена из избранного или ее там и не было."
+                f"Статья {article_id} уже была удалена из избранного или ее "
+                f"там и не было."
             )
         return Response(
             status=status.HTTP_204_NO_CONTENT,

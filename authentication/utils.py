@@ -1,7 +1,4 @@
-from random import choices as random_choices
-
 from django.core import mail
-from icecream import ic
 
 from authentication.models import EmailCode
 
@@ -13,7 +10,6 @@ def get_recovery_code(email):
 def send_email_message(
     subject: str, message: str, sender: str, recipients: list
 ):
-    ic(message)
     with mail.get_connection() as connection:
         message = mail.EmailMessage(
             subject,

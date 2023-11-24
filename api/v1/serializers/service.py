@@ -1,5 +1,3 @@
-import datetime
-
 from django.db.models import Q
 from drf_extra_fields.fields import Base64ImageField
 from icecream import ic
@@ -8,9 +6,6 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from api.v1.serializers.core import (
     ScheduleSerializer,
     PriceSerializer,
-)
-from api.v1.serializers.users import (
-    SupplierProfileSerializer,
 )
 from core.constants import Limits, Default
 from core.models import Schedule
@@ -21,17 +16,19 @@ from core.utils import (
     update_prices,
     create_prices,
     delete_prices,
-    string_to_date,
+    get_customer,
 )
 
 from services.models import Booking, Price, Review, Favorite, FavoriteArticles
 
 from rest_framework import serializers
 from services.models import Service
+from users.models import CustomerProfile
 
 
 class SmallServiceSerializer(serializers.ModelSerializer):
     """Сериализация услуг с минимальными данными."""
+
     class Meta:
         model = Service
         fields = (
@@ -66,10 +63,12 @@ class BaseServiceSerializer(serializers.ModelSerializer):
 
 class ServiceCreateSerializer(BaseServiceSerializer):
     """Сериализация всех услуг."""
+
     image = Base64ImageField(
         allow_empty_file=True,
         required=False,
     )
+
     def create(self, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
@@ -91,10 +90,12 @@ class ServiceCreateSerializer(BaseServiceSerializer):
 
 class ServiceUpdateSerializer(BaseServiceSerializer):
     """Сериализация обновления всех услуг."""
+
     image = Base64ImageField(
         allow_empty_file=True,
         required=False,
     )
+
     def update(self, instance, validated_data):
         schedules_data = validated_data.pop("schedules", [])
         prices_data = validated_data.pop("prices", [])
@@ -167,6 +168,16 @@ class FavoriteSerializer(serializers.ModelSerializer):
     )
     """Сериализатор избранного."""
 
+    def validate(self, attrs):
+        customer = get_customer(self.context.get("request"), CustomerProfile)
+        service = attrs.get("service")
+        services = Service.objects.filter(in_favorites__customer=customer)
+        if service in services:
+            raise serializers.ValidationError(
+                "Эта услуга у вас уже добавлена в избранное."
+            )
+        return attrs
+
     class Meta:
         model = Favorite
         fields = [
@@ -175,12 +186,26 @@ class FavoriteSerializer(serializers.ModelSerializer):
             "date_added",
         ]
 
+
 class FavoriteArticlesSerializer(serializers.ModelSerializer):
     """Сериализатор избранного."""
 
+    def validate(self, attrs):
+        customer = get_customer(self.context.get("request"), CustomerProfile)
+        article_id = attrs.get("article_id")
+        articles = [
+            favorite.article_id
+            for favorite in FavoriteArticles.objects.filter(customer=customer)
+        ]
+        if article_id in articles:
+            raise serializers.ValidationError(
+                "Эта статья у вас уже добавлена в избранное."
+            )
+        return attrs
+
     class Meta:
         model = FavoriteArticles
-        fields = [
+        fields = (
             "article_id",
             "date_added",
-        ]
+        )

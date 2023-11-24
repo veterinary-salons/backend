@@ -26,7 +26,7 @@ from authentication.email_messages import (
     RECOVERY_CODE_MESSAGE,
 )
 from authentication.models import EmailCode
-from authentication.permissions import IsEmailCodeConfirmed
+from authentication.permissions import IsEmailConfirmed
 from authentication.utils import get_recovery_code, send_email_message
 from core.constants import Limits
 from core.exceptions import InvalidRequestData
@@ -155,7 +155,7 @@ class SignInViewSet(viewsets.GenericViewSet):
     @action(
         methods=("POST",),
         detail=False,
-        permission_classes=(IsAuthenticated, IsEmailCodeConfirmed),
+        permission_classes=(IsAuthenticated, IsEmailConfirmed),
     )
     def recovery_password(self, request):
         serializer = self.get_serializer(data=request.data)

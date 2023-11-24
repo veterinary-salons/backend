@@ -1,4 +1,4 @@
-from django.db.models import CheckConstraint, Q, F, JSONField
+from django.db.models import CheckConstraint, Q, F, JSONField, UniqueConstraint
 from icecream import ic
 from rest_framework import serializers
 
@@ -272,13 +272,13 @@ class Favorite(models.Model):
         verbose_name = "избранная услуга"
         verbose_name_plural = "избранные услуги"
         constraints = (
-            # UniqueConstraint(
-            #     fields=(
-            #         "service",
-            #         "customer",
-            #     ),
-            #     name="%(app_label)s_%(class)s услуга уже в избранном",
-            # ),
+            UniqueConstraint(
+                fields=(
+                    "service",
+                    "customer",
+                ),
+                name="%(app_label)s_%(class)s услуга уже в избранном",
+            ),
         )
 
     def __str__(self) -> str:
@@ -304,3 +304,12 @@ class FavoriteArticles(models.Model):
     class Meta:
         verbose_name = "избранные статьи"
         verbose_name_plural = "избранные статьи"
+        constraints = (
+            UniqueConstraint(
+                fields=(
+                    "article_id",
+                    "customer",
+                ),
+                name="%(app_label)s_%(class)s статья уже в избранном",
+            ),
+        )
