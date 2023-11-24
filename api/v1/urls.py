@@ -8,8 +8,11 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from api.v1.views.authentication import SignUpView, SignInViewSet, \
-    VerifyEmailView
+from api.v1.views.authentication import (
+    SignUpView,
+    SignInViewSet,
+    VerifyEmailView,
+)
 
 from api.v1.views.pet import PetViewSet
 from api.v1.views.service import (
@@ -19,7 +22,6 @@ from api.v1.views.service import (
     BookingReviewCreateOrDelete,
     FavoriteServiceView,
     FavoriteArticlesView,
-    # ServiceFilterView,
 )
 from api.v1.views.users import (
     CustomerProfileView,

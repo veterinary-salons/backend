@@ -18,7 +18,7 @@ from users.models import CustomerProfile, SupplierProfile, User
 class CustomUserSerializer(serializers.ModelSerializer):
 
     @staticmethod
-    def validate_password(value):
+    def check_password(value):
         try:
             validate_password(value)
         except ValidationError as e:
@@ -86,18 +86,11 @@ class CustomerPatchSerializer(serializers.ModelSerializer):
     ]
 
 class CustomerSerializer(CustomerPatchSerializer):
-    def to_representation(self, instance):
-        request = self.context.get("request")
-        # domain = request.META.get("HTTP_HOST")
-        representation = super().to_representation(instance)
-        representation["image"] = instance.image.url
-        return representation
-
+    image = Base64ImageField(allow_empty_file=True, required=False, )
     pet = PetSerializer(
         many=True,
         read_only=True,
     )
-
     class Meta(CustomerPatchSerializer.Meta):
         fields = CustomerPatchSerializer.Meta.fields + [
             "pet",
