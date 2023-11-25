@@ -41,7 +41,6 @@ router.register(
 )
 
 router.register("suppliers", SupplierProfileViewSet, basename="supplier")
-# router.register("auth/signup", SignUpView, basename="signup")
 router.register("auth/signin", SignInViewSet, basename="signin")
 
 schema_view = get_schema_view(

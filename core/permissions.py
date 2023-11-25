@@ -29,6 +29,7 @@ class IsOwner(BasePermission):
 
 class IsCustomer(BasePermission):
     message = "Только для покупателей!"
+
     def has_permission(
         self,
         request,
@@ -53,6 +54,7 @@ class IsMyService(BasePermission):
         )
         return get_customer(request, CustomerProfile) == customer
 
+
 class IsSupplier(BasePermission):
     def has_permission(
         self,
@@ -60,3 +62,20 @@ class IsSupplier(BasePermission):
         view,
     ):
         return bool(get_supplier(request, SupplierProfile))
+
+
+class GetForAllDeleteForOwner(BasePermission):
+    message = "Удалить свой аккаунт можно только владельцу!"
+
+    def has_permission(self, request, view):
+        if request.method == "GET":
+            result = True
+        elif request.method == "DELETE":
+            result = (
+                int(view.kwargs.get('supplier_id'))
+                == get_supplier(request, SupplierProfile).id
+            )
+        else:
+            result = False
+
+        return result

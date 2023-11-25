@@ -1,12 +1,8 @@
 from rest_framework import permissions
 
-from authentication.utils import get_recovery_code
-
 
 class IsEmailConfirmed(permissions.BasePermission):
-    message = "You haven't confirmed the code from your email letter"
+    message = "Вы не подтвердили код из письма по электронной почте."
 
     def has_permission(self, request, view):
-        email = request.user.email
-        code = get_recovery_code(email)
-        return code.confirmed
+        return request.user.email_confirmed

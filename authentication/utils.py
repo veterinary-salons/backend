@@ -5,7 +5,7 @@ from authentication.models import EmailCode
 
 def get_recovery_code(email):
     code, created = EmailCode.objects.get_or_create(email=email)
-    return code.code
+    return code
 
 def send_email_message(
     subject: str, message: str, sender: str, recipients: list

@@ -42,21 +42,18 @@ class SignUpView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         email = request.data.get("email")
-        code = get_recovery_code(email)
-        ic(email, code)
+        code = get_recovery_code(email).code
         send_email_message(
             subject="Подтвердите email",
             message=f"Ваш код: {code}",
             sender=FROM_EMAIL,
-            # recipients=[email],
-            recipients=["kamanchi22@mail.ru"],
+            recipients=[email],
         )
         full_serializer = self.get_serializer(data=request.data)
         full_serializer.is_valid(raise_exception=True)
         profile_type = full_serializer.validated_data.get("profile_type")
 
         if profile_type == "customer":
-            ic(full_serializer.validated_data.get("user"))
             serializer = CustomerProfileSerializer(
                 data=full_serializer.validated_data,
                 context = {"request": request},
@@ -82,9 +79,6 @@ class VerifyEmailView(generics.GenericAPIView):
     permission_classes=[IsAuthenticated,]
 
     def post(self, request):
-        ic()
-        user = request.user
-        ic(request.data)
         email = request.user.email
         verification_code = request.data.get("code")
         
@@ -105,7 +99,8 @@ class SignInViewSet(viewsets.GenericViewSet):
     http_method_names = ("post",)
     allowed_methods = ("POST",)
 
-    def _perform_data_validation(self, request):
+    @staticmethod
+    def _perform_data_validation(request):
         serializer =SignInSerializer(
         data=request.data,
         context={'request': request},
@@ -129,6 +124,7 @@ class SignInViewSet(viewsets.GenericViewSet):
     @action(
         methods=("POST",),
         detail=False,
+        authentication_classes=(),
     )
     def recovery(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -147,10 +143,12 @@ class SignInViewSet(viewsets.GenericViewSet):
     @action(
         methods=("POST",),
         detail=False,
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(IsAuthenticated, IsEmailConfirmed),
     )
     def recovery_code(self, request):
-        return self._perform_data_validation(request)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(data=serializer.validated_data, status=HTTP_200_OK)
 
     @action(
         methods=("POST",),

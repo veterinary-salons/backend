@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     "pets",
     "services",
     # "goods",
-    "djoser",
     "core",
     "drf_yasg",
 ]
@@ -158,9 +157,3 @@ EMAIL_PORT = getenv("EMAIL_PORT")
 EMAIL_HOST_USER = getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_SSL = getenv("EMAIL_USE_SSL")
-
-DJOSER = {
-    'SEND_ACTIVATION_EMAIL': True,
-    'ACTIVATION_URL': 'auth/activate/{uid}/{token}'
-    # etc
-}

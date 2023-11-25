@@ -2,10 +2,8 @@ from django.contrib.auth import get_user_model
 from icecream import ic
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 from drf_extra_fields.fields import Base64ImageField
 
-from api.v1.serializers.core import Base64ImageFieldUser
 from authentication.tokens import RecoveryAccessToken
 from authentication.utils import get_recovery_code
 from core.constants import Limits
@@ -17,9 +15,6 @@ User = get_user_model()
 
 class SignUpProfileSerializer(serializers.ModelSerializer):
     profile_type = serializers.ChoiceField(choices=("customer", "supplier"))
-    # first_name = serializers.CharField()
-    # last_name = serializers.CharField()
-    # phone_number = serializers.CharField()
     email = serializers.EmailField(max_length=Limits.MAX_LEN_EMAIL)
     password = serializers.CharField(write_only=True)
     image = Base64ImageField(allow_empty_file=True, required=False)
@@ -61,10 +56,11 @@ class RecoveryEmailSerializer(serializers.Serializer):
     )
     token = serializers.CharField(read_only=True)
 
-    def validate_email(self, value):
+    @staticmethod
+    def validate_email(value):
         if not User.objects.filter(email=value).exists():
             raise serializers.ValidationError(
-                "a user with this email does not exist"
+                "Пользователя с такой почтой не зарегистрировано."
             )
         return value
 
@@ -128,18 +124,21 @@ class BasicProfileInfoSerializer(serializers.Serializer):
 class SignInSerializer(TokenObtainPairSerializer):
     profile_data_serializer_class = BasicProfileInfoSerializer
     image = Base64ImageField(allow_empty_file=True, required=False)
+    def _get_profile_data(self):
+        profile = self.user.profile
+        if not profile:
+            raise serializers.ValidationError("Profile does not exist")
+
+        if isinstance(profile, SupplierProfile):
+            profile_type = "supplier"
+        else:
+            profile_type = "customer"
+        return profile, profile_type
 
     def validate(self, attrs):
         token_data = super().validate(attrs)
-        profile = self.user.profile
-        if not profile:
-            raise serializers.ValidationError("this profile does not exist")
-        if isinstance(profile, SupplierProfile):
-            profile_type = "supplier"
-            image = profile.image
-        else:
-            profile_type = "customer"
-            image = profile.image
+        profile, profile_type = self._get_profile_data()
+        image = profile.image
         profile_fields = {
             "profile_type": profile_type,
             "id": profile.id,
@@ -157,3 +156,4 @@ class SignInSerializer(TokenObtainPairSerializer):
             "token_data": token_data,
             "profile_data": profile_data,
         }
+    

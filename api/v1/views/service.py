@@ -32,7 +32,8 @@ from django.contrib.auth import get_user_model
 from authentication.permissions import IsEmailConfirmed
 from core.constants import Default
 from core.models import Slot, Schedule
-from core.permissions import IsCustomer, IsAuthor, IsMyService
+from core.permissions import IsCustomer, IsAuthor, IsMyService, \
+    GetForAllDeleteForOwner
 from core.utils import get_customer, get_supplier, string_to_date
 from rest_framework.permissions import (
     IsAuthenticated,
@@ -94,7 +95,7 @@ class SupplierServiceProfileView(
     queryset = Service.objects.prefetch_related("supplier")
     serializer_class = BaseServiceSerializer
     permission_classes = [
-        AllowAny,
+        GetForAllDeleteForOwner,
     ]
 
     def get(self, request, *args, **kwargs):
@@ -113,18 +114,17 @@ class SupplierServiceProfileView(
                 ).data
             }
         ]
-
         return Response(data=supplier_data + service_data)
 
     def delete(self, request, *args, **kwargs):
         """Удаляем специалиста и, заодно, все услуги."""
         supplier_id = int(self.kwargs.get("supplier_id"))
         supplier = SupplierProfile.objects.filter(id=supplier_id)
-        last_name = get_object_or_404(supplier).user.last_name
-        first_name = get_object_or_404(supplier).user.first_name
+        # last_name = get_object_or_404(supplier).user.last_name
+        # first_name = get_object_or_404(supplier).user.first_name
         return Response(
             status=status.HTTP_204_NO_CONTENT,
-            data={"message": f"Пользователь {last_name} {first_name} удален"},
+            data={"message": f"Пользователь {supplier} удален"},
         )
 
 
